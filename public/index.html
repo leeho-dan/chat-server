@@ -2,340 +2,83 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>디자인 상담</title>
-
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin:0;
-  font-family: Arial;
-  background:#f8f9fa;
-}
-
-/* ===== 헤더 ===== */
-#header {
-  position:fixed;
-  top:0;
-  width:100%;
-  height:55px;
-  background:white;
-  border-bottom:1px solid #ddd;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  z-index:10;
-}
-
-#statusIcon {
-  position:absolute;
-  right:15px;
-  font-size:20px;
-  cursor:pointer;
-}
-
-/* ===== 채팅 ===== */
-#chatBox {
-  position:fixed;
-  top:55px;
-  bottom:110px;
-  width:100%;
-  overflow-y:auto;
-  padding:15px;
-  display:flex;
-  flex-direction:column;
-}
-
-/* 메시지 */
-.message {
-  max-width:70%;
-  padding:10px 14px;
-  margin:6px 0;
-  border-radius:18px;
-  word-break:break-word;
-}
-
-.me {
-  align-self:flex-end;
-  background:#4dabf7;
-  color:white;
-}
-
-.other {
-  align-self:flex-start;
-  background:white;
-  border:1px solid #ddd;
-}
-
-/* 이미지 */
-.chat-img {
-  max-width:180px;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-/* 다운로드 버튼 */
-.download-btn {
-  display:inline-block;
-  margin-top:5px;
-  padding:4px 8px;
-  font-size:12px;
-  background:#e9ecef;
-  border-radius:8px;
-  text-decoration:none;
-  color:#333;
-}
-
-/* ===== 입력 ===== */
-#inputArea {
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:white;
-  border-top:1px solid #ddd;
-  padding:10px;
-}
-
-#inputRow {
-  display:flex;
-  max-width:600px;
-  margin:0 auto;
-}
-
-#msg {
-  flex:1;
-  padding:12px;
-  border-radius:25px;
-  border:1px solid #ccc;
-}
-
-#sendBtn {
-  margin-left:8px;
-  padding:10px 14px;
-  border:none;
-  background:#4dabf7;
-  color:white;
-  border-radius:50%;
-  cursor:pointer;
-}
-
-#file {
-  display:none;
-}
-
-#fileLabel {
-  margin-left:8px;
-  padding:10px;
-  border-radius:50%;
-  background:#e9ecef;
-  cursor:pointer;
-}
-
-/* 주문 */
-#orderBtn {
-  display:block;
-  margin:8px auto 0;
-  width:100%;
-  max-width:600px;
-  padding:10px;
-  background:#ff6b6b;
-  color:white;
-  border:none;
-  border-radius:10px;
-}
-
-/* ===== 모달 ===== */
-#imageModal {
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  z-index:9999;
-
-  /* 격자 배경 */
-  background:
-    linear-gradient(45deg, #eee 25%, transparent 25%),
-    linear-gradient(-45deg, #eee 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #eee 75%),
-    linear-gradient(-45deg, transparent 75%, #eee 75%);
-  background-size:20px 20px;
-}
-
-/* 중앙 정렬 */
-#modalContent {
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%);
-}
-
-/* 이미지 */
-#modalImg {
-  max-width:90vw;
-  max-height:80vh;
-  border-radius:10px;
-}
-
-/* 버튼 */
-#closeBtn, #downloadBtn {
-  position:absolute;
-  top:15px;
-  font-size:20px;
-  background:white;
-  border-radius:50%;
-  padding:8px;
-  cursor:pointer;
-  z-index:10000;
-}
-
-#closeBtn { right:15px; }
-#downloadBtn { right:60px; text-decoration:none; }
-
-/* 캔버스 (그림) */
-#drawCanvas {
-  position:absolute;
-  top:0;
-  left:0;
-  pointer-events:none;
-}
-</style>
+<title>관리자 상담</title>
 </head>
-
 <body>
 
-<div id="header">
-  디자인 상담
-  <span id="statusIcon" onclick="toggleStatus()">🟢</span>
-</div>
+<h2>관리자 채팅</h2>
 
-<div id="chatBox"></div>
+<select id="roomSelect"></select>
+<br><br>
 
-<div id="inputArea">
-  <div id="inputRow">
-    <input id="msg" placeholder="메시지 입력..." />
-    <button id="sendBtn" onclick="send()">➤</button>
-    <label id="fileLabel" for="file">📎</label>
-    <input type="file" id="file">
-  </div>
-  <button id="orderBtn">🛒 주문하기</button>
-</div>
+<div id="chatBox" style="height:300px; overflow:auto; border:1px solid #ccc;"></div>
 
-<!-- 이미지 모달 -->
-<div id="imageModal">
-  <span id="closeBtn">✕</span>
-  <a id="downloadBtn" download>⬇️</a>
-
-  <div id="modalContent">
-    <img id="modalImg">
-    <canvas id="drawCanvas"></canvas>
-  </div>
-</div>
+<input id="msg">
+<button onclick="send()">전송</button>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
 const socket = io();
-const chatBox = document.getElementById('chatBox');
+const role = "admin";
 
-/* ===== 상태 ===== */
-let isOpen = true;
-function toggleStatus(){
-  isOpen=!isOpen;
-  statusIcon.innerText = isOpen ? "🟢" : "🔴";
-}
+let currentRoom = null;
 
-/* ===== 메시지 ===== */
-function send(){
-  const input = msg;
-  const text = input.value.trim();
-  if(!text) return;
+/* ===== 방 목록 받기 ===== */
+socket.on("roomList", rooms=>{
+  const select = document.getElementById("roomSelect");
+  select.innerHTML="";
 
-  if(!isOpen){
-    alert("상담 불가 상태");
-    return;
+  rooms.forEach(r=>{
+    const opt=document.createElement("option");
+    opt.value=r;
+    opt.text=r;
+    select.appendChild(opt);
+  });
+
+  if(!currentRoom && rooms.length){
+    currentRoom = rooms[0];
   }
-
-  socket.emit('message', text);
-  addMessage(text,'me');
-  input.value="";
-}
-
-msg.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){ e.preventDefault(); send(); }
 });
 
-socket.on('message',m=>addMessage(m,'other'));
+/* 방 선택 */
+roomSelect.onchange=function(){
+  currentRoom = this.value;
+  chatBox.innerHTML="";
+};
 
-function addMessage(text,type){
-  const div=document.createElement('div');
-  div.className='message '+type;
-  div.innerText=text;
+/* 메시지 전송 */
+function send(){
+  const text = msg.value.trim();
+  if(!text || !currentRoom) return;
+
+  socket.emit("message",{
+    roomId: currentRoom,
+    text,
+    sender: role
+  });
+
+  msg.value="";
+}
+
+/* 메시지 수신 */
+socket.on("message", data=>{
+  if(data.roomId !== currentRoom) return;
+
+  const div=document.createElement("div");
+  div.innerText = data.sender + " : " + data.text;
   chatBox.appendChild(div);
-  chatBox.scrollTop=chatBox.scrollHeight;
-}
+});
 
-/* ===== 이미지 ===== */
-file.onchange=function(){
-  const f=this.files[0];
-  if(!f) return;
+/* 이미지 */
+socket.on("image", data=>{
+  if(data.roomId !== currentRoom) return;
 
-  const reader=new FileReader();
-  reader.onload=e=>{
-    createImage(e.target.result,'me');
-  };
-  reader.readAsDataURL(f);
-
-  const fd=new FormData();
-  fd.append('image',f);
-
-  fetch('/upload',{method:'POST',body:fd})
-    .then(r=>r.json())
-    .then(d=>socket.emit('image',d.url));
-};
-
-socket.on('image',url=>createImage(url,'other'));
-
-function createImage(src,type){
-  const wrap=document.createElement('div');
-  wrap.className='message '+type;
-
-  const img=document.createElement('img');
-  img.src=src;
-  img.className='chat-img';
-  img.onclick=()=>openImage(src);
-
-  const down=document.createElement('a');
-  down.href=src;
-  down.download="";
-  down.className='download-btn';
-  down.innerText="⬇️";
-
-  wrap.append(img,down);
-  chatBox.appendChild(wrap);
-}
-
-/* ===== 모달 ===== */
-const modal=document.getElementById("imageModal");
-const modalImg=document.getElementById("modalImg");
-const downloadBtn=document.getElementById("downloadBtn");
-
-function openImage(src){
-  modal.style.display="block";
-  modalImg.src=src;
-  downloadBtn.href=src;
-}
-
-closeBtn.onclick=()=>modal.style.display="none";
-
-/* 배경 클릭 닫기 */
-modal.onclick=e=>{
-  if(e.target===modal) modal.style.display="none";
-};
+  const img=document.createElement("img");
+  img.src=data.url;
+  img.style.maxWidth="150px";
+  chatBox.appendChild(img);
+});
 
 </script>
 
