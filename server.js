@@ -1,115 +1,99 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const mongoose = require("mongoose");
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: {
-    origin: "*"
-  }
+  cors: { origin: "*" }
 });
 
 app.use(express.static("public"));
 
-/* ===== 방 관리 ===== */
-const rooms = new Map(); // roomId -> Set(socketId)
+/* ===== MongoDB ===== */
+mongoose.connect("여기에_MongoDB_URL");
 
-/* ===== 연결 ===== */
+const MessageSchema = new mongoose.Schema({
+  roomId: String,
+  text: String,
+  sender: String,
+  time: Number,
+  image: String
+});
+
+const Message = mongoose.model("Message", MessageSchema);
+
+/* ===== Cloudinary ===== */
+cloudinary.config({
+  cloud_name: "여기에_NAME",
+  api_key: "여기에_KEY",
+  api_secret: "여기에_SECRET"
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "chat",
+    allowed_formats: ["jpg", "png", "jpeg"]
+  }
+});
+
+const upload = multer({ storage });
+
+/* ===== 업로드 ===== */
+app.post("/upload", upload.single("image"), (req, res) => {
+  res.json({ url: req.file.path });
+});
+
+/* ===== 소켓 ===== */
 io.on("connection", (socket) => {
 
   let currentRoom = null;
   let currentRole = null;
 
-  /* ===== 입장 ===== */
-  socket.on("join", ({ roomId, role }) => {
-    if (!roomId) return;
-
+  socket.on("join", async ({ roomId, role }) => {
     currentRoom = roomId;
-    currentRole = role || "user";
+    currentRole = role;
 
     socket.join(roomId);
 
-    if (!rooms.has(roomId)) {
-      rooms.set(roomId, new Set());
-    }
-    rooms.get(roomId).add(socket.id);
-
-    console.log(`JOIN: ${socket.id} → ${roomId} (${currentRole})`);
+    const history = await Message.find({ roomId }).sort({ time: 1 });
+    socket.emit("history", history);
   });
 
-  /* ===== 메시지 ===== */
-  socket.on("message", (data) => {
-    if (!data || !data.roomId || !data.text) return;
+  socket.on("message", async (data) => {
+    if (!data.text) return;
 
-    const safeData = {
-      roomId: data.roomId,
-      text: String(data.text).slice(0, 1000),
-      sender: currentRole, // 서버 기준
-      time: Date.now()
-    };
-
-    io.to(data.roomId).emit("message", safeData);
-  });
-
-  /* ===== 이미지 ===== */
-  socket.on("image", (data) => {
-    if (!data || !data.roomId || !data.url) return;
-
-    const safeData = {
-      roomId: data.roomId,
-      url: data.url,
-      sender: currentRole,
-      time: Date.now()
-    };
-
-    io.to(data.roomId).emit("image", safeData);
-  });
-
-  /* ===== 🎨 draw (최적화) ===== */
-  socket.on("draw", (data) => {
-    if (!data || !data.roomId) return;
-
-    // 최소 데이터만 전달
-    io.to(data.roomId).emit("draw", {
-      last: data.last,
-      cur: data.cur
-    });
-  });
-
-  /* ===== 💬 코멘트 ===== */
-  socket.on("comment", (data) => {
-    if (!data || !data.roomId || !data.text) return;
-
-    io.to(data.roomId).emit("comment", {
+    const msg = {
+      roomId: currentRoom,
       text: data.text,
       sender: currentRole,
       time: Date.now()
-    });
+    };
+
+    await Message.create(msg);
+    io.to(currentRoom).emit("message", msg);
   });
 
-  /* ===== 연결 종료 ===== */
-  socket.on("disconnect", () => {
-    if (!currentRoom) return;
+  socket.on("image", async (data) => {
+    const msg = {
+      roomId: currentRoom,
+      image: data.url,
+      sender: currentRole,
+      time: Date.now()
+    };
 
-    const room = rooms.get(currentRoom);
-    if (room) {
-      room.delete(socket.id);
-
-      // 방 비었으면 삭제
-      if (room.size === 0) {
-        rooms.delete(currentRoom);
-        console.log(`ROOM REMOVED: ${currentRoom}`);
-      }
-    }
-
-    console.log(`DISCONNECT: ${socket.id}`);
+    await Message.create(msg);
+    io.to(currentRoom).emit("image", msg);
   });
 
 });
 
-/* ===== 서버 실행 ===== */
 server.listen(3000, () => {
-  console.log("🚀 서버 실행: http://localhost:3000");
+  console.log("🚀 서버 실행");
 });
