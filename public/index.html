@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>채팅 상담</title>
+<title>디자인 상담</title>
 
 <style>
 body {
@@ -11,7 +11,7 @@ body {
   background:#e9ecef;
 }
 
-/* 상단 */
+/* 헤더 */
 #header {
   position:fixed;
   top:0;
@@ -19,17 +19,15 @@ body {
   background:white;
   padding:12px;
   border-bottom:1px solid #ddd;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  text-align:center;
+  font-weight:bold;
 }
 
-#statusBtn {
-  padding:6px 12px;
-  border:none;
-  border-radius:20px;
-  background:#28c76f;
-  color:white;
+#statusIcon {
+  position:absolute;
+  right:15px;
+  top:12px;
+  font-size:20px;
   cursor:pointer;
 }
 
@@ -49,7 +47,6 @@ body {
   padding:10px 14px;
   margin:5px 0;
   border-radius:18px;
-  font-size:14px;
 }
 
 .me {
@@ -71,6 +68,13 @@ body {
   cursor:pointer;
 }
 
+/* 다운로드 버튼 */
+.download-btn {
+  margin-top:5px;
+  text-decoration:none;
+  font-size:14px;
+}
+
 /* 입력 */
 #inputArea {
   position:fixed;
@@ -88,7 +92,6 @@ body {
   display:flex;
   width:90%;
   max-width:500px;
-  align-items:center;
 }
 
 #msg {
@@ -100,12 +103,11 @@ body {
 
 #sendBtn {
   margin-left:8px;
-  padding:10px 14px;
+  padding:10px;
   border:none;
   background:#4dabf7;
   color:white;
   border-radius:50%;
-  cursor:pointer;
 }
 
 #file {
@@ -120,6 +122,7 @@ body {
   cursor:pointer;
 }
 
+/* 주문 버튼 */
 #orderBtn {
   margin-top:8px;
   width:90%;
@@ -131,187 +134,249 @@ body {
   border-radius:10px;
   font-weight:bold;
 }
+
+/* ===== 이미지 모달 ===== */
+#imageModal {
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
+  z-index:9999;
+  justify-content:center;
+  align-items:center;
+}
+
+#modalImg {
+  max-width:90%;
+  max-height:90%;
+  transition:transform 0.2s;
+}
+
+#closeBtn {
+  position:absolute;
+  top:20px;
+  right:20px;
+  color:white;
+  font-size:28px;
+}
+
+#downloadBtn {
+  position:absolute;
+  bottom:20px;
+  right:20px;
+  color:white;
+  font-size:24px;
+}
+
+#drawCanvas {
+  position:absolute;
+  top:0;
+  left:0;
+}
 </style>
 </head>
 
 <body>
 
 <div id="header">
-  <div>💬 상담채팅</div>
-  <button id="statusBtn" onclick="toggleStatus()">상담 가능</button>
+  디자인 상담
+  <span id="statusIcon" onclick="toggleStatus()">🟢</span>
 </div>
 
 <div id="chatBox"></div>
 
 <div id="inputArea">
-
   <div id="inputRow">
-    <input id="msg" placeholder="메시지를 입력하세요..." />
+    <input id="msg" placeholder="메시지 입력..." />
     <button id="sendBtn" onclick="send()">➤</button>
     <label id="fileLabel" for="file">📎</label>
     <input type="file" id="file">
   </div>
+  <button id="orderBtn">🛒 주문하기</button>
+</div>
 
-  <button id="orderBtn" onclick="goOrder()">🛒 주문하기</button>
-
+<!-- 이미지 모달 -->
+<div id="imageModal">
+  <span id="closeBtn">✕</span>
+  <a id="downloadBtn" download>⬇️</a>
+  <canvas id="drawCanvas"></canvas>
+  <img id="modalImg">
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-
 <script>
+
 const socket = io();
 const chatBox = document.getElementById('chatBox');
 
-/* =======================
-   상담 상태
-======================= */
 let isOpen = true;
 
-function toggleStatus() {
-  const btn = document.getElementById('statusBtn');
-
+/* 상담 상태 */
+function toggleStatus(){
   isOpen = !isOpen;
-
-  if (isOpen) {
-    btn.innerText = "상담 가능";
-    btn.style.background = "#28c76f";
-    systemMessage("상담이 다시 시작되었습니다 😊");
-  } else {
-    btn.innerText = "상담 불가";
-    btn.style.background = "#ff4d4f";
-    systemMessage("현재 상담이 종료되었습니다. 나중에 다시 시도해주세요 🙏");
-  }
+  document.getElementById("statusIcon").innerText = isOpen ? "🟢" : "🔴";
 }
 
-/* =======================
-   시스템 메시지
-======================= */
-function systemMessage(text) {
-  const div = document.createElement('div');
-  div.className = 'message other';
-  div.style.background = '#fff3cd';
-  div.style.border = '1px solid #ffeeba';
-  div.innerText = text;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-/* =======================
-   메시지 전송
-======================= */
-function send() {
+/* 메시지 전송 */
+function send(){
   const input = document.getElementById('msg');
   const msg = input.value.trim();
+  if(!msg) return;
 
-  if (!msg) return;
-
-  if (!isOpen) {
-    systemMessage("현재 상담이 불가능합니다 😢");
-    input.value = "";
+  if(!isOpen){
+    system("상담 불가 상태입니다");
     return;
   }
 
   socket.emit('message', msg);
-  addMessage(msg, 'me');
-
-  input.value = "";
+  addMessage(msg,'me');
+  input.value="";
 }
 
-/* 엔터 전송 */
-document.getElementById("msg").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
+/* 엔터 */
+document.getElementById("msg").addEventListener("keydown", e=>{
+  if(e.key==="Enter"){
     e.preventDefault();
     send();
   }
 });
 
-/* 메시지 받기 */
-socket.on('message', msg => {
-  addMessage(msg, 'other');
+/* 메시지 수신 */
+socket.on('message', msg=>{
+  addMessage(msg,'other');
 });
 
 /* 메시지 UI */
-function addMessage(text, type) {
-  const div = document.createElement('div');
-  div.className = 'message ' + type;
-  div.innerText = text;
+function addMessage(text,type){
+  const div=document.createElement('div');
+  div.className='message '+type;
+  div.innerText=text;
   chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* =======================
-   이미지 업로드
-======================= */
-document.getElementById('file').addEventListener('change', function () {
+/* 시스템 */
+function system(text){
+  const div=document.createElement('div');
+  div.className='message other';
+  div.style.background="#fff3cd";
+  div.innerText=text;
+  chatBox.appendChild(div);
+}
 
-  const file = this.files[0];
-  if (!file) return;
+/* 이미지 업로드 */
+document.getElementById('file').addEventListener('change', function(){
 
-  if (!isOpen) {
-    systemMessage("상담 불가 상태에서는 파일 전송이 불가능합니다");
-    return;
-  }
+  const file=this.files[0];
+  if(!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'message me';
-
-    const link = document.createElement('a');
-    link.href = e.target.result;
-    link.download = '';
-
-    const img = document.createElement('img');
-    img.src = e.target.result;
-    img.className = 'chat-img';
-
-    link.appendChild(img);
-    wrapper.appendChild(link);
-    chatBox.appendChild(wrapper);
-
-    chatBox.scrollTop = chatBox.scrollHeight;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    createImage(e.target.result,'me');
   };
-
   reader.readAsDataURL(file);
 
-  const formData = new FormData();
+  const formData=new FormData();
   formData.append('image', file);
 
-  fetch('/upload', { method: 'POST', body: formData })
-    .then(res => res.json())
-    .then(data => {
-      socket.emit('image', data.url);
+  fetch('/upload',{method:'POST',body:formData})
+    .then(res=>res.json())
+    .then(data=>{
+      socket.emit('image',data.url);
     });
 });
 
 /* 이미지 수신 */
-socket.on('image', url => {
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'message other';
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = '';
-
-  const img = document.createElement('img');
-  img.src = url;
-  img.className = 'chat-img';
-
-  link.appendChild(img);
-  wrapper.appendChild(link);
-  chatBox.appendChild(wrapper);
-
-  chatBox.scrollTop = chatBox.scrollHeight;
+socket.on('image', url=>{
+  createImage(url,'other');
 });
 
-/* =======================
-   주문하기
-======================= */
-function goOrder() {
-  window.open("https://yourshop.cafe24.com", "_blank");
+/* 이미지 UI */
+function createImage(src,type){
+  const wrap=document.createElement('div');
+  wrap.className='message '+type;
+
+  const img=document.createElement('img');
+  img.src=src;
+  img.className='chat-img';
+  img.onclick=()=>openImage(src);
+
+  const down=document.createElement('a');
+  down.href=src;
+  down.download="";
+  down.className="download-btn";
+  down.innerText="⬇️ 다운로드";
+
+  wrap.appendChild(img);
+  wrap.appendChild(down);
+  chatBox.appendChild(wrap);
 }
+
+/* ===== 이미지 모달 ===== */
+const modal=document.getElementById("imageModal");
+const modalImg=document.getElementById("modalImg");
+const downloadBtn=document.getElementById("downloadBtn");
+const canvas=document.getElementById("drawCanvas");
+const ctx=canvas.getContext("2d");
+
+let scale=1,posX=0,posY=0;
+
+/* 열기 */
+function openImage(src){
+  modal.style.display="flex";
+  modalImg.src=src;
+  downloadBtn.href=src;
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+}
+
+/* 닫기 */
+document.getElementById("closeBtn").onclick=()=>modal.style.display="none";
+modal.onclick=e=>{
+  if(e.target===modal) modal.style.display="none";
+};
+
+/* 드래그 */
+modalImg.onmousedown=e=>{
+  const startX=e.clientX-posX;
+  const startY=e.clientY-posY;
+
+  document.onmousemove=e=>{
+    posX=e.clientX-startX;
+    posY=e.clientY-startY;
+    modalImg.style.transform=`translate(${posX}px,${posY}px) scale(${scale})`;
+  };
+
+  document.onmouseup=()=>document.onmousemove=null;
+};
+
+/* 더블클릭 확대 */
+modalImg.ondblclick=()=>{
+  scale = scale===1?2:1;
+  modalImg.style.transform=`scale(${scale})`;
+};
+
+/* 스케치 */
+let drawing=false;
+
+canvas.onmousedown=e=>{
+  drawing=true;
+  ctx.beginPath();
+  ctx.moveTo(e.clientX,e.clientY);
+};
+
+canvas.onmousemove=e=>{
+  if(!drawing) return;
+  ctx.lineTo(e.clientX,e.clientY);
+  ctx.strokeStyle="red";
+  ctx.lineWidth=3;
+  ctx.stroke();
+};
+
+canvas.onmouseup=()=>drawing=false;
+
 </script>
 
 </body>
