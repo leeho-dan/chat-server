@@ -1,222 +1,28 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>디자인 상담</title>
-
-<style>
-:root{
-  --primary:#0a84ff;
-  --bg:#f5f6f8;
-  --border:#e5e5ea;
-  --text:#1c1c1e;
-  --sub:#8e8e93;
-}
-
-*{box-sizing:border-box;}
-
-body{
-  margin:0;
-  font-family:-apple-system;
-  background:var(--bg);
-  display:flex;
-  height:100vh;
-}
-
-/* 채팅 */
-#chatContainer{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-
-#header{
-  height:60px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-bottom:1px solid var(--border);
-  position:relative;
-}
-
-#statusIcon{
-  position:absolute;
-  right:15px;
-}
-
-#statusText{
-  position:absolute;
-  left:15px;
-  font-size:12px;
-  color:var(--sub);
-}
-
-#chatBox{
-  flex:1;
-  overflow-y:auto;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-/* 메시지 */
-.message{
-  display:flex;
-  flex-direction:column;
-  max-width:65%;
-}
-
-.bubble{
-  padding:12px 16px;
-  border-radius:18px;
-}
-
-.me .bubble{
-  background:var(--primary);
-  color:white;
-}
-
-.other .bubble{
-  background:white;
-  border:1px solid var(--border);
-}
-
-.time{
-  font-size:10px;
-  color:var(--sub);
-  margin-top:2px;
-}
-
-.me{ align-self:flex-end; }
-.other{ align-self:flex-start; }
-.system{ align-self:center; font-size:12px; color:var(--sub); }
-
-/* 입력 */
-#inputArea{
-  display:flex;
-  padding:10px;
-  border-top:1px solid var(--border);
-}
-
-#msg{
-  flex:1;
-  padding:12px;
-  border-radius:20px;
-  border:1px solid var(--border);
-}
-
-button{
-  margin-left:8px;
-  border:none;
-  border-radius:20px;
-  background:var(--primary);
-  color:white;
-  padding:0 16px;
-}
-
-/* 이미지 */
-.chat-img{
-  max-width:150px;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-/* 사이드 */
-#sideViewer{
-  width:0;
-  transition:0.3s;
-  overflow:hidden;
-  background:white;
-  border-left:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-}
-
-#sideViewer.open{ width:400px; }
-
-#viewerHeader{
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  border-bottom:1px solid var(--border);
-}
-
-#viewerBody{
-  position:relative;
-  flex:1;
-}
-
-#sideImg{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-}
-
-#drawCanvas{
-  position:absolute;
-  top:0;
-  left:0;
-}
-</style>
-</head>
-
-<body>
-
-<div id="chatContainer">
-  <div id="header">
-    <span id="statusText">상담 가능</span>
-    디자인 상담
-    <span id="statusIcon">🟢</span>
-  </div>
-
-  <div id="chatBox"></div>
-
-  <div id="inputArea">
-    <input id="msg" placeholder="메시지 입력...">
-    <button id="sendBtn">전송</button>
-    <input type="file" id="file">
-  </div>
-</div>
-
-<div id="sideViewer">
-  <div id="viewerHeader">
-    <div>
-      <button id="drawToggle">그리기</button>
-      <a id="downloadBtn" download>다운로드</a>
-    </div>
-    <button id="closeBtn">닫기</button>
-  </div>
-
-  <div id="viewerBody">
-    <img id="sideImg">
-    <canvas id="drawCanvas"></canvas>
-  </div>
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-const socket=io();
-const role="admin";
 
-let roomId=localStorage.getItem("roomId")||crypto.randomUUID();
-localStorage.setItem("roomId",roomId);
+const socket = io("https://너의-render-주소.onrender.com");
 
-socket.emit("join",{roomId,role});
+const role = location.search.includes("admin") ? "admin" : "user";
 
-const chatBox=document.getElementById("chatBox");
-const msg=document.getElementById("msg");
+let roomId = localStorage.getItem("roomId") || crypto.randomUUID();
+localStorage.setItem("roomId", roomId);
 
-/* 메시지 */
+socket.emit("join", { roomId, role });
+
+const chatBox = document.getElementById("chatBox");
+const msg = document.getElementById("msg");
+
+/* 메시지 보내기 */
 function send(){
-  const text=msg.value.trim();
+  const text = msg.value.trim();
   if(!text) return;
 
-  socket.emit("message",{roomId,text,sender:role,time:Date.now()});
+  socket.emit("message", { text });
   msg.value="";
 }
 
+/* 엔터 전송 */
 msg.addEventListener("keydown",e=>{
   if(e.key==="Enter"){
     e.preventDefault();
@@ -224,66 +30,59 @@ msg.addEventListener("keydown",e=>{
   }
 });
 
-sendBtn.onclick=send;
-
-socket.on("message",d=>{
-  renderMessage(d);
-});
+/* 메시지 받기 */
+socket.on("message", renderMessage);
 
 function renderMessage(d){
   const wrap=document.createElement("div");
   wrap.className="message "+(d.sender===role?"me":"other");
 
   const bubble=document.createElement("div");
-  bubble.className="bubble";
-  bubble.textContent=d.text;
+  bubble.innerText=d.text;
 
-  const time=document.createElement("div");
-  time.className="time";
-  time.textContent=new Date(d.time).toLocaleTimeString();
-
-  wrap.append(bubble,time);
+  wrap.appendChild(bubble);
   chatBox.appendChild(wrap);
-  chatBox.scrollTop=chatBox.scrollHeight;
 }
 
-/* 이미지 */
+/* 히스토리 */
+socket.on("history", list=>{
+  list.forEach(item=>{
+    if(item.text) renderMessage(item);
+    if(item.image) renderImage(item);
+  });
+});
+
+/* 이미지 업로드 */
 file.onchange=e=>{
   const f=e.target.files[0];
   if(!f) return;
 
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const img=document.createElement("img");
-    img.src=ev.target.result;
-    img.className="chat-img";
-    img.onclick=()=>openViewer(img.src);
+  const fd=new FormData();
+  fd.append("image",f);
 
-    const wrap=document.createElement("div");
-    wrap.className="message me";
-    wrap.appendChild(img);
-
-    chatBox.appendChild(wrap);
-  };
-  reader.readAsDataURL(f);
+  fetch("https://너의-render-주소.onrender.com/upload",{
+    method:"POST",
+    body:fd
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    socket.emit("image",{ url:d.url });
+  });
 };
 
-/* 사이드 */
-function openViewer(src){
-  sideViewer.classList.add("open");
-  sideImg.src=src;
-  downloadBtn.href=src;
+/* 이미지 */
+socket.on("image", renderImage);
+
+function renderImage(d){
+  const img=document.createElement("img");
+  img.src=d.image;
+  img.style.maxWidth="150px";
+
+  const wrap=document.createElement("div");
+  wrap.className="message "+(d.sender===role?"me":"other");
+
+  wrap.appendChild(img);
+  chatBox.appendChild(wrap);
 }
 
-closeBtn.onclick=()=>sideViewer.classList.remove("open");
-
-/* ESC 닫기 */
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){
-    sideViewer.classList.remove("open");
-  }
-});
 </script>
-
-</body>
-</html>
