@@ -1,86 +1,121 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>관리자 상담</title>
-</head>
-<body>
-
-<h2>관리자 채팅</h2>
-
-<select id="roomSelect"></select>
-<br><br>
-
-<div id="chatBox" style="height:300px; overflow:auto; border:1px solid #ccc;"></div>
-
-<input id="msg">
-<button onclick="send()">전송</button>
-
 <script src="/socket.io/socket.io.js"></script>
 <script>
 
 const socket = io();
-const role = "admin";
+const chatBox = document.getElementById('chatBox');
 
-let currentRoom = null;
+/* ===== 역할 설정 ===== */
+const role = "admin"; 
+// 👉 관리자 페이지면 "admin"
+// 👉 상담자 페이지면 "user"
 
-/* ===== 방 목록 받기 ===== */
-socket.on("roomList", rooms=>{
-  const select = document.getElementById("roomSelect");
-  select.innerHTML="";
+/* ===== 상태 ===== */
+let isOpen = true;
+function toggleStatus(){
+  isOpen=!isOpen;
+  statusIcon.innerText = isOpen ? "🟢" : "🔴";
+}
 
-  rooms.forEach(r=>{
-    const opt=document.createElement("option");
-    opt.value=r;
-    opt.text=r;
-    select.appendChild(opt);
-  });
-
-  if(!currentRoom && rooms.length){
-    currentRoom = rooms[0];
-  }
-});
-
-/* 방 선택 */
-roomSelect.onchange=function(){
-  currentRoom = this.value;
-  chatBox.innerHTML="";
-};
-
-/* 메시지 전송 */
+/* ===== 메시지 ===== */
 function send(){
   const text = msg.value.trim();
-  if(!text || !currentRoom) return;
+  if(!text) return;
 
-  socket.emit("message",{
-    roomId: currentRoom,
-    text,
+  if(!isOpen){
+    alert("상담 불가 상태");
+    return;
+  }
+
+  socket.emit('message', {
+    text: text,
     sender: role
   });
 
   msg.value="";
 }
 
-/* 메시지 수신 */
-socket.on("message", data=>{
-  if(data.roomId !== currentRoom) return;
+msg.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){ e.preventDefault(); send(); }
+});
 
-  const div=document.createElement("div");
-  div.innerText = data.sender + " : " + data.text;
+/* ✅ 여기 핵심 수정 */
+socket.on('message', data=>{
+  const type = data.sender === role ? 'me' : 'other';
+  addMessage(data.text, type);
+});
+
+function addMessage(text,type){
+  const div=document.createElement('div');
+  div.className='message '+type;
+  div.innerText=text;
   chatBox.appendChild(div);
+  chatBox.scrollTop=chatBox.scrollHeight;
+}
+
+/* ===== 이미지 ===== */
+file.onchange=function(){
+  const f=this.files[0];
+  if(!f) return;
+
+  const reader=new FileReader();
+  reader.onload=e=>{
+    createImage(e.target.result,'me'); // 미리보기 유지
+  };
+  reader.readAsDataURL(f);
+
+  const fd=new FormData();
+  fd.append('image',f);
+
+  fetch('/upload',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      socket.emit('image',{
+        url: d.url,
+        sender: role
+      });
+    });
+};
+
+/* ✅ 이미지도 동일하게 수정 */
+socket.on('image', data=>{
+  const type = data.sender === role ? 'me' : 'other';
+  createImage(data.url, type);
 });
 
-/* 이미지 */
-socket.on("image", data=>{
-  if(data.roomId !== currentRoom) return;
+function createImage(src,type){
+  const wrap=document.createElement('div');
+  wrap.className='message '+type;
 
-  const img=document.createElement("img");
-  img.src=data.url;
-  img.style.maxWidth="150px";
-  chatBox.appendChild(img);
-});
+  const img=document.createElement('img');
+  img.src=src;
+  img.className='chat-img';
+  img.onclick=()=>openImage(src);
+
+  const down=document.createElement('a');
+  down.href=src;
+  down.download="";
+  down.className='download-btn';
+  down.innerText="⬇️";
+
+  wrap.append(img,down);
+  chatBox.appendChild(wrap);
+}
+
+/* ===== 모달 ===== */
+const modal=document.getElementById("imageModal");
+const modalImg=document.getElementById("modalImg");
+const downloadBtn=document.getElementById("downloadBtn");
+
+function openImage(src){
+  modal.style.display="block";
+  modalImg.src=src;
+  downloadBtn.href=src;
+}
+
+closeBtn.onclick=()=>modal.style.display="none";
+
+modal.onclick=e=>{
+  if(e.target===modal) modal.style.display="none";
+};
 
 </script>
-
-</body>
-</html>
