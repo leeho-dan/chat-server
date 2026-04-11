@@ -1,32 +1,39 @@
-const express = require('express');
-const http = require('http');
-const multer = require('multer');
-const { Server } = require('socket.io');
-const cors = require('cors');
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
-app.use(cors());
-app.use('/uploads', express.static('uploads'));
-app.use(express.static('public'));
-
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
+const io = new Server(server);
+
+app.use(express.static("public"));
+
+let rooms = new Set();
+
+io.on("connection", socket => {
+
+  /* 입장 */
+  socket.on("join", ({ roomId, role }) => {
+    socket.join(roomId);
+
+    if(role === "user"){
+      rooms.add(roomId);
+      io.emit("roomList", Array.from(rooms));
+    }
+  });
+
+  /* 메시지 */
+  socket.on("message", data => {
+    io.to(data.roomId).emit("message", data);
+  });
+
+  /* 이미지 */
+  socket.on("image", data => {
+    io.to(data.roomId).emit("image", data);
+  });
+
 });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+server.listen(3000, ()=>{
+  console.log("서버 실행중");
 });
-const upload = multer({ storage });
-
-app.post('/upload', upload.single('image'), (req, res) => {
-  res.json({ url: '/uploads/' + req.file.filename });
-});
-
-io.on('connection', (socket) => {
-  socket.on('message', (msg) => io.emit('message', msg));
-  socket.on('image', (url) => io.emit('image', url));
-});
-
-server.listen(process.env.PORT || 3000);
