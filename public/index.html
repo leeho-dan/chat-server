@@ -12,16 +12,17 @@
 <script>
 const socket = io();
 const chatBox = document.getElementById('chatBox');
-const input = document.getElementById('msg'); // ✅ 수정됨
+const input = document.getElementById('msg');
 
+// 메시지 전송
 function send() {
   const msg = input.value;
   if (!msg) return;
   socket.emit('message', msg);
-  input.value = ""; // 입력창 비우기
+  input.value = "";
 }
 
-// ✅ 엔터로 전송
+// 엔터 전송
 input.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -29,25 +30,48 @@ input.addEventListener("keydown", function(e) {
   }
 });
 
+// 메시지 받기
 socket.on('message', msg => {
   const div = document.createElement('div');
   div.innerText = msg;
   chatBox.appendChild(div);
 });
 
+// ✅ 여기 핵심 (이미지 미리보기 + 업로드)
 document.getElementById('file').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  // 1. 미리보기 (즉시 화면에 표시)
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.createElement('img');
+    img.src = e.target.result;
+    img.style.maxWidth = "200px";
+    img.style.borderRadius = "8px";
+    img.style.margin = "5px 0";
+    chatBox.appendChild(img);
+  };
+  reader.readAsDataURL(file);
+
+  // 2. 서버 업로드
   const formData = new FormData();
-  formData.append('image', this.files[0]);
+  formData.append('image', file);
 
   fetch('/upload', { method: 'POST', body: formData })
     .then(res => res.json())
-    .then(data => socket.emit('image', data.url));
+    .then(data => {
+      socket.emit('image', data.url);
+    });
 });
 
+// 다른 사람 이미지 받기
 socket.on('image', url => {
   const img = document.createElement('img');
   img.src = url;
-  img.width = 200;
+  img.style.maxWidth = "200px";
+  img.style.borderRadius = "8px";
+  img.style.margin = "5px 0";
   chatBox.appendChild(img);
 });
 </script>
