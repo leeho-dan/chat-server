@@ -8,185 +8,77 @@
 * { box-sizing: border-box; }
 body { margin:0; font-family: Arial; background:#f8f9fa; }
 
-/* ===== 헤더 ===== */
+/* 헤더 */
 #header {
-  position:fixed;
-  top:0;
-  width:100%;
-  height:55px;
-  background:white;
-  border-bottom:1px solid #ddd;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  z-index:10;
+  position:fixed; top:0; width:100%; height:55px;
+  background:white; border-bottom:1px solid #ddd;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:bold; z-index:10;
 }
+#statusIcon { position:absolute; right:15px; cursor:pointer; }
 
-#statusIcon {
-  position:absolute;
-  right:15px;
-  font-size:20px;
-  cursor:pointer;
-}
-
-/* ===== 채팅 ===== */
+/* 채팅 */
 #chatBox {
-  position:fixed;
-  top:55px;
-  bottom:110px;
-  width:100%;
-  overflow-y:auto;
-  padding:15px;
-  display:flex;
-  flex-direction:column;
+  position:fixed; top:55px; bottom:110px; width:100%;
+  overflow-y:auto; padding:15px; display:flex; flex-direction:column;
 }
+.message { max-width:70%; padding:10px; margin:5px; border-radius:15px; }
+.me { align-self:flex-end; background:#4dabf7; color:white; }
+.other { align-self:flex-start; background:white; border:1px solid #ddd; }
 
-/* 메시지 */
-.message {
-  max-width:70%;
-  padding:10px 14px;
-  margin:6px 0;
-  border-radius:18px;
-  word-break:break-word;
-}
+.chat-img { max-width:150px; cursor:pointer; }
 
-.me {
-  align-self:flex-end;
-  background:#4dabf7;
-  color:white;
-}
-
-.other {
-  align-self:flex-start;
-  background:white;
-  border:1px solid #ddd;
-}
-
-/* 이미지 */
-.chat-img {
-  max-width:180px;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-/* 다운로드 버튼 */
-.download-btn {
-  display:inline-block;
-  margin-top:5px;
-  padding:4px 8px;
-  font-size:12px;
-  background:#e9ecef;
-  border-radius:8px;
-  text-decoration:none;
-  color:#333;
-}
-
-/* ===== 입력 ===== */
+/* 입력 */
 #inputArea {
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:white;
-  border-top:1px solid #ddd;
-  padding:10px;
+  position:fixed; bottom:0; width:100%;
+  background:white; padding:10px; border-top:1px solid #ddd;
 }
-
-#inputRow {
-  display:flex;
-  max-width:600px;
-  margin:0 auto;
-}
-
-#msg {
-  flex:1;
-  padding:12px;
-  border-radius:25px;
-  border:1px solid #ccc;
-}
-
-#sendBtn {
-  margin-left:8px;
-  padding:10px 14px;
-  border:none;
-  background:#4dabf7;
-  color:white;
-  border-radius:50%;
-  cursor:pointer;
-}
+#inputRow { display:flex; max-width:600px; margin:auto; }
+#msg { flex:1; padding:10px; }
+#sendBtn { margin-left:5px; }
 
 #file { display:none; }
 
-#fileLabel {
-  margin-left:8px;
-  padding:10px;
-  border-radius:50%;
-  background:#e9ecef;
-  cursor:pointer;
+/* ===== 사이드 뷰어 ===== */
+#sideViewer {
+  position:fixed; top:55px; right:0;
+  width:40%; height:calc(100% - 55px);
+  background:white; border-left:1px solid #ddd;
+  display:none; flex-direction:column;
 }
 
-#orderBtn {
-  display:block;
-  margin:8px auto 0;
-  width:100%;
-  max-width:600px;
-  padding:10px;
-  background:#ff6b6b;
-  color:white;
-  border:none;
-  border-radius:10px;
+#viewerHeader {
+  height:50px; display:flex; justify-content:space-between;
+  align-items:center; padding:0 10px;
+  border-bottom:1px solid #eee;
 }
 
-/* ===== 모달 ===== */
-#imageModal {
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  z-index:9999;
-  background:
-    linear-gradient(45deg, #eee 25%, transparent 25%),
-    linear-gradient(-45deg, #eee 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #eee 75%),
-    linear-gradient(-45deg, transparent 75%, #eee 75%);
-  background-size:20px 20px;
+#viewerBody {
+  position:relative; flex:1;
 }
 
-#modalContent {
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%);
+#sideImg {
+  width:100%; height:100%; object-fit:contain;
 }
-
-#modalImg {
-  max-width:90vw;
-  max-height:80vh;
-  border-radius:10px;
-}
-
-#closeBtn, #downloadBtn {
-  position:absolute;
-  top:15px;
-  font-size:20px;
-  background:white;
-  border-radius:50%;
-  padding:8px;
-  cursor:pointer;
-  z-index:10000;
-}
-
-#closeBtn { right:15px; }
-#downloadBtn { right:60px; text-decoration:none; }
 
 #drawCanvas {
-  position:absolute;
-  top:0;
-  left:0;
-  pointer-events:none;
+  position:absolute; top:0; left:0;
 }
+
+#commentList {
+  max-height:120px;
+  overflow:auto;
+  border-top:1px solid #eee;
+  padding:5px;
+}
+
+#commentBox {
+  display:flex;
+  border-top:1px solid #eee;
+}
+#commentInput { flex:1; }
+
+#chatBox.shrink { width:60%; }
 </style>
 </head>
 
@@ -201,21 +93,32 @@ body { margin:0; font-family: Arial; background:#f8f9fa; }
 
 <div id="inputArea">
   <div id="inputRow">
-    <input id="msg" placeholder="메시지 입력..." />
-    <button id="sendBtn" onclick="send()">➤</button>
-    <label id="fileLabel" for="file">📎</label>
+    <input id="msg">
+    <button id="sendBtn" onclick="send()">전송</button>
     <input type="file" id="file">
   </div>
-  <button id="orderBtn">🛒 주문하기</button>
 </div>
 
-<div id="imageModal">
-  <span id="closeBtn">✕</span>
-  <a id="downloadBtn" download>⬇️</a>
+<!-- 사이드 뷰어 -->
+<div id="sideViewer">
+  <div id="viewerHeader">
+    이미지 보기
+    <div>
+      <button id="drawToggle">✏️</button>
+      <span id="viewerClose">✕</span>
+    </div>
+  </div>
 
-  <div id="modalContent">
-    <img id="modalImg">
+  <div id="viewerBody">
+    <img id="sideImg">
     <canvas id="drawCanvas"></canvas>
+  </div>
+
+  <div id="commentList"></div>
+
+  <div id="commentBox">
+    <input id="commentInput">
+    <button id="commentSend">전송</button>
   </div>
 </div>
 
@@ -223,47 +126,25 @@ body { margin:0; font-family: Arial; background:#f8f9fa; }
 <script>
 
 const socket = io();
+const role = "admin"; // 👉 user로 바꾸면 상담자
+
 const chatBox = document.getElementById('chatBox');
 
-/* 🔥 역할 설정 (중요) */
-const role = "admin"; 
-// 👉 상담자 페이지는 "user"로 변경
-
-/* ===== 상태 ===== */
+/* 상태 */
 let isOpen = true;
-
 function toggleStatus(){
-  isOpen = !isOpen;
-  statusIcon.innerText = isOpen ? "🟢" : "🔴";
+  isOpen=!isOpen;
 }
 
-/* ===== 메시지 전송 ===== */
+/* ===== 채팅 ===== */
 function send(){
   const text = msg.value.trim();
   if(!text) return;
 
-  if(!isOpen){
-    alert("상담 불가 상태");
-    return;
-  }
-
-  socket.emit('message', {
-    text: text,
-    sender: role
-  });
-
-  msg.value = "";
+  socket.emit('message',{ text, sender:role });
+  msg.value="";
 }
 
-/* 엔터 전송 */
-msg.addEventListener("keydown", e=>{
-  if(e.key==="Enter"){
-    e.preventDefault();
-    send();
-  }
-});
-
-/* 🔥 핵심: sender 기준 출력 */
 socket.on('message', data=>{
   const type = data.sender === role ? 'me' : 'other';
   addMessage(data.text, type);
@@ -274,7 +155,6 @@ function addMessage(text,type){
   div.className='message '+type;
   div.innerText=text;
   chatBox.appendChild(div);
-  chatBox.scrollTop=chatBox.scrollHeight;
 }
 
 /* ===== 이미지 ===== */
@@ -294,54 +174,107 @@ file.onchange=function(){
   fetch('/upload',{method:'POST',body:fd})
     .then(r=>r.json())
     .then(d=>{
-      socket.emit('image',{
-        url:d.url,
-        sender:role
-      });
+      socket.emit('image',{ url:d.url, sender:role });
     });
 };
 
 socket.on('image', data=>{
   const type = data.sender === role ? 'me' : 'other';
-  createImage(data.url, type);
+  createImage(data.url,type);
 });
 
 function createImage(src,type){
-  const wrap=document.createElement('div');
-  wrap.className='message '+type;
+  const div=document.createElement('div');
+  div.className='message '+type;
 
   const img=document.createElement('img');
   img.src=src;
   img.className='chat-img';
   img.onclick=()=>openImage(src);
 
-  const down=document.createElement('a');
-  down.href=src;
-  down.download="";
-  down.className='download-btn';
-  down.innerText="⬇️";
-
-  wrap.append(img,down);
-  chatBox.appendChild(wrap);
-  chatBox.scrollTop=chatBox.scrollHeight;
+  div.appendChild(img);
+  chatBox.appendChild(div);
 }
 
-/* ===== 모달 ===== */
-const modal=document.getElementById("imageModal");
-const modalImg=document.getElementById("modalImg");
-const downloadBtn=document.getElementById("downloadBtn");
+/* ===== 사이드 뷰 ===== */
+const sideViewer = document.getElementById("sideViewer");
+const sideImg = document.getElementById("sideImg");
+const viewerClose = document.getElementById("viewerClose");
 
 function openImage(src){
-  modal.style.display="block";
-  modalImg.src=src;
-  downloadBtn.href=src;
+  sideViewer.style.display="flex";
+  sideImg.src=src;
+  chatBox.classList.add("shrink");
+
+  setTimeout(()=>{
+    drawCanvas.width = sideImg.clientWidth;
+    drawCanvas.height = sideImg.clientHeight;
+  },100);
 }
 
-closeBtn.onclick=()=>modal.style.display="none";
-
-modal.onclick=e=>{
-  if(e.target===modal) modal.style.display="none";
+viewerClose.onclick=()=>{
+  sideViewer.style.display="none";
+  chatBox.classList.remove("shrink");
 };
+
+/* ===== 그리기 (실시간 공유) ===== */
+const drawCanvas = document.getElementById("drawCanvas");
+const ctx = drawCanvas.getContext("2d");
+
+let drawing=false;
+let drawMode=false;
+
+drawToggle.onclick=()=> drawMode=!drawMode;
+
+drawCanvas.onmousedown=e=>{
+  if(!drawMode) return;
+  drawing=true;
+  ctx.beginPath();
+  ctx.moveTo(e.offsetX,e.offsetY);
+
+  socket.emit('draw',{ x:e.offsetX, y:e.offsetY, type:"start" });
+};
+
+drawCanvas.onmousemove=e=>{
+  if(!drawing) return;
+
+  ctx.lineTo(e.offsetX,e.offsetY);
+  ctx.stroke();
+
+  socket.emit('draw',{ x:e.offsetX, y:e.offsetY, type:"draw" });
+};
+
+drawCanvas.onmouseup=()=>{
+  drawing=false;
+};
+
+/* 수신 */
+socket.on('draw', data=>{
+  if(data.type==="start"){
+    ctx.beginPath();
+    ctx.moveTo(data.x,data.y);
+  }else{
+    ctx.lineTo(data.x,data.y);
+    ctx.stroke();
+  }
+});
+
+/* ===== 코멘트 (실시간) ===== */
+const commentList = document.getElementById("commentList");
+
+commentSend.onclick=()=>{
+  const text = commentInput.value.trim();
+  if(!text) return;
+
+  socket.emit('comment',{ text, sender:role });
+  commentInput.value="";
+};
+
+socket.on('comment', data=>{
+  const div=document.createElement("div");
+  div.innerText = data.sender + " : " + data.text;
+  commentList.appendChild(div);
+});
 
 </script>
 
