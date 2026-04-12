@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const path = require("path");
+const cors = require("cors");
 const { Server } = require("socket.io");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
@@ -15,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 /* =========================
    기본 설정
 ========================= */
+app.use(cors({ origin: true }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -100,13 +102,11 @@ if (CLOUD_NAME && CLOUD_KEY && CLOUD_SECRET) {
 
   const storage = new CloudinaryStorage({
     cloudinary,
-    params: async (req, file) => {
-      return {
-        folder: "chat",
-        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
-        resource_type: "image"
-      };
-    }
+    params: async () => ({
+      folder: "chat",
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+      resource_type: "image"
+    })
   });
 
   upload = multer({
@@ -142,7 +142,6 @@ app.post("/upload", (req, res, next) => {
     if (!req.file || !req.file.path) {
       return res.status(400).json({ error: "업로드된 파일이 없습니다." });
     }
-
     return res.json({ url: req.file.path });
   } catch (error) {
     return res.status(500).json({ error: "업로드 처리 중 오류가 발생했습니다." });
@@ -215,18 +214,33 @@ app.post("/register", async (req, res) => {
 
 /* =========================
    메모리 보조 저장
-   - DB 미연결 시 최소 동작 보장
 ========================= */
-const memoryMessages = new Map(); // roomId -> []
+const memoryMessages = new Map();
 function pushMemoryMessage(roomId, message) {
   if (!memoryMessages.has(roomId)) {
     memoryMessages.set(roomId, []);
   }
   const list = memoryMessages.get(roomId);
   list.push(message);
-  if (list.length > 100) {
-    list.shift();
+  if (list.length > 100) list.shift();
+}
+
+/* =========================
+   드로잉 메모리 저장
+   key = roomId::imageUrl
+========================= */
+const drawingBoards = new Map();
+
+function boardKey(roomId, imageUrl) {
+  return `${roomId}::${imageUrl}`;
+}
+
+function getBoard(roomId, imageUrl) {
+  const key = boardKey(roomId, imageUrl);
+  if (!drawingBoards.has(key)) {
+    drawingBoards.set(key, []);
   }
+  return drawingBoards.get(key);
 }
 
 /* =========================
@@ -331,9 +345,57 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
-    // 현재 버전에서는 별도 정리 로직 불필요
+  socket.on("request-draw-history", (payload) => {
+    try {
+      const imageUrl = String(payload?.imageUrl || "").trim();
+      if (!currentRoom || !imageUrl) return;
+
+      const strokes = getBoard(currentRoom, imageUrl);
+      socket.emit("draw-history", {
+        imageUrl,
+        strokes
+      });
+    } catch (error) {
+      console.log("draw-history error:", error.message);
+    }
   });
+
+  socket.on("draw", (payload) => {
+    try {
+      const imageUrl = String(payload?.imageUrl || "").trim();
+      const last = payload?.last;
+      const cur = payload?.cur;
+      const color = typeof payload?.color === "string" ? payload.color : "#ff3b30";
+      const size = Number(payload?.size || 3);
+
+      if (!currentRoom || !imageUrl) return;
+      if (!last || !cur) return;
+
+      const safeStroke = {
+        imageUrl,
+        last: {
+          x: Math.max(0, Math.min(1, Number(last.x))),
+          y: Math.max(0, Math.min(1, Number(last.y)))
+        },
+        cur: {
+          x: Math.max(0, Math.min(1, Number(cur.x))),
+          y: Math.max(0, Math.min(1, Number(cur.y)))
+        },
+        color,
+        size: Math.max(1, Math.min(24, size))
+      };
+
+      const strokes = getBoard(currentRoom, imageUrl);
+      strokes.push(safeStroke);
+      if (strokes.length > 5000) strokes.shift();
+
+      socket.to(currentRoom).emit("draw", safeStroke);
+    } catch (error) {
+      console.log("draw error:", error.message);
+    }
+  });
+
+  socket.on("disconnect", () => {});
 });
 
 /* =========================
