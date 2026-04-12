@@ -7,15 +7,18 @@
 
 <style>
 :root{
-  --bg:#f5f8fc;
+  --bg:#f4f8fc;
   --card:#ffffff;
   --soft:#f8fbff;
-  --line:#e4eaf1;
+  --line:#e4ebf3;
   --text:#17212b;
-  --sub:#738190;
+  --sub:#758394;
   --primary:#2491ff;
-  --primary-soft:#68beff;
-  --shadow:0 20px 60px rgba(18,36,61,0.10);
+  --primary-soft:#6fc3ff;
+  --shadow:0 18px 50px rgba(18,36,61,0.10);
+  --radius-xl:28px;
+  --radius-lg:20px;
+  --radius-md:16px;
 }
 
 *{
@@ -29,7 +32,7 @@ html, body{
   font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   background:
     radial-gradient(circle at top left, rgba(36,145,255,0.08), transparent 24%),
-    linear-gradient(180deg, #f9fbff 0%, #eef4fa 100%);
+    linear-gradient(180deg, #f9fbff 0%, #edf4fa 100%);
   color:var(--text);
 }
 
@@ -43,101 +46,106 @@ label{
   font:inherit;
 }
 
+button{
+  cursor:pointer;
+}
+
 #app{
   width:100%;
   height:100%;
-  padding:20px;
+  padding:14px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
 #chatCard{
-  width:min(960px, 100%);
-  height:min(92vh, 940px);
+  width:min(920px, 100%);
+  height:min(94dvh, 860px);
   background:rgba(255,255,255,0.92);
-  backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,0.75);
-  border-radius:32px;
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.8);
+  border-radius:30px;
   box-shadow:var(--shadow);
   overflow:hidden;
   display:flex;
   flex-direction:column;
 }
 
+/* 헤더 */
 #header{
-  flex:1;
-  min-height:88px;
+  height:74px;
+  flex-shrink:0;
   border-bottom:1px solid var(--line);
   display:flex;
   align-items:center;
   justify-content:center;
   position:relative;
-  background:rgba(255,255,255,0.88);
+  background:rgba(255,255,255,0.9);
 }
 
 #title{
-  font-size:30px;
+  font-size:26px;
   font-weight:800;
   letter-spacing:-0.03em;
 }
 
 #roleBadge{
   position:absolute;
-  left:22px;
+  left:16px;
   top:50%;
   transform:translateY(-50%);
-  padding:10px 14px;
+  padding:8px 12px;
   border-radius:999px;
-  background:#f6f9fc;
+  background:#f7faff;
   border:1px solid var(--line);
   color:var(--sub);
-  font-size:13px;
+  font-size:12px;
   font-weight:700;
 }
 
 #headerActions{
   position:absolute;
-  right:18px;
+  right:14px;
   top:50%;
   transform:translateY(-50%);
   display:flex;
-  gap:10px;
+  gap:8px;
 }
 
 .iconBtn{
-  width:46px;
-  height:46px;
+  width:40px;
+  height:40px;
   border:none;
   border-radius:50%;
-  background:#edf3f8;
-  color:#506274;
+  background:#edf4fa;
+  color:#557086;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:20px;
-  cursor:pointer;
+  font-size:18px;
 }
 
+/* 채팅 영역 */
 #chatBox{
-  flex:6;
+  flex:1;
   min-height:0;
   overflow-y:auto;
-  padding:22px 22px 14px;
+  padding:16px 16px 10px;
   background:#f8fbff;
 }
 
 #chatInner{
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:12px;
   min-height:100%;
 }
 
 .messageRow{
   display:flex;
   flex-direction:column;
-  gap:5px;
+  gap:4px;
 }
 
 .messageRow.me{
@@ -149,11 +157,11 @@ label{
 }
 
 .bubble{
-  max-width:min(76%, 580px);
-  padding:14px 18px;
-  border-radius:26px;
-  font-size:16px;
-  line-height:1.48;
+  max-width:min(74%, 520px);
+  padding:12px 16px;
+  border-radius:22px;
+  font-size:15px;
+  line-height:1.45;
   letter-spacing:-0.02em;
   word-break:break-word;
 }
@@ -161,15 +169,15 @@ label{
 .messageRow.me .bubble{
   background:linear-gradient(135deg, var(--primary-soft), var(--primary));
   color:white;
-  border-bottom-right-radius:10px;
-  box-shadow:0 10px 24px rgba(36,145,255,0.18);
+  border-bottom-right-radius:8px;
+  box-shadow:0 8px 20px rgba(36,145,255,0.16);
 }
 
 .messageRow.other .bubble{
   background:#ffffff;
   color:var(--text);
   border:1px solid var(--line);
-  border-bottom-left-radius:10px;
+  border-bottom-left-radius:8px;
 }
 
 .meta{
@@ -179,96 +187,123 @@ label{
 }
 
 .imageBubble{
-  max-width:min(76%, 580px);
+  max-width:min(72%, 500px);
   background:#ffffff;
   border:1px solid var(--line);
-  border-radius:24px;
-  padding:10px;
+  border-radius:22px;
+  padding:8px;
   cursor:pointer;
 }
 
 .messageRow.me .imageBubble{
-  border-bottom-right-radius:10px;
+  border-bottom-right-radius:8px;
 }
 
 .messageRow.other .imageBubble{
-  border-bottom-left-radius:10px;
+  border-bottom-left-radius:8px;
 }
 
 .chatImg{
   display:block;
   width:100%;
-  max-width:260px;
-  border-radius:16px;
+  max-width:230px;
+  border-radius:14px;
 }
 
+/* 입력 영역 */
 #inputArea{
-  flex:3;
-  min-height:210px;
+  flex-shrink:0;
   border-top:1px solid var(--line);
-  background:rgba(255,255,255,0.92);
-  padding:16px 18px 18px;
+  background:rgba(255,255,255,0.94);
+  padding:10px 14px 12px;
   display:flex;
   flex-direction:column;
-  justify-content:center;
+  gap:8px;
+}
+
+#utilityRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+#togglePhoneBtn{
+  border:none;
+  background:#eef4fa;
+  color:#5c7085;
+  height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
 }
 
 #phoneRow{
+  display:none;
+  gap:8px;
+}
+
+#phoneRow.open{
   display:flex;
-  gap:10px;
-  margin-bottom:12px;
 }
 
-#phoneInput,
-#msgInput{
-  width:100%;
-  height:56px;
-  border:1px solid #d8e0ea;
+#phoneInput{
+  flex:1;
+  height:42px;
+  border:1px solid #d8e2ec;
   background:#f8fbff;
-  border-radius:22px;
+  border-radius:16px;
   outline:none;
-  padding:0 18px;
-  font-size:16px;
-  color:var(--text);
-  transition:0.2s ease;
-}
-
-#phoneInput:focus,
-#msgInput:focus,
-#viewerMsgInput:focus{
-  background:#ffffff;
-  border-color:rgba(36,145,255,0.45);
-  box-shadow:0 0 0 4px rgba(36,145,255,0.10);
+  padding:0 14px;
+  font-size:14px;
 }
 
 #savePhoneBtn{
-  height:56px;
+  height:42px;
   border:none;
-  border-radius:22px;
-  padding:0 22px;
+  border-radius:16px;
+  padding:0 16px;
   background:#607082;
   color:white;
   font-weight:800;
-  cursor:pointer;
 }
 
 #messageRow{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
+}
+
+#msgInput{
+  flex:1;
+  height:48px;
+  border:1px solid #d8e2ec;
+  background:#f8fbff;
+  border-radius:18px;
+  outline:none;
+  padding:0 16px;
+  font-size:15px;
+}
+
+#msgInput:focus,
+#phoneInput:focus,
+#viewerMsgInput:focus{
+  background:#ffffff;
+  border-color:rgba(36,145,255,0.45);
+  box-shadow:0 0 0 4px rgba(36,145,255,0.08);
 }
 
 #sendBtn{
-  width:58px;
-  height:58px;
+  width:48px;
+  height:48px;
   border:none;
   border-radius:50%;
-  background:linear-gradient(135deg, #72c2ff, var(--primary));
+  background:linear-gradient(135deg, #79c7ff, var(--primary));
   color:white;
-  font-size:24px;
+  font-size:20px;
   font-weight:800;
-  box-shadow:0 10px 24px rgba(36,145,255,0.18);
-  cursor:pointer;
+  box-shadow:0 8px 20px rgba(36,145,255,0.16);
 }
 
 #fileInput{
@@ -276,19 +311,19 @@ label{
 }
 
 #fileLabel{
-  width:58px;
-  height:58px;
+  width:48px;
+  height:48px;
   border-radius:50%;
-  background:#edf3f8;
+  background:#edf4fa;
   color:#5e7185;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:24px;
+  font-size:22px;
   cursor:pointer;
 }
 
-/* 새 창 뷰어 모드 */
+/* 뷰어 */
 #viewerOverlay{
   position:fixed;
   inset:0;
@@ -303,39 +338,38 @@ label{
 }
 
 #viewerTopbar{
-  height:72px;
+  height:60px;
   flex-shrink:0;
   border-bottom:1px solid var(--line);
-  background:rgba(255,255,255,0.94);
+  background:rgba(255,255,255,0.96);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 18px;
+  padding:0 14px;
 }
 
 #viewerTitle{
-  font-size:20px;
+  font-size:18px;
   font-weight:800;
 }
 
 #viewerActions{
   display:flex;
-  gap:10px;
+  gap:8px;
 }
 
 .viewerBtn{
-  height:44px;
+  height:38px;
   border:none;
-  border-radius:14px;
-  padding:0 16px;
-  background:#edf3f8;
+  border-radius:12px;
+  padding:0 14px;
+  background:#edf4fa;
   color:#425466;
   text-decoration:none;
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:700;
-  cursor:pointer;
 }
 
 #viewerMain{
@@ -359,7 +393,7 @@ label{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:18px;
+  padding:12px;
 }
 
 #imageStage{
@@ -372,10 +406,10 @@ label{
 #viewerImage{
   display:block;
   max-width:100%;
-  max-height:calc(100vh - 200px);
-  border-radius:22px;
-  box-shadow:0 18px 40px rgba(18,36,61,0.12);
-  pointer-events:none; /* 이미지 클릭 방지 */
+  max-height:calc(100vh - 150px);
+  border-radius:18px;
+  box-shadow:0 14px 32px rgba(18,36,61,0.10);
+  pointer-events:none;
   user-select:none;
   -webkit-user-drag:none;
 }
@@ -385,71 +419,70 @@ label{
   inset:0;
   width:100%;
   height:100%;
-  border-radius:22px;
+  border-radius:18px;
   touch-action:none;
-  pointer-events:auto; /* 캔버스가 입력 받음 */
+  pointer-events:auto;
 }
 
 #toolbar{
   border-top:1px solid var(--line);
   background:#ffffff;
-  padding:14px 18px;
+  padding:10px 12px;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:10px;
 }
 
 #toolRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
+  gap:10px;
 }
 
 #drawModeWrap{
   display:flex;
-  gap:8px;
+  gap:6px;
   flex-wrap:wrap;
 }
 
 .toolBtn{
-  height:42px;
+  height:36px;
   border:none;
-  border-radius:14px;
-  padding:0 14px;
-  background:#edf3f8;
+  border-radius:12px;
+  padding:0 12px;
+  background:#edf4fa;
   color:#425466;
   font-weight:700;
-  cursor:pointer;
 }
 
 .toolBtn.active{
-  background:linear-gradient(135deg, #72c2ff, var(--primary));
+  background:linear-gradient(135deg, #79c7ff, var(--primary));
   color:white;
 }
 
 #thicknessWrap{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
   color:var(--sub);
-  font-size:13px;
+  font-size:12px;
   font-weight:700;
 }
 
 #thicknessRange{
-  width:150px;
+  width:120px;
 }
 
 #colorRow{
   display:flex;
-  gap:10px;
+  gap:8px;
   flex-wrap:wrap;
 }
 
 .colorSwatch{
-  width:28px;
-  height:28px;
+  width:24px;
+  height:24px;
   border:none;
   border-radius:50%;
   cursor:pointer;
@@ -457,7 +490,7 @@ label{
 }
 
 .colorSwatch.active{
-  box-shadow:0 0 0 3px rgba(36,145,255,0.22);
+  box-shadow:0 0 0 3px rgba(36,145,255,0.20);
 }
 
 #viewerRight{
@@ -468,13 +501,13 @@ label{
 }
 
 #viewerChatHeader{
-  height:64px;
+  height:52px;
   flex-shrink:0;
   border-bottom:1px solid var(--line);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:18px;
+  font-size:16px;
   font-weight:800;
 }
 
@@ -482,46 +515,45 @@ label{
   flex:1;
   min-height:0;
   overflow-y:auto;
-  padding:16px;
+  padding:12px;
   background:#fbfdff;
 }
 
 #viewerChatInner{
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:10px;
 }
 
 #viewerInputBar{
   flex-shrink:0;
   border-top:1px solid var(--line);
-  padding:14px 16px 18px;
+  padding:10px 12px 12px;
   background:#ffffff;
   display:flex;
-  gap:10px;
+  gap:8px;
 }
 
 #viewerMsgInput{
   flex:1;
-  height:54px;
+  height:44px;
   border:1px solid #d8e0ea;
   background:#f8fbff;
-  border-radius:20px;
+  border-radius:16px;
   outline:none;
-  padding:0 18px;
-  font-size:16px;
+  padding:0 14px;
+  font-size:14px;
 }
 
 #viewerSendBtn{
-  width:54px;
-  height:54px;
+  width:44px;
+  height:44px;
   border:none;
   border-radius:50%;
-  background:linear-gradient(135deg, #72c2ff, var(--primary));
+  background:linear-gradient(135deg, #79c7ff, var(--primary));
   color:white;
-  font-size:22px;
+  font-size:18px;
   font-weight:800;
-  cursor:pointer;
 }
 
 @media (max-width: 900px){
@@ -531,13 +563,58 @@ label{
 
   #chatCard{
     width:100%;
-    height:100%;
+    height:100dvh;
     border-radius:0;
+  }
+
+  #header{
+    height:64px;
+    min-height:64px;
+  }
+
+  #title{
+    font-size:22px;
+  }
+
+  #roleBadge{
+    left:10px;
+    padding:6px 10px;
+    font-size:11px;
+  }
+
+  #chatBox{
+    padding:14px 12px 8px;
+  }
+
+  .bubble{
+    max-width:84%;
+    font-size:14px;
+    padding:11px 14px;
+  }
+
+  .chatImg{
+    max-width:200px;
+  }
+
+  #inputArea{
+    padding:8px 10px 10px;
+    gap:6px;
+  }
+
+  #msgInput,
+  #sendBtn,
+  #fileLabel{
+    height:44px;
+  }
+
+  #sendBtn,
+  #fileLabel{
+    width:44px;
   }
 
   #viewerMain{
     grid-template-columns:1fr;
-    grid-template-rows:58vh 42vh;
+    grid-template-rows:56vh 44vh;
   }
 
   #viewerLeft{
@@ -545,13 +622,12 @@ label{
     border-bottom:1px solid var(--line);
   }
 
-  #title{
-    font-size:24px;
+  #viewerImage{
+    max-height:calc(56vh - 80px);
   }
 
-  .bubble{
-    max-width:84%;
-    font-size:15px;
+  #viewerTopbar{
+    height:56px;
   }
 }
 </style>
@@ -573,6 +649,10 @@ label{
     </div>
 
     <div id="inputArea">
+      <div id="utilityRow">
+        <button id="togglePhoneBtn" type="button">전화번호 입력</button>
+      </div>
+
       <div id="phoneRow">
         <input id="phoneInput" type="tel" placeholder="전화번호 입력" />
         <button id="savePhoneBtn" type="button">등록</button>
@@ -592,7 +672,7 @@ label{
   <div id="viewerTopbar">
     <div id="viewerTitle">이미지 협업 상담</div>
     <div id="viewerActions">
-      <a id="downloadSketchBtn" class="viewerBtn" download="sketch.png">스케치 다운로드</a>
+      <a id="downloadSketchBtn" class="viewerBtn" download="sketch.png">다운로드</a>
       <button id="closeViewerBtn" class="viewerBtn" type="button">닫기</button>
     </div>
   </div>
@@ -664,6 +744,8 @@ const fileInput = document.getElementById("fileInput");
 const phoneInput = document.getElementById("phoneInput");
 const savePhoneBtn = document.getElementById("savePhoneBtn");
 const openViewerBtn = document.getElementById("openViewerBtn");
+const togglePhoneBtn = document.getElementById("togglePhoneBtn");
+const phoneRow = document.getElementById("phoneRow");
 
 const viewerOverlay = document.getElementById("viewerOverlay");
 const closeViewerBtn = document.getElementById("closeViewerBtn");
@@ -725,6 +807,10 @@ if (isViewerMode) {
     viewerImage.src = initialImageUrl;
   }
 }
+
+togglePhoneBtn.addEventListener("click", () => {
+  phoneRow.classList.toggle("open");
+});
 
 function scrollBottom(container) {
   requestAnimationFrame(() => {
@@ -791,7 +877,6 @@ function syncViewerChatFromMain() {
   scrollBottom(viewerChatBox);
 }
 
-/* 중복 방지: 서버에서 받은 메시지만 그림 */
 function renderTextMessage(data) {
   chatInner.appendChild(createTextRow(data));
   scrollBottom(chatBox);
@@ -817,18 +902,14 @@ function renderImageMessage(data) {
 
 function sendMainMessage() {
   const text = msgInput.value.trim();
-  if (!text) return;
-  if (isComposingMain) return;
-
+  if (!text || isComposingMain) return;
   socket.emit("message", { text });
   msgInput.value = "";
 }
 
 function sendViewerMessage() {
   const text = viewerMsgInput.value.trim();
-  if (!text) return;
-  if (isComposingViewer) return;
-
+  if (!text || isComposingViewer) return;
   socket.emit("message", { text });
   viewerMsgInput.value = "";
 }
@@ -839,7 +920,6 @@ async function savePhone() {
     alert("전화번호를 입력해주세요.");
     return;
   }
-
   alert("전화번호 저장 기능은 현재 최소 버전에서는 UI만 포함되어 있습니다.");
 }
 
@@ -856,22 +936,11 @@ async function uploadImage(file) {
   if (!response.ok) {
     throw new Error(result.error || "이미지 업로드 실패");
   }
-
   if (!result.url) {
     throw new Error("업로드된 이미지 URL이 없습니다.");
   }
 
   socket.emit("image", { url: result.url });
-}
-
-function openViewer(imageId, imageUrl) {
-  currentViewerImageId = imageId;
-  currentViewerImageUrl = imageUrl;
-  currentStrokes = [];
-  viewerOverlay.classList.add("open");
-  viewerOverlay.setAttribute("aria-hidden", "false");
-  viewerImage.src = imageUrl;
-  syncViewerChatFromMain();
 }
 
 function openViewerPopup(imageId, imageUrl) {
@@ -885,7 +954,7 @@ function openViewerPopup(imageId, imageUrl) {
   window.open(
     url.toString(),
     "designImageViewer",
-    "width=1400,height=900,resizable=yes,scrollbars=yes"
+    "width=1320,height=860,resizable=yes,scrollbars=yes"
   );
 }
 
@@ -1007,7 +1076,7 @@ function buildDownload() {
   img.src = currentViewerImageUrl;
 }
 
-/* UI 이벤트 */
+/* 이벤트 */
 sendBtn.addEventListener("click", sendMainMessage);
 viewerSendBtn.addEventListener("click", sendViewerMessage);
 
@@ -1096,7 +1165,6 @@ colorSwatches.forEach((btn) => {
 
 drawCanvas.addEventListener("pointerdown", (evt) => {
   if (!currentViewerImageId) return;
-
   isDrawing = true;
   lastPoint = getNormalizedPoint(evt);
   drawCanvas.setPointerCapture(evt.pointerId);
@@ -1118,7 +1186,6 @@ drawCanvas.addEventListener("pointermove", (evt) => {
   currentStrokes.push(stroke);
   drawStroke(stroke);
   socket.emit("draw-stroke", stroke);
-
   lastPoint = current;
 });
 
