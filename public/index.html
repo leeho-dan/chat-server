@@ -15,7 +15,7 @@
   --sub:#738190;
   --primary:#2491ff;
   --primary-soft:#68beff;
-  --shadow:0 20px 60px rgba(18, 36, 61, 0.10);
+  --shadow:0 20px 60px rgba(18,36,61,0.10);
 }
 
 *{
@@ -288,7 +288,7 @@ label{
   cursor:pointer;
 }
 
-/* 전체화면 뷰어 */
+/* 전체화면 협업 뷰어 */
 #viewerOverlay{
   position:fixed;
   inset:0;
@@ -570,7 +570,7 @@ label{
 
     <div id="inputArea">
       <div id="phoneRow">
-        <input id="phoneInput" type="tel" placeholder="알림 받을 전화번호 입력" />
+        <input id="phoneInput" type="tel" placeholder="전화번호 입력" />
         <button id="savePhoneBtn" type="button">등록</button>
       </div>
 
@@ -680,6 +680,7 @@ const colorSwatches = Array.from(document.querySelectorAll(".colorSwatch"));
 
 roleBadge.textContent = role === "admin" ? "관리자 화면" : "고객 채팅";
 
+/* 한글 조합 중복 전송 방지 */
 let isComposingMain = false;
 let isComposingViewer = false;
 
@@ -688,9 +689,11 @@ msgInput.addEventListener("compositionend", () => { isComposingMain = false; });
 viewerMsgInput.addEventListener("compositionstart", () => { isComposingViewer = true; });
 viewerMsgInput.addEventListener("compositionend", () => { isComposingViewer = false; });
 
+/* 현재 선택 이미지 */
 let lastSelectedImageId = "";
 let lastSelectedImageUrl = "";
 
+/* 뷰어 상태 */
 let currentViewerImageId = "";
 let currentViewerImageUrl = "";
 let currentStrokes = [];
@@ -767,26 +770,23 @@ function syncViewerChatFromMain() {
   scrollBottom(viewerChatBox);
 }
 
+/* 중복 방지: 로컬 선렌더 없음. 서버에서 받은 것만 그림 */
 function renderTextMessage(data) {
-  const mainNode = createTextRow(data);
-  chatInner.appendChild(mainNode);
+  chatInner.appendChild(createTextRow(data));
   scrollBottom(chatBox);
 
   if (viewerOverlay.classList.contains("open")) {
-    const viewerNode = createTextRow(data);
-    viewerChatInner.appendChild(viewerNode);
+    viewerChatInner.appendChild(createTextRow(data));
     scrollBottom(viewerChatBox);
   }
 }
 
 function renderImageMessage(data) {
-  const mainNode = createImageRow(data);
-  chatInner.appendChild(mainNode);
+  chatInner.appendChild(createImageRow(data));
   scrollBottom(chatBox);
 
   if (viewerOverlay.classList.contains("open")) {
-    const viewerNode = createImageRow(data);
-    viewerChatInner.appendChild(viewerNode);
+    viewerChatInner.appendChild(createImageRow(data));
     scrollBottom(viewerChatBox);
   }
 
@@ -819,7 +819,7 @@ async function savePhone() {
     return;
   }
 
-  alert("전화번호 등록 기능은 현재 서버 예제에 포함되지 않았습니다. 원하면 다음 단계에서 추가할 수 있습니다.");
+  alert("전화번호 저장 기능은 현재 최소 버전에서는 UI만 포함되어 있습니다. 서버 저장까지 원하면 다음 단계에서 추가할 수 있습니다.");
 }
 
 async function uploadImage(file) {
@@ -971,7 +971,7 @@ function buildDownload() {
   img.src = currentViewerImageUrl;
 }
 
-/* 이벤트 */
+/* UI 이벤트 */
 sendBtn.addEventListener("click", sendMainMessage);
 viewerSendBtn.addEventListener("click", sendViewerMessage);
 
