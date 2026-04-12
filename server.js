@@ -17,23 +17,22 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 3000;
-const publicDir = path.join(__dirname, "public");
-const uploadsDir = path.join(publicDir, "uploads");
+const PUBLIC_DIR = path.join(__dirname, "public");
+const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
 
-fs.mkdirSync(uploadsDir, { recursive: true });
+// uploads 폴더가 없으면 자동 생성
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(publicDir));
+app.use(express.static(PUBLIC_DIR));
 
 /* =========================
-   파일 업로드
+   이미지 업로드 설정
 ========================= */
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname || "").toLowerCase() || ".png";
     cb(null, `${Date.now()}-${uuidv4()}${ext}`);
@@ -43,7 +42,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024
+    fileSize: 10 * 1024 * 1024 // 10MB
   },
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype || !file.mimetype.startsWith("image/")) {
@@ -53,12 +52,16 @@ const upload = multer({
   }
 });
 
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
 app.post("/upload", (req, res) => {
   upload.single("image")(req, res, (err) => {
     if (err) {
       return res.status(400).json({
         ok: false,
-        error: err.message || "업로드 실패"
+        error: err.message || "이미지 업로드에 실패했습니다."
       });
     }
 
@@ -76,14 +79,10 @@ app.post("/upload", (req, res) => {
   });
 });
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true });
-});
-
 /* =========================
-   메모리 저장소
-   - room별 메시지
-   - imageId별 드로잉 이력
+   메모리 기반 데이터 저장소
+   - room별 채팅 메시지
+   - room / imageId별 스케치 이력
 ========================= */
 const rooms = new Map();
 
@@ -97,15 +96,17 @@ function getRoom(roomId) {
   return rooms.get(roomId);
 }
 
-function pushMessage(roomId, message) {
+function addMessage(roomId, message) {
   const room = getRoom(roomId);
   room.messages.push(message);
+
+  // 메모리 과다 사용 방지
   if (room.messages.length > 1000) {
     room.messages.shift();
   }
 }
 
-function getDrawings(roomId, imageId) {
+function getDrawingList(roomId, imageId) {
   const room = getRoom(roomId);
   if (!room.drawings[imageId]) {
     room.drawings[imageId] = [];
@@ -114,16 +115,18 @@ function getDrawings(roomId, imageId) {
 }
 
 /* =========================
-   실시간 소켓
+   Socket.IO 실시간 통신
 ========================= */
 io.on("connection", (socket) => {
   let currentRoomId = null;
   let currentRole = "user";
 
+  // 채팅방 입장
   socket.on("join", (payload = {}) => {
-    const roomId = typeof payload.roomId === "string" && payload.roomId.trim()
-      ? payload.roomId.trim()
-      : null;
+    const roomId =
+      typeof payload.roomId === "string" && payload.roomId.trim()
+        ? payload.roomId.trim()
+        : null;
 
     const role = payload.role === "admin" ? "admin" : "user";
 
@@ -138,6 +141,7 @@ io.on("connection", (socket) => {
     socket.emit("history", room.messages);
   });
 
+  // 텍스트 메시지
   socket.on("message", (payload = {}) => {
     if (!currentRoomId) return;
 
@@ -152,44 +156,50 @@ io.on("connection", (socket) => {
       time: Date.now()
     };
 
-    pushMessage(currentRoomId, message);
+    addMessage(currentRoomId, message);
     io.to(currentRoomId).emit("message", message);
   });
 
+  // 이미지 메시지
   socket.on("image", (payload = {}) => {
     if (!currentRoomId) return;
 
-    const url = String(payload.url || "").trim();
-    if (!url) return;
+    const imageUrl = String(payload.url || "").trim();
+    if (!imageUrl) return;
 
     const imageMessage = {
       id: uuidv4(),
       type: "image",
       sender: currentRole,
       imageId: uuidv4(),
-      imageUrl: url,
+      imageUrl,
       time: Date.now()
     };
 
-    pushMessage(currentRoomId, imageMessage);
-    getDrawings(currentRoomId, imageMessage.imageId);
+    addMessage(currentRoomId, imageMessage);
+
+    // 해당 이미지용 스케치 배열 미리 생성
+    getDrawingList(currentRoomId, imageMessage.imageId);
 
     io.to(currentRoomId).emit("image", imageMessage);
   });
 
+  // 특정 이미지의 기존 스케치 이력 요청
   socket.on("request-drawing-history", (payload = {}) => {
     if (!currentRoomId) return;
 
     const imageId = String(payload.imageId || "").trim();
     if (!imageId) return;
 
-    const strokes = getDrawings(currentRoomId, imageId);
+    const strokes = getDrawingList(currentRoomId, imageId);
+
     socket.emit("drawing-history", {
       imageId,
       strokes
     });
   });
 
+  // 스케치 한 줄 그리기
   socket.on("draw-stroke", (payload = {}) => {
     if (!currentRoomId) return;
 
@@ -204,7 +214,8 @@ io.on("connection", (socket) => {
     const current = payload.current;
 
     if (
-      !last || !current ||
+      !last ||
+      !current ||
       typeof last.x !== "number" ||
       typeof last.y !== "number" ||
       typeof current.x !== "number" ||
@@ -228,16 +239,17 @@ io.on("connection", (socket) => {
       }
     };
 
-    const drawings = getDrawings(currentRoomId, imageId);
-    drawings.push(stroke);
+    const drawingList = getDrawingList(currentRoomId, imageId);
+    drawingList.push(stroke);
 
-    if (drawings.length > 5000) {
-      drawings.shift();
+    if (drawingList.length > 5000) {
+      drawingList.shift();
     }
 
     socket.to(currentRoomId).emit("draw-stroke", stroke);
   });
 
+  // 전체 스케치 지우기
   socket.on("clear-drawing", (payload = {}) => {
     if (!currentRoomId) return;
 
