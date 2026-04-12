@@ -7,18 +7,15 @@
 
 <style>
 :root{
-  --bg:#f4f7fb;
+  --bg:#f5f8fc;
   --card:#ffffff;
   --soft:#f8fbff;
-  --line:#e4e8ef;
-  --text:#16202a;
-  --sub:#7a8795;
+  --line:#e4eaf1;
+  --text:#17212b;
+  --sub:#738190;
   --primary:#2491ff;
-  --primary-soft:#63b8ff;
+  --primary-soft:#68beff;
   --shadow:0 20px 60px rgba(18, 36, 61, 0.10);
-  --radius-xl:30px;
-  --radius-lg:24px;
-  --radius-md:18px;
 }
 
 *{
@@ -31,8 +28,8 @@ html, body{
   height:100%;
   font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(36,145,255,0.10), transparent 24%),
-    linear-gradient(180deg, #f9fbff 0%, #eef3f8 100%);
+    radial-gradient(circle at top left, rgba(36,145,255,0.08), transparent 24%),
+    linear-gradient(180deg, #f9fbff 0%, #eef4fa 100%);
   color:var(--text);
 }
 
@@ -46,10 +43,6 @@ label{
   font:inherit;
 }
 
-button{
-  cursor:pointer;
-}
-
 #app{
   width:100%;
   height:100%;
@@ -59,13 +52,12 @@ button{
   justify-content:center;
 }
 
-/* 기본 채팅 카드 */
 #chatCard{
-  width:min(920px, 100%);
-  height:min(92vh, 920px);
+  width:min(960px, 100%);
+  height:min(92vh, 940px);
   background:rgba(255,255,255,0.92);
   backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,0.8);
+  border:1px solid rgba(255,255,255,0.75);
   border-radius:32px;
   box-shadow:var(--shadow);
   overflow:hidden;
@@ -73,16 +65,15 @@ button{
   flex-direction:column;
 }
 
-/* 1 : 6 : 3 */
 #header{
   flex:1;
-  min-height:90px;
+  min-height:88px;
   border-bottom:1px solid var(--line);
   display:flex;
   align-items:center;
   justify-content:center;
   position:relative;
-  background:rgba(255,255,255,0.86);
+  background:rgba(255,255,255,0.88);
 }
 
 #title{
@@ -98,8 +89,8 @@ button{
   transform:translateY(-50%);
   padding:10px 14px;
   border-radius:999px;
+  background:#f6f9fc;
   border:1px solid var(--line);
-  background:#f8fafc;
   color:var(--sub);
   font-size:13px;
   font-weight:700;
@@ -120,11 +111,12 @@ button{
   border:none;
   border-radius:50%;
   background:#edf3f8;
+  color:#506274;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:20px;
-  color:#4f6277;
+  cursor:pointer;
 }
 
 #chatBox{
@@ -157,11 +149,11 @@ button{
 }
 
 .bubble{
-  max-width:min(76%, 560px);
+  max-width:min(76%, 580px);
   padding:14px 18px;
   border-radius:26px;
-  line-height:1.48;
   font-size:16px;
+  line-height:1.48;
   letter-spacing:-0.02em;
   word-break:break-word;
 }
@@ -170,13 +162,13 @@ button{
   background:linear-gradient(135deg, var(--primary-soft), var(--primary));
   color:white;
   border-bottom-right-radius:10px;
-  box-shadow:0 8px 24px rgba(36,145,255,0.18);
+  box-shadow:0 10px 24px rgba(36,145,255,0.18);
 }
 
 .messageRow.other .bubble{
-  background:#fff;
-  border:1px solid var(--line);
+  background:#ffffff;
   color:var(--text);
+  border:1px solid var(--line);
   border-bottom-left-radius:10px;
 }
 
@@ -187,8 +179,8 @@ button{
 }
 
 .imageBubble{
-  max-width:min(76%, 560px);
-  background:#fff;
+  max-width:min(76%, 580px);
+  background:#ffffff;
   border:1px solid var(--line);
   border-radius:24px;
   padding:10px;
@@ -206,16 +198,15 @@ button{
 .chatImg{
   display:block;
   width:100%;
-  max-width:250px;
+  max-width:260px;
   border-radius:16px;
 }
 
-/* 입력영역 */
 #inputArea{
   flex:3;
   min-height:210px;
   border-top:1px solid var(--line);
-  background:rgba(255,255,255,0.9);
+  background:rgba(255,255,255,0.92);
   padding:16px 18px 18px;
   display:flex;
   flex-direction:column;
@@ -239,14 +230,15 @@ button{
   padding:0 18px;
   font-size:16px;
   color:var(--text);
-  transition:.2s ease;
+  transition:0.2s ease;
 }
 
 #phoneInput:focus,
-#msgInput:focus{
+#msgInput:focus,
+#viewerMsgInput:focus{
+  background:#ffffff;
   border-color:rgba(36,145,255,0.45);
   box-shadow:0 0 0 4px rgba(36,145,255,0.10);
-  background:#fff;
 }
 
 #savePhoneBtn{
@@ -254,9 +246,10 @@ button{
   border:none;
   border-radius:22px;
   padding:0 22px;
-  background:#5f6f82;
+  background:#607082;
   color:white;
   font-weight:800;
+  cursor:pointer;
 }
 
 #messageRow{
@@ -274,7 +267,8 @@ button{
   color:white;
   font-size:24px;
   font-weight:800;
-  box-shadow:0 8px 24px rgba(36,145,255,0.18);
+  box-shadow:0 10px 24px rgba(36,145,255,0.18);
+  cursor:pointer;
 }
 
 #fileInput{
@@ -286,7 +280,7 @@ button{
   height:58px;
   border-radius:50%;
   background:#edf3f8;
-  color:#5f7286;
+  color:#5e7185;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -294,14 +288,14 @@ button{
   cursor:pointer;
 }
 
-/* 전체화면 이미지+채팅 뷰어 */
+/* 전체화면 뷰어 */
 #viewerOverlay{
   position:fixed;
   inset:0;
-  background:rgba(244,247,251,0.97);
   z-index:100;
   display:none;
   flex-direction:column;
+  background:rgba(245,248,252,0.98);
 }
 
 #viewerOverlay.open{
@@ -312,7 +306,7 @@ button{
   height:72px;
   flex-shrink:0;
   border-bottom:1px solid var(--line);
-  background:rgba(255,255,255,0.92);
+  background:rgba(255,255,255,0.94);
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -336,11 +330,12 @@ button{
   padding:0 16px;
   background:#edf3f8;
   color:#425466;
-  font-weight:700;
   text-decoration:none;
   display:flex;
   align-items:center;
   justify-content:center;
+  font-weight:700;
+  cursor:pointer;
 }
 
 #viewerMain{
@@ -352,9 +347,9 @@ button{
 
 #viewerLeft{
   min-width:0;
-  border-right:1px solid var(--line);
   display:flex;
   flex-direction:column;
+  border-right:1px solid var(--line);
   background:#f8fbff;
 }
 
@@ -379,7 +374,7 @@ button{
   max-width:100%;
   max-height:calc(100vh - 200px);
   border-radius:22px;
-  box-shadow:0 18px 36px rgba(18,36,61,0.12);
+  box-shadow:0 18px 40px rgba(18,36,61,0.12);
 }
 
 #drawCanvas{
@@ -392,9 +387,9 @@ button{
 }
 
 #toolbar{
-  padding:14px 18px;
   border-top:1px solid var(--line);
-  background:#fff;
+  background:#ffffff;
+  padding:14px 18px;
   display:flex;
   flex-direction:column;
   gap:12px;
@@ -410,6 +405,7 @@ button{
 #drawModeWrap{
   display:flex;
   gap:8px;
+  flex-wrap:wrap;
 }
 
 .toolBtn{
@@ -420,6 +416,7 @@ button{
   background:#edf3f8;
   color:#425466;
   font-weight:700;
+  cursor:pointer;
 }
 
 .toolBtn.active{
@@ -442,7 +439,6 @@ button{
 
 #colorRow{
   display:flex;
-  align-items:center;
   gap:10px;
   flex-wrap:wrap;
 }
@@ -464,7 +460,7 @@ button{
   min-width:0;
   display:flex;
   flex-direction:column;
-  background:#fff;
+  background:#ffffff;
 }
 
 #viewerChatHeader{
@@ -492,13 +488,13 @@ button{
   gap:12px;
 }
 
-#viewerMessageRow{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  padding:14px 16px 18px;
+#viewerInputBar{
+  flex-shrink:0;
   border-top:1px solid var(--line);
-  background:#fff;
+  padding:14px 16px 18px;
+  background:#ffffff;
+  display:flex;
+  gap:10px;
 }
 
 #viewerMsgInput{
@@ -512,12 +508,6 @@ button{
   font-size:16px;
 }
 
-#viewerMsgInput:focus{
-  border-color:rgba(36,145,255,0.45);
-  box-shadow:0 0 0 4px rgba(36,145,255,0.10);
-  background:#fff;
-}
-
 #viewerSendBtn{
   width:54px;
   height:54px;
@@ -527,9 +517,9 @@ button{
   color:white;
   font-size:22px;
   font-weight:800;
+  cursor:pointer;
 }
 
-/* 모바일 */
 @media (max-width: 900px){
   #app{
     padding:0;
@@ -542,8 +532,8 @@ button{
   }
 
   #viewerMain{
-    grid-template-columns: 1fr;
-    grid-template-rows: 58vh 42vh;
+    grid-template-columns:1fr;
+    grid-template-rows:58vh 42vh;
   }
 
   #viewerLeft{
@@ -570,7 +560,7 @@ button{
       <div id="roleBadge">고객 채팅</div>
       <div id="title">디자인 상담</div>
       <div id="headerActions">
-        <button id="openFullscreenBtn" class="iconBtn" type="button" aria-label="전체화면 보기">⛶</button>
+        <button id="openViewerBtn" class="iconBtn" type="button" aria-label="전체화면 협업 뷰어 열기">⛶</button>
       </div>
     </div>
 
@@ -642,7 +632,7 @@ button{
       <div id="viewerChatBox">
         <div id="viewerChatInner"></div>
       </div>
-      <div id="viewerMessageRow">
+      <div id="viewerInputBar">
         <input id="viewerMsgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
         <button id="viewerSendBtn" type="button">➤</button>
       </div>
@@ -652,18 +642,15 @@ button{
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-/* 역할 및 방 */
 const params = new URLSearchParams(location.search);
 const role = params.has("admin") ? "admin" : "user";
 let roomId = params.get("room") || localStorage.getItem("roomId") || crypto.randomUUID();
 localStorage.setItem("roomId", roomId);
 
-/* 소켓 */
 const socket = io({
   transports: ["websocket", "polling"]
 });
 
-/* DOM */
 const roleBadge = document.getElementById("roleBadge");
 const chatInner = document.getElementById("chatInner");
 const chatBox = document.getElementById("chatBox");
@@ -672,33 +659,27 @@ const sendBtn = document.getElementById("sendBtn");
 const fileInput = document.getElementById("fileInput");
 const phoneInput = document.getElementById("phoneInput");
 const savePhoneBtn = document.getElementById("savePhoneBtn");
-const openFullscreenBtn = document.getElementById("openFullscreenBtn");
+const openViewerBtn = document.getElementById("openViewerBtn");
 
 const viewerOverlay = document.getElementById("viewerOverlay");
 const closeViewerBtn = document.getElementById("closeViewerBtn");
-const downloadSketchBtn = document.getElementById("downloadSketchBtn");
 const viewerImage = document.getElementById("viewerImage");
-const drawCanvas = document.getElementById("drawCanvas");
 const viewerChatInner = document.getElementById("viewerChatInner");
 const viewerChatBox = document.getElementById("viewerChatBox");
 const viewerMsgInput = document.getElementById("viewerMsgInput");
 const viewerSendBtn = document.getElementById("viewerSendBtn");
+const downloadSketchBtn = document.getElementById("downloadSketchBtn");
 
+const drawCanvas = document.getElementById("drawCanvas");
+const ctx = drawCanvas.getContext("2d");
 const penBtn = document.getElementById("penBtn");
 const eraserBtn = document.getElementById("eraserBtn");
 const clearBtn = document.getElementById("clearBtn");
 const thicknessRange = document.getElementById("thicknessRange");
 const colorSwatches = Array.from(document.querySelectorAll(".colorSwatch"));
 
-const ctx = drawCanvas.getContext("2d");
-
-/* 역할 표시 */
 roleBadge.textContent = role === "admin" ? "관리자 화면" : "고객 채팅";
-if (role === "admin") {
-  document.getElementById("phoneRow").style.display = "none";
-}
 
-/* 한글 조합 방지 */
 let isComposingMain = false;
 let isComposingViewer = false;
 
@@ -707,7 +688,9 @@ msgInput.addEventListener("compositionend", () => { isComposingMain = false; });
 viewerMsgInput.addEventListener("compositionstart", () => { isComposingViewer = true; });
 viewerMsgInput.addEventListener("compositionend", () => { isComposingViewer = false; });
 
-/* 뷰어 상태 */
+let lastSelectedImageId = "";
+let lastSelectedImageUrl = "";
+
 let currentViewerImageId = "";
 let currentViewerImageUrl = "";
 let currentStrokes = [];
@@ -717,7 +700,6 @@ let currentSize = 3;
 let isDrawing = false;
 let lastPoint = null;
 
-/* 입장 */
 socket.emit("join", { roomId, role });
 
 function scrollBottom(container) {
@@ -737,7 +719,7 @@ function formatTime(ts) {
   }
 }
 
-function createMessageNode(data) {
+function createTextRow(data) {
   const row = document.createElement("div");
   row.className = "messageRow " + (data.sender === role ? "me" : "other");
 
@@ -754,7 +736,7 @@ function createMessageNode(data) {
   return row;
 }
 
-function createImageNode(data) {
+function createImageRow(data) {
   const row = document.createElement("div");
   row.className = "messageRow " + (data.sender === role ? "me" : "other");
 
@@ -780,28 +762,39 @@ function createImageNode(data) {
   return row;
 }
 
-function appendToBothChats(nodeMain, nodeViewer) {
-  chatInner.appendChild(nodeMain);
-  viewerChatInner.appendChild(nodeViewer);
-  scrollBottom(chatBox);
+function syncViewerChatFromMain() {
+  viewerChatInner.innerHTML = chatInner.innerHTML;
   scrollBottom(viewerChatBox);
 }
 
 function renderTextMessage(data) {
-  appendToBothChats(
-    createMessageNode(data),
-    createMessageNode(data)
-  );
+  const mainNode = createTextRow(data);
+  chatInner.appendChild(mainNode);
+  scrollBottom(chatBox);
+
+  if (viewerOverlay.classList.contains("open")) {
+    const viewerNode = createTextRow(data);
+    viewerChatInner.appendChild(viewerNode);
+    scrollBottom(viewerChatBox);
+  }
 }
 
 function renderImageMessage(data) {
-  appendToBothChats(
-    createImageNode(data),
-    createImageNode(data)
-  );
+  const mainNode = createImageRow(data);
+  chatInner.appendChild(mainNode);
+  scrollBottom(chatBox);
+
+  if (viewerOverlay.classList.contains("open")) {
+    const viewerNode = createImageRow(data);
+    viewerChatInner.appendChild(viewerNode);
+    scrollBottom(viewerChatBox);
+  }
+
+  lastSelectedImageId = data.imageId;
+  lastSelectedImageUrl = data.imageUrl;
 }
 
-function sendMessageFromMain() {
+function sendMainMessage() {
   const text = msgInput.value.trim();
   if (!text) return;
   if (isComposingMain) return;
@@ -810,7 +803,7 @@ function sendMessageFromMain() {
   msgInput.value = "";
 }
 
-function sendMessageFromViewer() {
+function sendViewerMessage() {
   const text = viewerMsgInput.value.trim();
   if (!text) return;
   if (isComposingViewer) return;
@@ -826,25 +819,7 @@ async function savePhone() {
     return;
   }
 
-  try {
-    const response = await fetch("/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ roomId, phone })
-    });
-
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(result.error || "전화번호 등록 실패");
-    }
-
-    alert("전화번호가 등록되었습니다.");
-  } catch (error) {
-    console.error(error);
-    alert("전화번호 등록에 실패했습니다.");
-  }
+  alert("전화번호 등록 기능은 현재 서버 예제에 포함되지 않았습니다. 원하면 다음 단계에서 추가할 수 있습니다.");
 }
 
 async function uploadImage(file) {
@@ -875,8 +850,7 @@ function openViewer(imageId, imageUrl) {
   viewerOverlay.classList.add("open");
   viewerOverlay.setAttribute("aria-hidden", "false");
   viewerImage.src = imageUrl;
-  viewerChatInner.innerHTML = chatInner.innerHTML;
-  scrollBottom(viewerChatBox);
+  syncViewerChatFromMain();
 }
 
 function closeViewer() {
@@ -943,7 +917,7 @@ function getNormalizedPoint(evt) {
   };
 }
 
-function setActiveTool() {
+function setActiveTools() {
   penBtn.classList.toggle("active", drawMode === "draw");
   eraserBtn.classList.toggle("active", drawMode === "erase");
 }
@@ -954,11 +928,10 @@ function setActiveColor(color) {
   });
 }
 
-function buildSketchDownload() {
+function buildDownload() {
   if (!currentViewerImageUrl) return;
 
   const img = new Image();
-  img.crossOrigin = "anonymous";
   img.onload = () => {
     const exportCanvas = document.createElement("canvas");
     exportCanvas.width = img.naturalWidth;
@@ -998,24 +971,23 @@ function buildSketchDownload() {
   img.src = currentViewerImageUrl;
 }
 
-/* 메인 이벤트 */
-sendBtn.addEventListener("click", sendMessageFromMain);
+/* 이벤트 */
+sendBtn.addEventListener("click", sendMainMessage);
+viewerSendBtn.addEventListener("click", sendViewerMessage);
 
 msgInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     if (isComposingMain || e.isComposing) return;
     e.preventDefault();
-    sendMessageFromMain();
+    sendMainMessage();
   }
 });
-
-viewerSendBtn.addEventListener("click", sendMessageFromViewer);
 
 viewerMsgInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     if (isComposingViewer || e.isComposing) return;
     e.preventDefault();
-    sendMessageFromViewer();
+    sendViewerMessage();
   }
 });
 
@@ -1035,12 +1007,12 @@ fileInput.addEventListener("change", async (e) => {
   }
 });
 
-openFullscreenBtn.addEventListener("click", () => {
-  if (currentViewerImageId && currentViewerImageUrl) {
-    openViewer(currentViewerImageId, currentViewerImageUrl);
-  } else {
+openViewerBtn.addEventListener("click", () => {
+  if (!lastSelectedImageId || !lastSelectedImageUrl) {
     alert("먼저 채팅에서 이미지를 선택해주세요.");
+    return;
   }
+  openViewer(lastSelectedImageId, lastSelectedImageUrl);
 });
 
 closeViewerBtn.addEventListener("click", closeViewer);
@@ -1056,12 +1028,12 @@ window.addEventListener("resize", updateCanvasSize);
 
 penBtn.addEventListener("click", () => {
   drawMode = "draw";
-  setActiveTool();
+  setActiveTools();
 });
 
 eraserBtn.addEventListener("click", () => {
   drawMode = "erase";
-  setActiveTool();
+  setActiveTools();
 });
 
 clearBtn.addEventListener("click", () => {
@@ -1117,7 +1089,7 @@ drawCanvas.addEventListener("pointerup", stopDrawing);
 drawCanvas.addEventListener("pointercancel", stopDrawing);
 drawCanvas.addEventListener("pointerleave", stopDrawing);
 
-downloadSketchBtn.addEventListener("click", buildSketchDownload);
+downloadSketchBtn.addEventListener("click", buildDownload);
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
@@ -1141,8 +1113,6 @@ socket.on("message", (data) => {
 });
 
 socket.on("image", (data) => {
-  currentViewerImageId = data.imageId;
-  currentViewerImageUrl = data.imageUrl;
   renderImageMessage(data);
 });
 
