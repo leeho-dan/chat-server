@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const path = require("path");
 const fs = require("fs");
+const cors = require("cors");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const { Server } = require("socket.io");
@@ -16,13 +17,19 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 3000;
-const uploadsDir = path.join(__dirname, "public", "uploads");
+const publicDir = path.join(__dirname, "public");
+const uploadsDir = path.join(publicDir, "uploads");
 
 fs.mkdirSync(uploadsDir, { recursive: true });
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(publicDir));
 
+/* =========================
+   파일 업로드
+========================= */
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadsDir);
@@ -46,18 +53,20 @@ const upload = multer({
   }
 });
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true });
-});
-
 app.post("/upload", (req, res) => {
   upload.single("image")(req, res, (err) => {
     if (err) {
-      return res.status(400).json({ error: err.message || "업로드 실패" });
+      return res.status(400).json({
+        ok: false,
+        error: err.message || "업로드 실패"
+      });
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: "업로드된 파일이 없습니다." });
+      return res.status(400).json({
+        ok: false,
+        error: "업로드된 파일이 없습니다."
+      });
     }
 
     return res.json({
@@ -67,17 +76,15 @@ app.post("/upload", (req, res) => {
   });
 });
 
-/*
-  메모리 구조
-  rooms = {
-    [roomId]: {
-      messages: [],
-      drawings: {
-        [imageId]: [ stroke, stroke, ... ]
-      }
-    }
-  }
-*/
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
+/* =========================
+   메모리 저장소
+   - room별 메시지
+   - imageId별 드로잉 이력
+========================= */
 const rooms = new Map();
 
 function getRoom(roomId) {
@@ -90,6 +97,25 @@ function getRoom(roomId) {
   return rooms.get(roomId);
 }
 
+function pushMessage(roomId, message) {
+  const room = getRoom(roomId);
+  room.messages.push(message);
+  if (room.messages.length > 1000) {
+    room.messages.shift();
+  }
+}
+
+function getDrawings(roomId, imageId) {
+  const room = getRoom(roomId);
+  if (!room.drawings[imageId]) {
+    room.drawings[imageId] = [];
+  }
+  return room.drawings[imageId];
+}
+
+/* =========================
+   실시간 소켓
+========================= */
 io.on("connection", (socket) => {
   let currentRoomId = null;
   let currentRole = "user";
@@ -118,8 +144,6 @@ io.on("connection", (socket) => {
     const text = String(payload.text || "").trim();
     if (!text) return;
 
-    const room = getRoom(currentRoomId);
-
     const message = {
       id: uuidv4(),
       type: "text",
@@ -128,9 +152,7 @@ io.on("connection", (socket) => {
       time: Date.now()
     };
 
-    room.messages.push(message);
-    if (room.messages.length > 500) room.messages.shift();
-
+    pushMessage(currentRoomId, message);
     io.to(currentRoomId).emit("message", message);
   });
 
@@ -140,24 +162,19 @@ io.on("connection", (socket) => {
     const url = String(payload.url || "").trim();
     if (!url) return;
 
-    const room = getRoom(currentRoomId);
-    const imageId = uuidv4();
-
-    const message = {
+    const imageMessage = {
       id: uuidv4(),
       type: "image",
       sender: currentRole,
-      imageId,
+      imageId: uuidv4(),
       imageUrl: url,
       time: Date.now()
     };
 
-    room.messages.push(message);
-    room.drawings[imageId] = room.drawings[imageId] || [];
+    pushMessage(currentRoomId, imageMessage);
+    getDrawings(currentRoomId, imageMessage.imageId);
 
-    if (room.messages.length > 500) room.messages.shift();
-
-    io.to(currentRoomId).emit("image", message);
+    io.to(currentRoomId).emit("image", imageMessage);
   });
 
   socket.on("request-drawing-history", (payload = {}) => {
@@ -166,9 +183,7 @@ io.on("connection", (socket) => {
     const imageId = String(payload.imageId || "").trim();
     if (!imageId) return;
 
-    const room = getRoom(currentRoomId);
-    const strokes = room.drawings[imageId] || [];
-
+    const strokes = getDrawings(currentRoomId, imageId);
     socket.emit("drawing-history", {
       imageId,
       strokes
@@ -184,19 +199,19 @@ io.on("connection", (socket) => {
     const mode = payload.mode === "erase" ? "erase" : "draw";
     const color = typeof payload.color === "string" ? payload.color : "#ff3b30";
     const size = Math.max(1, Math.min(48, Number(payload.size || 3)));
+
     const last = payload.last;
     const current = payload.current;
 
     if (
       !last || !current ||
-      typeof last.x !== "number" || typeof last.y !== "number" ||
-      typeof current.x !== "number" || typeof current.y !== "number"
+      typeof last.x !== "number" ||
+      typeof last.y !== "number" ||
+      typeof current.x !== "number" ||
+      typeof current.y !== "number"
     ) {
       return;
     }
-
-    const room = getRoom(currentRoomId);
-    room.drawings[imageId] = room.drawings[imageId] || [];
 
     const stroke = {
       imageId,
@@ -213,10 +228,11 @@ io.on("connection", (socket) => {
       }
     };
 
-    room.drawings[imageId].push(stroke);
+    const drawings = getDrawings(currentRoomId, imageId);
+    drawings.push(stroke);
 
-    if (room.drawings[imageId].length > 5000) {
-      room.drawings[imageId].shift();
+    if (drawings.length > 5000) {
+      drawings.shift();
     }
 
     socket.to(currentRoomId).emit("draw-stroke", stroke);
