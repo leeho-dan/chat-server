@@ -1,7 +1,7 @@
 {
-  "name": "design-realtime-chat",
+  "name": "realtime-design-chat",
   "version": "1.0.0",
-  "description": "Realtime design consultation chat with collaborative sketching",
+  "description": "Realtime design consultation chat with collaborative image sketching",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
