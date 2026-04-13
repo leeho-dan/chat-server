@@ -19,6 +19,7 @@
 }
 
 *{ box-sizing:border-box; }
+
 html, body{
   margin:0;
   width:100%;
@@ -29,7 +30,9 @@ html, body{
     linear-gradient(180deg, #f9fbff 0%, #edf4fa 100%);
   color:var(--text);
 }
+
 body{ overflow:hidden; }
+
 button,input,textarea,label{ font:inherit; }
 button{ cursor:pointer; }
 
@@ -382,26 +385,36 @@ button{ cursor:pointer; }
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:10px;
+  padding:14px;
+  background:#f7fbff;
 }
 
 #imageStage{
   position:relative;
-  max-width:100%;
-  max-height:100%;
-  display:inline-block;
-  overflow:visible;
+  width:min(100%, 1200px);
+  height:min(100%, 760px);
+  min-height:420px;
+  border-radius:22px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(247,251,255,0.96));
+  border:1px solid #dfe9f3;
+  box-shadow:0 18px 38px rgba(18,36,61,0.08);
+  overflow:hidden;
 }
 
 #viewerImage{
-  display:block;
-  max-width:100%;
-  max-height:calc(100vh - 205px);
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -50%);
+  max-width:84%;
+  max-height:84%;
   border-radius:18px;
-  box-shadow:0 14px 32px rgba(18,36,61,0.10);
+  box-shadow:0 14px 32px rgba(18,36,61,0.12);
   pointer-events:none;
   user-select:none;
   -webkit-user-drag:none;
+  z-index:1;
 }
 
 #drawCanvas{
@@ -409,7 +422,7 @@ button{ cursor:pointer; }
   inset:0;
   width:100%;
   height:100%;
-  border-radius:18px;
+  border-radius:22px;
   touch-action:none;
   pointer-events:auto;
   z-index:2;
@@ -654,32 +667,41 @@ button{ cursor:pointer; }
 
 @media (max-width: 900px){
   #app{ padding:0; }
+
   #chatCard{
     width:100%;
     height:100dvh;
     border-radius:0;
   }
+
   #header{
     height:64px;
     min-height:64px;
   }
+
   #title{ font-size:22px; }
+
   #roleBadge{
     left:10px;
     padding:6px 10px;
     font-size:11px;
   }
+
   #chatBox{ padding:14px 12px 8px; }
+
   .bubble{
     max-width:84%;
     font-size:14px;
     padding:11px 14px;
   }
+
   .chatImg{ max-width:200px; }
+
   #inputArea{
     padding:8px 10px 10px;
     gap:6px;
   }
+
   #msgInput, #sendBtn, #fileLabel{ height:44px; }
   #sendBtn, #fileLabel{ width:44px; }
 
@@ -701,8 +723,9 @@ button{ cursor:pointer; }
     border-bottom:1px solid var(--line);
   }
 
-  #viewerImage{
-    max-height:calc(54vh - 130px);
+  #imageStage{
+    min-height:300px;
+    height:100%;
   }
 
   #toolRow{
@@ -841,11 +864,19 @@ button{ cursor:pointer; }
 <script>
 const STORAGE_KEYS = {
   roomId: "chat_room_id",
-  viewerState: "chat_last_viewer_state"
+  viewerState: "chat_last_viewer_state",
+  userName: "chat_user_name"
 };
 
 const params = new URLSearchParams(location.search);
 const role = params.has("admin") ? "admin" : "user";
+const userName =
+  params.get("userName") ||
+  localStorage.getItem(STORAGE_KEYS.userName) ||
+  "상담자";
+
+localStorage.setItem(STORAGE_KEYS.userName, userName);
+
 let roomId = params.get("room") || localStorage.getItem(STORAGE_KEYS.roomId) || crypto.randomUUID();
 localStorage.setItem(STORAGE_KEYS.roomId, roomId);
 
@@ -891,6 +922,7 @@ const thicknessRange = document.getElementById("thicknessRange");
 const colorSwatches = Array.from(document.querySelectorAll(".colorSwatch"));
 const noteColorSwatches = Array.from(document.querySelectorAll(".noteColorSwatch"));
 const textLayer = document.getElementById("textLayer");
+const imageStage = document.getElementById("imageStage");
 
 roleBadge.textContent = role === "admin" ? "관리자 화면" : "고객 채팅";
 
@@ -1120,6 +1152,22 @@ function formatTime(ts) {
   }
 }
 
+function formatFileDate(date = new Date()) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mi = String(date.getMinutes()).padStart(2, "0");
+  return `${yyyy}${mm}${dd}_${hh}${mi}`;
+}
+
+function sanitizeFileName(name) {
+  return String(name || "상담자")
+    .replace(/[\\/:*?"<>|]/g, "_")
+    .replace(/\s+/g, "_")
+    .slice(0, 40);
+}
+
 function createTextRow(data) {
   const row = document.createElement("div");
   row.className = "messageRow " + (data.sender === role ? "me" : "other");
@@ -1236,6 +1284,7 @@ function openViewerPopup(imageId, imageUrl) {
   url.searchParams.set("role", role);
   url.searchParams.set("imageId", imageId);
   url.searchParams.set("imageUrl", imageUrl);
+  url.searchParams.set("userName", userName);
 
   const popup = window.open(
     url.toString(),
@@ -1265,12 +1314,13 @@ function closeViewer() {
 }
 
 function updateCanvasSize() {
-  const width = viewerImage.clientWidth;
-  const height = viewerImage.clientHeight;
+  const width = imageStage.clientWidth;
+  const height = imageStage.clientHeight;
   if (!width || !height) return;
 
   drawCanvas.width = width;
   drawCanvas.height = height;
+
   redrawAllStrokes();
   renderNotes();
 }
@@ -1374,14 +1424,43 @@ function wrapTextLines(text, maxCharsPerLine) {
 function buildDownload() {
   if (!currentViewerImageUrl) return;
 
+  const stageWidth = imageStage.clientWidth || 1200;
+  const stageHeight = imageStage.clientHeight || 760;
+
   const img = new Image();
+
   img.onload = () => {
     const exportCanvas = document.createElement("canvas");
-    exportCanvas.width = img.naturalWidth;
-    exportCanvas.height = img.naturalHeight;
+    exportCanvas.width = Math.round(stageWidth * 2);
+    exportCanvas.height = Math.round(stageHeight * 2);
 
     const exportCtx = exportCanvas.getContext("2d");
-    exportCtx.drawImage(img, 0, 0);
+
+    exportCtx.fillStyle = "#f7fbff";
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+    exportCtx.fillStyle = "#ffffff";
+    roundRect(exportCtx, 8, 8, exportCanvas.width - 16, exportCanvas.height - 16, 24);
+    exportCtx.fill();
+
+    const stageRect = imageStage.getBoundingClientRect();
+    const imageRect = viewerImage.getBoundingClientRect();
+
+    const relX = Math.max(0, imageRect.left - stageRect.left);
+    const relY = Math.max(0, imageRect.top - stageRect.top);
+    const relW = imageRect.width;
+    const relH = imageRect.height;
+
+    const drawX = (relX / stageRect.width) * exportCanvas.width;
+    const drawY = (relY / stageRect.height) * exportCanvas.height;
+    const drawW = (relW / stageRect.width) * exportCanvas.width;
+    const drawH = (relH / stageRect.height) * exportCanvas.height;
+
+    exportCtx.save();
+    roundRect(exportCtx, drawX, drawY, drawW, drawH, 18);
+    exportCtx.clip();
+    exportCtx.drawImage(img, drawX, drawY, drawW, drawH);
+    exportCtx.restore();
 
     currentStrokes.forEach((stroke) => {
       const x1 = stroke.last.x * exportCanvas.width;
@@ -1392,7 +1471,7 @@ function buildDownload() {
       exportCtx.save();
       exportCtx.lineCap = "round";
       exportCtx.lineJoin = "round";
-      exportCtx.lineWidth = stroke.size || 3;
+      exportCtx.lineWidth = (stroke.size || 3) * 2;
 
       if (stroke.mode === "erase") {
         exportCtx.globalCompositeOperation = "destination-out";
@@ -1418,21 +1497,21 @@ function buildDownload() {
       exportCtx.save();
       exportCtx.fillStyle = note.color || "#fff7c2";
       exportCtx.strokeStyle = note.author === "admin" ? "#8a5cff" : "#2491ff";
-      exportCtx.lineWidth = 2;
+      exportCtx.lineWidth = 2.5;
 
       roundRect(exportCtx, x, y, width, height, 16);
       exportCtx.fill();
       exportCtx.stroke();
 
       exportCtx.fillStyle = "#17212b";
-      exportCtx.font = `${Math.max(13, exportCanvas.width * 0.016)}px sans-serif`;
-      exportCtx.fillText(note.author === "admin" ? "관리자" : "고객", x + 12, y + 18);
+      exportCtx.font = "bold 24px sans-serif";
+      exportCtx.fillText(note.author === "admin" ? "관리자" : "고객", x + 18, y + 30);
 
-      exportCtx.font = `${Math.max(14, exportCanvas.width * 0.018)}px sans-serif`;
-      const lines = wrapTextLines(note.text || "", 18);
-      const lineHeight = Math.max(18, exportCanvas.width * 0.024);
+      exportCtx.font = "24px sans-serif";
+      const lines = wrapTextLines(note.text || "", 20);
+      const lineHeight = 30;
       lines.forEach((line, idx) => {
-        exportCtx.fillText(line, x + 12, y + 40 + idx * lineHeight);
+        exportCtx.fillText(line, x + 18, y + 64 + idx * lineHeight);
       });
 
       exportCtx.restore();
@@ -1440,16 +1519,19 @@ function buildDownload() {
 
     exportCtx.save();
     exportCtx.fillStyle = "rgba(0,0,0,0.55)";
-    exportCtx.font = `${Math.max(12, exportCanvas.width * 0.012)}px sans-serif`;
+    exportCtx.font = "20px sans-serif";
     exportCtx.fillText(
-      `Room ${roomId.slice(0, 8)} · ${new Date().toLocaleString("ko-KR")}`,
-      16,
-      exportCanvas.height - 16
+      `${userName} · ${new Date().toLocaleString("ko-KR")}`,
+      20,
+      exportCanvas.height - 20
     );
     exportCtx.restore();
 
+    const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
     downloadSketchBtn.href = exportCanvas.toDataURL("image/png");
+    downloadSketchBtn.download = fileName;
   };
+
   img.src = currentViewerImageUrl;
 }
 
@@ -1459,9 +1541,9 @@ function addTextNote() {
 
   const note = {
     id: crypto.randomUUID(),
-    x: 0.12,
-    y: 0.12,
-    width: 0.22,
+    x: 0.08,
+    y: 0.08,
+    width: 0.20,
     height: 0.12,
     text: "메모 입력",
     color: currentNoteColor,
