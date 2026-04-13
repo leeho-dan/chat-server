@@ -933,20 +933,82 @@ button{ cursor:pointer; }
 
   #viewerTopbar{
     height:auto;
-    min-height:72px;
-    align-items:flex-start;
-    padding:10px 12px;
-    flex-direction:column;
+    min-height:0;
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) auto;
+    grid-template-areas:
+      "stats actions"
+      "title actions";
+    align-items:center;
+    gap:6px 10px;
+    padding:8px 10px;
+  }
+
+  #viewerTopLeft{
+    grid-area:title;
+    width:100%;
+    gap:0;
+  }
+
+  #viewerTitle{
+    font-size:15px;
+    line-height:1.2;
+  }
+
+  #viewerSubtitle{
+    display:none;
+  }
+
+  #viewerStats{
+    grid-area:stats;
+    width:100%;
+    gap:6px;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+
+  #viewerStats::-webkit-scrollbar{
+    display:none;
+  }
+
+  .statBadge{
+    height:24px;
+    padding:0 7px;
+    font-size:0;
+    gap:0;
+    white-space:nowrap;
+  }
+
+  .statBadge::before{
+    content:attr(data-icon);
+    font-size:11px;
+    line-height:1;
+  }
+
+  .statBadge::after{
+    content:attr(data-count);
+    margin-left:4px;
+    font-size:10px;
+    line-height:1;
+    font-weight:800;
+  }
+
+  #connectionBadge::before{
+    color:#2f9e44;
+    font-size:10px;
   }
 
   #viewerActions{
-    width:100%;
+    grid-area:actions;
+    width:auto;
     justify-content:flex-end;
+    align-self:start;
   }
 
   #viewerMain{
     grid-template-columns:1fr;
-    grid-template-rows:54vh 46vh;
+    grid-template-rows:minmax(0, 57dvh) minmax(0, 1fr);
   }
 
   #viewerLeft{
@@ -954,9 +1016,14 @@ button{ cursor:pointer; }
     border-bottom:1px solid var(--line);
   }
 
+  #canvasWrap{
+    padding:8px;
+  }
+
   #imageStage{
-    min-height:300px;
+    min-height:0;
     height:100%;
+    border-radius:18px;
   }
 
   #toolRow{
@@ -994,12 +1061,12 @@ button{ cursor:pointer; }
   #thicknessRange{ width:100px; }
 
   #colorRow{
-    gap:10px;
+    gap:7px;
   }
 
   .colorSwatch{
-    width:30px;
-    height:30px;
+    width:24px;
+    height:24px;
   }
 
   #noteColorRow{
@@ -1009,6 +1076,36 @@ button{ cursor:pointer; }
 
   #noteColorRow.open{
     display:flex;
+  }
+
+  #viewerRight{
+    min-height:0;
+  }
+
+  #viewerChatHeader{
+    display:none;
+  }
+
+  #viewerChatBox{
+    padding:10px 10px 6px;
+  }
+
+  #viewerChatInner{
+    gap:8px;
+  }
+
+  #viewerInputBar{
+    padding:8px 10px 10px;
+  }
+
+  #viewerMsgInput{
+    height:42px;
+    font-size:13px;
+  }
+
+  #viewerSendBtn{
+    width:42px;
+    height:42px;
   }
 }
 </style>
@@ -1069,9 +1166,9 @@ button{ cursor:pointer; }
     </div>
 
     <div id="viewerStats">
-      <div class="statBadge" id="drawingCountBadge">선 0</div>
-      <div class="statBadge" id="noteCountBadge">메모 0</div>
-      <div class="statBadge" id="connectionBadge">연결됨</div>
+      <div class="statBadge" id="drawingCountBadge" data-icon="〰" data-count="0">선 0</div>
+      <div class="statBadge" id="noteCountBadge" data-icon="✎" data-count="0">메모 0</div>
+      <div class="statBadge" id="connectionBadge" data-icon="●" data-count="on">연결됨</div>
     </div>
 
     <div id="viewerActions">
@@ -1160,7 +1257,6 @@ button{ cursor:pointer; }
         </div>
       </div>
     </section>
-
     <section id="viewerRight">
       <div id="viewerChatHeader">채팅</div>
       <div id="viewerChatBox">
@@ -1412,7 +1508,9 @@ function updateHistoryButtons() {
 
 function updateViewerStats() {
   drawingCountBadge.textContent = `선 ${currentStrokes.length}`;
+  drawingCountBadge.dataset.count = String(currentStrokes.length);
   noteCountBadge.textContent = `메모 ${currentNotes.length}`;
+  noteCountBadge.dataset.count = String(currentNotes.length);
   if (currentViewerImageId) {
     viewerSubtitle.textContent = `현재 이미지 ID: ${currentViewerImageId.slice(0, 8)} · 실시간 협업 중`;
   } else {
@@ -1458,11 +1556,13 @@ const initialImageUrl = params.get("imageUrl") || "";
 
 socket.on("connect", () => {
   connectionBadge.textContent = "연결됨";
+  connectionBadge.dataset.count = "on";
   announceReadyToParent();
 });
 
 socket.on("disconnect", () => {
   connectionBadge.textContent = "연결 끊김";
+  connectionBadge.dataset.count = "off";
 });
 
 socket.emit("join", { roomId, role });
@@ -1799,7 +1899,6 @@ function redrawAllStrokes() {
   currentStrokes.forEach(drawStroke);
   updateViewerStats();
 }
-
 function getNormalizedPoint(evt) {
   const rect = drawCanvas.getBoundingClientRect();
   return {
