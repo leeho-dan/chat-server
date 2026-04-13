@@ -44,7 +44,15 @@ button{ cursor:pointer; }
   line-height:1;
 }
 
-* { -webkit-tap-highlight-color: transparent; }
+#togglePhoneBtn,
+#savePhoneBtn,
+.viewerBtn,
+.toolBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
 
 #app{
   width:100%;
@@ -215,9 +223,6 @@ button{ cursor:pointer; }
   border-radius:999px;
   font-size:12px;
   font-weight:700;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
 }
 
 #phoneRow{ display:none; gap:8px; }
@@ -242,9 +247,6 @@ button{ cursor:pointer; }
   background:#607082;
   color:white;
   font-weight:800;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
 }
 
 #messageRow{
@@ -374,10 +376,6 @@ button{ cursor:pointer; }
   background:#edf4fa;
   color:#425466;
   text-decoration:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
   font-weight:700;
 }
 
@@ -559,10 +557,6 @@ button{ cursor:pointer; }
   color:#425466;
   font-weight:700;
   white-space:nowrap;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
 }
 
 .toolBtn.active{
@@ -901,7 +895,7 @@ button{ cursor:pointer; }
         <span class="btnIcon">↓</span>
         <span class="btnText">다운로드</span>
       </a>
-      <button id="closeViewerBtn" class="viewerBtn" type="button" aria-label="닫기">
+      <button id="closeViewerBtn" class="viewerBtn" type="button" aria-label="뷰어 닫기">
         <span class="btnIcon">✕</span>
         <span class="btnText">닫기</span>
       </button>
@@ -933,11 +927,11 @@ button{ cursor:pointer; }
               <span class="btnIcon">T</span>
               <span class="btnText">텍스트 추가</span>
             </button>
-            <button id="clearDrawingBtn" class="toolBtn" type="button" aria-label="선지우기">
+            <button id="clearDrawingBtn" class="toolBtn" type="button" aria-label="선 지우기">
               <span class="btnIcon">⌧</span>
               <span class="btnText">선지우기</span>
             </button>
-            <button id="clearNotesBtn" class="toolBtn" type="button" aria-label="메모지우기">
+            <button id="clearNotesBtn" class="toolBtn" type="button" aria-label="메모 지우기">
               <span class="btnIcon">⌦</span>
               <span class="btnText">메모지우기</span>
             </button>
@@ -954,7 +948,7 @@ button{ cursor:pointer; }
           <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
           <button class="colorSwatch" type="button" data-color="#ffffff" style="background:#ffffff;" aria-label="흰색"></button>
           <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
-          <button id="customColorBtn" class="colorSwatch" type="button" aria-label="추가 색상 선택"></button>
+          <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
           <input id="customColorInput" type="color" value="#2491ff" aria-label="사용자 지정 색상" />
         </div>
 
@@ -967,11 +961,11 @@ button{ cursor:pointer; }
         </div>
 
         <div id="historyRow">
-          <button id="undoBtn" class="toolBtn" type="button" aria-label="Undo">
+          <button id="undoBtn" class="toolBtn" type="button" aria-label="실행 취소">
             <span class="btnIcon">↶</span>
             <span class="btnText">Undo</span>
           </button>
-          <button id="redoBtn" class="toolBtn" type="button" aria-label="Redo">
+          <button id="redoBtn" class="toolBtn" type="button" aria-label="다시 실행">
             <span class="btnIcon">↷</span>
             <span class="btnText">Redo</span>
           </button>
@@ -1677,4 +1671,567 @@ function buildDownload() {
 
     const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
     downloadSketchBtn.href = exportCanvas.toDataURL("image/png");
-    downloadSketchBtn.download
+    downloadSketchBtn.download = fileName;
+  };
+
+  img.src = currentViewerImageUrl;
+}
+
+function addTextNote() {
+  if (!currentViewerImageId) return;
+  pushHistory();
+
+  const note = {
+    id: crypto.randomUUID(),
+    x: 0.08,
+    y: 0.08,
+    width: 0.20,
+    height: 0.12,
+    text: "메모 입력",
+    color: currentNoteColor,
+    author: role
+  };
+
+  socket.emit("add-note", {
+    imageId: currentViewerImageId,
+    note
+  });
+}
+
+function getNoteById(noteId) {
+  return currentNotes.find((n) => n.id === noteId);
+}
+
+function createNoteNode(note) {
+  const node = document.createElement("div");
+  node.className = "text-note";
+  node.dataset.id = note.id;
+  node.dataset.author = note.author === role ? "me" : "other";
+
+  const header = document.createElement("div");
+  header.className = "text-note-header";
+
+  const delBtn = document.createElement("button");
+  delBtn.className = "text-note-delete";
+  delBtn.type = "button";
+  delBtn.textContent = "✕";
+
+  const authorLabel = document.createElement("div");
+  authorLabel.className = "text-note-author";
+  authorLabel.textContent = note.author === "admin" ? "관리자 메모" : "고객 메모";
+
+  const textarea = document.createElement("textarea");
+  textarea.value = note.text || "";
+
+  const resize = document.createElement("div");
+  resize.className = "text-note-resize";
+
+  delBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!confirm("이 메모를 삭제할까요?")) return;
+    pushHistory();
+
+    socket.emit("delete-note", {
+      imageId: currentViewerImageId,
+      noteId: note.id
+    });
+  });
+
+  textarea.addEventListener("focus", () => {
+    pushHistory();
+  }, { once: true });
+
+  textarea.addEventListener("input", () => {
+    const model = getNoteById(note.id);
+    if (!model) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+
+    const nextHeight = Math.max(0.10, textarea.scrollHeight / Math.max(drawCanvas.height, 1));
+    model.text = textarea.value;
+    model.height = nextHeight;
+
+    applyNoteLayout(node, model);
+
+    scheduleNoteLiveUpdate(note.id, currentViewerImageId, {
+      text: model.text,
+      height: model.height
+    });
+
+    debounceNoteCommit(note.id, () => {
+      socket.emit("update-note", {
+        imageId: currentViewerImageId,
+        noteId: note.id,
+        patch: {
+          text: model.text,
+          height: model.height
+        }
+      });
+    });
+  });
+
+  header.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+    const model = getNoteById(note.id);
+    if (!model) return;
+
+    pushHistory();
+    draggingNoteId = note.id;
+    activeNoteNode = node;
+    node.classList.add("selected");
+
+    const rect = textLayer.getBoundingClientRect();
+    const noteLeftPx = model.x * rect.width;
+    const noteTopPx = model.y * rect.height;
+
+    dragOffset.x = e.clientX - rect.left - noteLeftPx;
+    dragOffset.y = e.clientY - rect.top - noteTopPx;
+
+    e.preventDefault();
+  });
+
+  resize.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+    const model = getNoteById(note.id);
+    if (!model) return;
+
+    pushHistory();
+    resizingNoteId = note.id;
+    activeNoteNode = node;
+
+    const rect = textLayer.getBoundingClientRect();
+    resizeStart = {
+      x: e.clientX,
+      y: e.clientY,
+      width: model.width * rect.width,
+      height: model.height * rect.height
+    };
+
+    e.preventDefault();
+  });
+
+  node.appendChild(header);
+  node.appendChild(delBtn);
+  node.appendChild(authorLabel);
+  node.appendChild(textarea);
+  node.appendChild(resize);
+
+  applyNoteLayout(node, note);
+  return node;
+}
+
+function applyNoteLayout(node, note) {
+  if (!node || !note) return;
+
+  node.style.left = (note.x * 100) + "%";
+  node.style.top = (note.y * 100) + "%";
+  node.style.width = (note.width * 100) + "%";
+  node.style.minHeight = Math.max(56, note.height * drawCanvas.height) + "px";
+  node.style.background = note.color || "#fff7c2";
+
+  const textarea = node.querySelector("textarea");
+  if (textarea && textarea.value !== note.text) {
+    textarea.value = note.text || "";
+  }
+  if (textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+  }
+}
+
+function renderNotes() {
+  textLayer.innerHTML = "";
+  currentNotes.forEach((note) => {
+    textLayer.appendChild(createNoteNode(note));
+  });
+  updateViewerStats();
+}
+
+function upsertNoteNode(note) {
+  const existing = textLayer.querySelector(`.text-note[data-id="${note.id}"]`);
+  if (existing) {
+    applyNoteLayout(existing, note);
+    return;
+  }
+  textLayer.appendChild(createNoteNode(note));
+  updateViewerStats();
+}
+
+window.addEventListener("pointermove", (e) => {
+  if (!currentViewerImageId) return;
+  const rect = textLayer.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+
+  if (draggingNoteId && activeNoteNode) {
+    const note = getNoteById(draggingNoteId);
+    if (!note) return;
+
+    const noteWidthPx = note.width * rect.width;
+    const noteHeightPx = Math.max(60, note.height * rect.height);
+
+    let leftPx = e.clientX - rect.left - dragOffset.x;
+    let topPx = e.clientY - rect.top - dragOffset.y;
+
+    leftPx = Math.max(0, Math.min(rect.width - noteWidthPx, leftPx));
+    topPx = Math.max(0, Math.min(rect.height - noteHeightPx, topPx));
+
+    note.x = leftPx / rect.width;
+    note.y = topPx / rect.height;
+
+    applyNoteLayout(activeNoteNode, note);
+
+    scheduleNoteLiveUpdate(note.id, currentViewerImageId, {
+      x: note.x,
+      y: note.y
+    });
+    return;
+  }
+
+  if (resizingNoteId && activeNoteNode) {
+    const note = getNoteById(resizingNoteId);
+    if (!note) return;
+
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+
+    const nextWidthPx = Math.max(120, Math.min(rect.width * 0.6, resizeStart.width + deltaX));
+    const nextHeightPx = Math.max(56, Math.min(rect.height * 0.5, resizeStart.height + deltaY));
+
+    note.width = nextWidthPx / rect.width;
+    note.height = nextHeightPx / rect.height;
+
+    applyNoteLayout(activeNoteNode, note);
+
+    scheduleNoteLiveUpdate(note.id, currentViewerImageId, {
+      width: note.width,
+      height: note.height
+    });
+  }
+});
+
+window.addEventListener("pointerup", () => {
+  if (draggingNoteId) {
+    const note = getNoteById(draggingNoteId);
+    if (note) {
+      socket.emit("update-note", {
+        imageId: currentViewerImageId,
+        noteId: note.id,
+        patch: {
+          x: note.x,
+          y: note.y
+        }
+      });
+    }
+  }
+
+  if (resizingNoteId) {
+    const note = getNoteById(resizingNoteId);
+    if (note) {
+      socket.emit("update-note", {
+        imageId: currentViewerImageId,
+        noteId: note.id,
+        patch: {
+          width: note.width,
+          height: note.height
+        }
+      });
+    }
+  }
+
+  draggingNoteId = null;
+  resizingNoteId = null;
+  activeNoteNode = null;
+});
+
+sendBtn.addEventListener("click", sendMainMessage);
+viewerSendBtn.addEventListener("click", sendViewerMessage);
+
+msgInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    if (isComposingMain || e.isComposing) return;
+    e.preventDefault();
+    sendMainMessage();
+  }
+});
+
+viewerMsgInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    if (isComposingViewer || e.isComposing) return;
+    e.preventDefault();
+    sendViewerMessage();
+  }
+});
+
+savePhoneBtn.addEventListener("click", savePhone);
+
+fileInput.addEventListener("change", async (e) => {
+  const selected = e.target.files[0];
+  if (!selected) return;
+
+  try {
+    await uploadImage(selected);
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "이미지 업로드에 실패했습니다.");
+  } finally {
+    fileInput.value = "";
+  }
+});
+
+openViewerBtn.addEventListener("click", () => {
+  if (!lastSelectedImageId || !lastSelectedImageUrl) {
+    alert("먼저 채팅에서 이미지를 선택해주세요.");
+    return;
+  }
+  openViewerPopup(lastSelectedImageId, lastSelectedImageUrl);
+});
+
+closeViewerBtn.addEventListener("click", () => {
+  if (isViewerMode) {
+    window.close();
+    return;
+  }
+  closeViewer();
+});
+
+viewerImage.addEventListener("load", () => {
+  updateCanvasSize();
+
+  if (currentViewerImageId) {
+    socket.emit("request-drawing-history", { imageId: currentViewerImageId });
+    socket.emit("request-note-history", { imageId: currentViewerImageId });
+    saveViewerState();
+  }
+  updateViewerStats();
+  updateHistoryButtons();
+});
+
+window.addEventListener("resize", updateCanvasSize);
+
+penBtn.addEventListener("click", () => {
+  drawMode = "draw";
+  setActiveTools();
+});
+
+eraserBtn.addEventListener("click", () => {
+  drawMode = "erase";
+  setActiveTools();
+});
+
+addTextBtn.addEventListener("click", addTextNote);
+
+clearDrawingBtn.addEventListener("click", () => {
+  if (!currentViewerImageId) return;
+  if (!confirm("현재 이미지의 선을 모두 지울까요?")) return;
+  pushHistory();
+  socket.emit("clear-drawing", { imageId: currentViewerImageId });
+});
+
+clearNotesBtn.addEventListener("click", () => {
+  if (!currentViewerImageId) return;
+  if (!confirm("현재 이미지의 메모를 모두 지울까요?")) return;
+  pushHistory();
+  socket.emit("clear-notes", { imageId: currentViewerImageId });
+});
+
+undoBtn.addEventListener("click", undoAction);
+redoBtn.addEventListener("click", redoAction);
+
+thicknessRange.addEventListener("input", () => {
+  currentSize = Number(thicknessRange.value || 3);
+});
+
+colorSwatches
+  .filter((btn) => btn !== customColorBtn)
+  .forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentColor = btn.dataset.color || "#ff3b30";
+      setActiveColor(currentColor);
+    });
+  });
+
+customColorBtn.addEventListener("click", () => {
+  customColorInput.click();
+});
+
+customColorInput.addEventListener("input", () => {
+  currentColor = customColorInput.value || "#2491ff";
+  setActiveColor(currentColor);
+});
+
+noteColorSwatches.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentNoteColor = btn.dataset.noteColor || "#fff7c2";
+    setActiveNoteColor(currentNoteColor);
+  });
+});
+
+drawCanvas.addEventListener("pointerdown", (evt) => {
+  if (!currentViewerImageId) return;
+  pushHistory();
+  isDrawing = true;
+  lastPoint = getNormalizedPoint(evt);
+  drawCanvas.setPointerCapture(evt.pointerId);
+});
+
+drawCanvas.addEventListener("pointermove", (evt) => {
+  if (!isDrawing || !currentViewerImageId || !lastPoint) return;
+
+  const current = getNormalizedPoint(evt);
+  const stroke = {
+    imageId: currentViewerImageId,
+    mode: drawMode,
+    color: currentColor,
+    size: currentSize,
+    last: lastPoint,
+    current
+  };
+
+  currentStrokes.push(stroke);
+  drawStroke(stroke);
+  updateViewerStats();
+  socket.emit("draw-stroke", stroke);
+  lastPoint = current;
+});
+
+function stopDrawing() {
+  isDrawing = false;
+  lastPoint = null;
+}
+
+drawCanvas.addEventListener("pointerup", stopDrawing);
+drawCanvas.addEventListener("pointercancel", stopDrawing);
+drawCanvas.addEventListener("pointerleave", stopDrawing);
+
+downloadSketchBtn.addEventListener("click", buildDownload);
+
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
+    e.preventDefault();
+    undoAction();
+    return;
+  }
+
+  if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") ||
+      ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "z")) {
+    e.preventDefault();
+    redoAction();
+    return;
+  }
+
+  if (e.key === "Escape") {
+    if (isViewerMode) {
+      window.close();
+      return;
+    }
+    closeViewer();
+  }
+});
+
+socket.on("history", (messages) => {
+  chatInner.innerHTML = "";
+  viewerChatInner.innerHTML = "";
+
+  (messages || []).forEach((item) => {
+    if (item.type === "text") renderTextMessage(item);
+    if (item.type === "image") renderImageMessage(item);
+  });
+});
+
+socket.on("message", (data) => {
+  renderTextMessage(data);
+});
+
+socket.on("image", (data) => {
+  renderImageMessage(data);
+});
+
+socket.on("drawing-history", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+  currentStrokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+  redrawAllStrokes();
+  updateViewerStats();
+});
+
+socket.on("draw-stroke", (stroke) => {
+  if (!stroke || stroke.imageId !== currentViewerImageId) return;
+  currentStrokes.push(stroke);
+  drawStroke(stroke);
+  updateViewerStats();
+});
+
+socket.on("clear-drawing", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+  currentStrokes = [];
+  clearCanvas();
+  updateViewerStats();
+});
+
+socket.on("note-history", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+  currentNotes = Array.isArray(payload.notes) ? payload.notes : [];
+  renderNotes();
+});
+
+socket.on("note-added", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId || !payload.note) return;
+
+  const exists = currentNotes.some((n) => n.id === payload.note.id);
+  if (!exists) {
+    currentNotes.push(payload.note);
+    upsertNoteNode(payload.note);
+    updateViewerStats();
+  }
+});
+
+socket.on("note-live-update", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId || !payload.noteId) return;
+
+  const note = currentNotes.find((n) => n.id === payload.noteId);
+  if (!note) return;
+
+  Object.assign(note, payload.patch || {});
+  const node = textLayer.querySelector(`.text-note[data-id="${note.id}"]`);
+  if (node) {
+    applyNoteLayout(node, note);
+  }
+});
+
+socket.on("note-updated", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId || !payload.noteId) return;
+
+  const note = currentNotes.find((n) => n.id === payload.noteId);
+  if (!note) return;
+
+  Object.assign(note, payload.patch || {});
+  const node = textLayer.querySelector(`.text-note[data-id="${note.id}"]`);
+  if (node) {
+    applyNoteLayout(node, note);
+  }
+  updateViewerStats();
+});
+
+socket.on("note-deleted", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId || !payload.noteId) return;
+
+  currentNotes = currentNotes.filter((n) => n.id !== payload.noteId);
+  const node = textLayer.querySelector(`.text-note[data-id="${payload.noteId}"]`);
+  if (node) node.remove();
+  updateViewerStats();
+});
+
+socket.on("clear-notes", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+  currentNotes = [];
+  renderNotes();
+  updateViewerStats();
+});
+
+setActiveTools();
+setActiveColor(currentColor);
+setActiveNoteColor(currentNoteColor);
+updateHistoryButtons();
+</script>
+</body>
+</html>
