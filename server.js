@@ -84,6 +84,16 @@ const NoteStateSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
+const ContactSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, index: true, required: true },
+    phone: { type: String, required: true },
+    role: { type: String, enum: ["user", "admin"], required: true },
+    createdAt: { type: Number, required: true, index: true }
+  },
+  { versionKey: false }
+);
+
 MessageSchema.index({ roomId: 1, time: 1, _id: 1 });
 DrawingStateSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
 NoteStateSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
@@ -91,6 +101,7 @@ NoteStateSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
 const MessageModel = mongoose.model("Message", MessageSchema);
 const DrawingStateModel = mongoose.model("DrawingState", DrawingStateSchema);
 const NoteStateModel = mongoose.model("NoteState", NoteStateSchema);
+const ContactModel = mongoose.model("Contact", ContactSchema);
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
@@ -152,16 +163,71 @@ const drawingSaveTimers = new Map();
 const noteSaveTimers = new Map();
 const drawingLoadedKeys = new Set();
 const noteLoadedKeys = new Set();
+const memoryContacts = [];
+const ROOM_TTL_MS = 1000 * 60 * 60 * 6;
+
+app.post("/contact", async (req, res) => {
+  const roomId = typeof req.body.roomId === "string" ? req.body.roomId.trim() : "";
+  const role = req.body.role === "admin" ? "admin" : "user";
+  const phone = sanitizePhone(req.body.phone);
+
+  if (!roomId) {
+    return res.status(400).json({
+      ok: false,
+      error: "roomId가 필요합니다."
+    });
+  }
+
+  if (phone.length < 8) {
+    return res.status(400).json({
+      ok: false,
+      error: "유효한 전화번호를 입력해주세요."
+    });
+  }
+
+  const record = {
+    roomId,
+    phone,
+    role,
+    createdAt: Date.now()
+  };
+
+  memoryContacts.push(record);
+  if (memoryContacts.length > 1000) {
+    memoryContacts.shift();
+  }
+
+  if (mongoReady) {
+    try {
+      await ContactModel.create(record);
+    } catch (error) {
+      console.error("연락처 저장 실패:", error.message);
+    }
+  }
+
+  return res.json({
+    ok: true,
+    phone
+  });
+});
 
 function getRoom(roomId) {
   if (!rooms.has(roomId)) {
     rooms.set(roomId, {
       messages: [],
       drawings: {},
-      notes: {}
+      notes: {},
+      socketCount: 0,
+      lastActiveAt: Date.now()
     });
   }
   return rooms.get(roomId);
+}
+
+function touchRoom(roomId) {
+  const room = getRoom(roomId);
+  room.lastActiveAt = Date.now();
+  return room;
 }
 
 function getStateKey(roomId, imageId) {
@@ -169,7 +235,7 @@ function getStateKey(roomId, imageId) {
 }
 
 function addMemoryMessage(roomId, message) {
-  const room = getRoom(roomId);
+  const room = touchRoom(roomId);
   room.messages.push(message);
   if (room.messages.length > 1000) {
     room.messages.shift();
@@ -177,7 +243,7 @@ function addMemoryMessage(roomId, message) {
 }
 
 function getMemoryDrawingList(roomId, imageId) {
-  const room = getRoom(roomId);
+  const room = touchRoom(roomId);
   if (!room.drawings[imageId]) {
     room.drawings[imageId] = [];
   }
@@ -185,7 +251,7 @@ function getMemoryDrawingList(roomId, imageId) {
 }
 
 function getMemoryNoteList(roomId, imageId) {
-  const room = getRoom(roomId);
+  const room = touchRoom(roomId);
   if (!room.notes[imageId]) {
     room.notes[imageId] = [];
   }
@@ -196,6 +262,12 @@ function sanitizeColor(value, fallback) {
   return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(value || "").trim())
     ? String(value).trim()
     : fallback;
+}
+
+function sanitizePhone(value) {
+  return String(value || "")
+    .replace(/[^\d+]/g, "")
+    .slice(0, 20);
 }
 
 function sanitizeStroke(stroke = {}) {
@@ -384,6 +456,7 @@ io.on("connection", (socket) => {
     currentRole = role;
 
     socket.join(currentRoomId);
+    touchRoom(currentRoomId).socketCount += 1;
 
     const messages = await loadMessages(currentRoomId);
     socket.emit("history", messages);
@@ -456,6 +529,30 @@ io.on("connection", (socket) => {
 
     scheduleDrawingPersist(currentRoomId, imageId);
     socket.to(currentRoomId).emit("draw-stroke", stroke);
+  });
+
+  socket.on("draw-strokes", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageId = String(payload.imageId || "").trim();
+    const incoming = Array.isArray(payload.strokes) ? payload.strokes : [];
+    if (!imageId || incoming.length === 0) return;
+
+    const strokes = await loadDrawingState(currentRoomId, imageId);
+    const sanitized = incoming
+      .slice(0, 200)
+      .map((stroke) => sanitizeStroke({ ...stroke, imageId }));
+
+    sanitized.forEach((stroke) => strokes.push(stroke));
+    if (strokes.length > 5000) {
+      strokes.splice(0, strokes.length - 5000);
+    }
+
+    scheduleDrawingPersist(currentRoomId, imageId);
+    socket.to(currentRoomId).emit("draw-strokes", {
+      imageId,
+      strokes: sanitized
+    });
   });
 
   socket.on("replace-drawing-history", async (payload = {}) => {
@@ -593,6 +690,14 @@ io.on("connection", (socket) => {
     await replaceNoteState(currentRoomId, imageId, []);
     io.to(currentRoomId).emit("clear-notes", { imageId });
   });
+
+  socket.on("disconnect", () => {
+    if (!currentRoomId || !rooms.has(currentRoomId)) return;
+
+    const room = getRoom(currentRoomId);
+    room.socketCount = Math.max(0, room.socketCount - 1);
+    room.lastActiveAt = Date.now();
+  });
 });
 
 connectMongo().finally(() => {
@@ -651,6 +756,29 @@ async function flushPendingState() {
 
   await Promise.allSettled([...drawingJobs, ...noteJobs]);
 }
+
+function pruneInactiveRooms() {
+  const now = Date.now();
+
+  rooms.forEach((room, roomId) => {
+    if (room.socketCount > 0) return;
+    if (now - room.lastActiveAt < ROOM_TTL_MS) return;
+
+    Object.keys(room.drawings).forEach((imageId) => {
+      drawingLoadedKeys.delete(getStateKey(roomId, imageId));
+      drawingSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    Object.keys(room.notes).forEach((imageId) => {
+      noteLoadedKeys.delete(getStateKey(roomId, imageId));
+      noteSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    rooms.delete(roomId);
+  });
+}
+
+setInterval(pruneInactiveRooms, 1000 * 60 * 10).unref();
 
 let shuttingDown = false;
 
