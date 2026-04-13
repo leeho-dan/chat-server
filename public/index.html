@@ -7,9 +7,6 @@
 
 <style>
 :root{
-  --bg:#f4f8fc;
-  --card:#ffffff;
-  --soft:#f8fbff;
   --line:#e4ebf3;
   --text:#17212b;
   --sub:#758394;
@@ -209,6 +206,17 @@ button{ cursor:pointer; }
   display:flex;
 }
 
+#phoneStatus{
+  display:none;
+  font-size:12px;
+  color:#5f7286;
+  padding:0 2px;
+}
+
+#phoneStatus.show{
+  display:block;
+}
+
 #phoneInput{
   flex:1;
   height:42px;
@@ -267,9 +275,7 @@ button{ cursor:pointer; }
   box-shadow:0 8px 20px rgba(36,145,255,0.16);
 }
 
-#fileInput{
-  display:none;
-}
+#fileInput{ display:none; }
 
 #fileLabel{
   width:48px;
@@ -364,6 +370,7 @@ button{ cursor:pointer; }
   display:flex;
   align-items:center;
   justify-content:center;
+  gap:6px;
   font-weight:700;
 }
 
@@ -770,6 +777,8 @@ button{ cursor:pointer; }
         <button id="savePhoneBtn" type="button">등록</button>
       </div>
 
+      <div id="phoneStatus" aria-live="polite"></div>
+
       <div id="messageRow">
         <input id="msgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
         <button id="sendBtn" type="button" aria-label="전송">➤</button>
@@ -869,8 +878,10 @@ const STORAGE_KEYS = {
   userName: "chat_user_name"
 };
 
+const EMBED_MESSAGE_NAMESPACE = "design-chat-widget";
+
 const params = new URLSearchParams(location.search);
-const role = params.has("admin") ? "admin" : "user";
+const role = params.get("role") === "admin" || params.has("admin") ? "admin" : "user";
 const userName =
   params.get("userName") ||
   localStorage.getItem(STORAGE_KEYS.userName) ||
@@ -892,6 +903,7 @@ const msgInput = document.getElementById("msgInput");
 const sendBtn = document.getElementById("sendBtn");
 const fileInput = document.getElementById("fileInput");
 const phoneInput = document.getElementById("phoneInput");
+const phoneStatus = document.getElementById("phoneStatus");
 const savePhoneBtn = document.getElementById("savePhoneBtn");
 const togglePhoneBtn = document.getElementById("togglePhoneBtn");
 const phoneRow = document.getElementById("phoneRow");
@@ -944,6 +956,9 @@ let currentSize = 3;
 let currentNoteColor = "#fff7c2";
 let isDrawing = false;
 let lastPoint = null;
+let pendingStrokeBatch = [];
+let pendingStrokeImageId = "";
+let strokeBatchRaf = null;
 
 let draggingNoteId = null;
 let resizingNoteId = null;
@@ -958,6 +973,29 @@ const noteTextTimers = new Map();
 let historyUndoStack = [];
 let historyRedoStack = [];
 let historyLock = false;
+let parentReadySent = false;
+
+function notifyParent(type, payload = {}) {
+  if (window.parent === window) return;
+
+  window.parent.postMessage(
+    {
+      source: EMBED_MESSAGE_NAMESPACE,
+      type,
+      payload
+    },
+    "*"
+  );
+}
+
+function announceReadyToParent() {
+  if (parentReadySent) return;
+  parentReadySent = true;
+  notifyParent("chat-ready", {
+    roomId,
+    role
+  });
+}
 
 function cloneState() {
   return {
@@ -1031,6 +1069,12 @@ function updateViewerStats() {
   }
 }
 
+function setPhoneStatus(message, isError = false) {
+  phoneStatus.textContent = message;
+  phoneStatus.style.color = isError ? "#d14343" : "#5f7286";
+  phoneStatus.classList.toggle("show", Boolean(message));
+}
+
 function scheduleNoteLiveUpdate(noteId, imageId, patch) {
   noteLiveQueue.set(noteId, { imageId, noteId, patch });
 
@@ -1084,14 +1128,14 @@ function sanitizeFileName(name) {
     .slice(0, 40);
 }
 
-function roundRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + width, y, x + width, y + height, radius);
-  ctx.arcTo(x + width, y + height, x, y + height, radius);
-  ctx.arcTo(x, y + height, x, y, radius);
-  ctx.arcTo(x, y, x + width, y, radius);
-  ctx.closePath();
+function roundRect(ctx2d, x, y, width, height, radius) {
+  ctx2d.beginPath();
+  ctx2d.moveTo(x + radius, y);
+  ctx2d.arcTo(x + width, y, x + width, y + height, radius);
+  ctx2d.arcTo(x + width, y + height, x, y + height, radius);
+  ctx2d.arcTo(x, y + height, x, y, radius);
+  ctx2d.arcTo(x, y, x + width, y, radius);
+  ctx2d.closePath();
 }
 
 function wrapTextLines(text, maxCharsPerLine) {
@@ -1197,10 +1241,38 @@ function sendViewerMessage() {
 async function savePhone() {
   const phone = phoneInput.value.trim();
   if (!phone) {
-    alert("전화번호를 입력해주세요.");
+    setPhoneStatus("전화번호를 입력해주세요.", true);
     return;
   }
-  alert("전화번호 저장 기능은 현재 UI만 포함되어 있습니다.");
+
+  savePhoneBtn.disabled = true;
+  setPhoneStatus("저장 중...");
+
+  try {
+    const response = await fetch("/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        roomId,
+        role,
+        phone
+      })
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "전화번호 저장에 실패했습니다.");
+    }
+
+    phoneInput.value = result.phone || phone;
+    setPhoneStatus("전화번호가 저장되었습니다.");
+  } catch (error) {
+    setPhoneStatus(error.message || "전화번호 저장에 실패했습니다.", true);
+  } finally {
+    savePhoneBtn.disabled = false;
+  }
 }
 
 async function uploadImage(file) {
@@ -1253,6 +1325,12 @@ function closeViewer() {
   renderNotes();
   updateViewerStats();
   updateHistoryButtons();
+  pendingStrokeBatch = [];
+  pendingStrokeImageId = "";
+  if (strokeBatchRaf) {
+    cancelAnimationFrame(strokeBatchRaf);
+    strokeBatchRaf = null;
+  }
 }
 
 function updateCanvasSize() {
@@ -1297,6 +1375,30 @@ function drawStroke(stroke) {
   ctx.lineTo(x2, y2);
   ctx.stroke();
   ctx.restore();
+}
+
+function flushStrokeBatch() {
+  if (!pendingStrokeBatch.length || !pendingStrokeImageId) {
+    strokeBatchRaf = null;
+    return;
+  }
+
+  socket.emit("draw-strokes", {
+    imageId: pendingStrokeImageId,
+    strokes: pendingStrokeBatch
+  });
+
+  pendingStrokeBatch = [];
+  pendingStrokeImageId = "";
+  strokeBatchRaf = null;
+}
+
+function queueStrokeForSync(stroke) {
+  pendingStrokeImageId = stroke.imageId;
+  pendingStrokeBatch.push(stroke);
+
+  if (strokeBatchRaf) return;
+  strokeBatchRaf = requestAnimationFrame(flushStrokeBatch);
 }
 
 function redrawAllStrokes() {
@@ -1438,6 +1540,10 @@ function buildDownload() {
     const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
     downloadSketchBtn.href = exportCanvas.toDataURL("image/png");
     downloadSketchBtn.download = fileName;
+  };
+
+  img.onerror = () => {
+    alert("이미지를 다운로드용으로 불러오지 못했습니다.");
   };
 
   img.src = currentViewerImageUrl;
@@ -1836,7 +1942,7 @@ drawCanvas.addEventListener("pointermove", (evt) => {
   currentStrokes.push(stroke);
   drawStroke(stroke);
   updateViewerStats();
-  socket.emit("draw-stroke", stroke);
+  queueStrokeForSync(stroke);
   lastPoint = current;
 });
 
@@ -1872,6 +1978,7 @@ document.addEventListener("keydown", (e) => {
 
 socket.on("connect", () => {
   connectionBadge.textContent = "연결됨";
+  announceReadyToParent();
 });
 
 socket.on("disconnect", () => {
@@ -1888,6 +1995,8 @@ socket.on("history", (messages) => {
     if (item.type === "text") renderTextMessage(item);
     if (item.type === "image") renderImageMessage(item);
   });
+
+  announceReadyToParent();
 });
 
 socket.on("message", (data) => {
@@ -1909,6 +2018,17 @@ socket.on("draw-stroke", (stroke) => {
   if (!stroke || stroke.imageId !== currentViewerImageId) return;
   currentStrokes.push(stroke);
   drawStroke(stroke);
+  updateViewerStats();
+});
+
+socket.on("draw-strokes", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+
+  const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+  strokes.forEach((stroke) => {
+    currentStrokes.push(stroke);
+    drawStroke(stroke);
+  });
   updateViewerStats();
 });
 
@@ -1978,6 +2098,11 @@ socket.on("clear-notes", (payload) => {
   renderNotes();
   updateViewerStats();
 });
+
+setActiveTools();
+setActiveColor(currentColor);
+setActiveNoteColor(currentNoteColor);
+updateHistoryButtons();
 </script>
 </body>
 </html>
