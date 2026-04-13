@@ -44,14 +44,16 @@ button{ cursor:pointer; }
   line-height:1;
 }
 
-#togglePhoneBtn,
-#savePhoneBtn,
-.viewerBtn,
-.toolBtn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
+.srOnly{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0, 0, 0, 0);
+  white-space:nowrap;
+  border:0;
 }
 
 #app{
@@ -223,10 +225,24 @@ button{ cursor:pointer; }
   border-radius:999px;
   font-size:12px;
   font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
 }
 
 #phoneRow{ display:none; gap:8px; }
 #phoneRow.open{ display:flex; }
+
+#phoneStatus{
+  display:none;
+  font-size:12px;
+  color:#5f7286;
+  padding:0 2px;
+}
+
+#phoneStatus.show{
+  display:block;
+}
 
 #phoneInput{
   flex:1;
@@ -247,6 +263,9 @@ button{ cursor:pointer; }
   background:#607082;
   color:white;
   font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
 }
 
 #messageRow{
@@ -376,6 +395,10 @@ button{ cursor:pointer; }
   background:#edf4fa;
   color:#425466;
   text-decoration:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
   font-weight:700;
 }
 
@@ -557,6 +580,10 @@ button{ cursor:pointer; }
   color:#425466;
   font-weight:700;
   white-space:nowrap;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
 }
 
 .toolBtn.active{
@@ -582,6 +609,30 @@ button{ cursor:pointer; }
   flex-wrap:wrap;
   align-items:center;
   min-height:30px;
+}
+
+#noteColorHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+#noteColorTitle{
+  font-size:12px;
+  font-weight:800;
+  color:var(--sub);
+}
+
+#toggleNoteColorsBtn{
+  height:30px;
+  border:none;
+  border-radius:999px;
+  padding:0 12px;
+  background:#edf4fa;
+  color:#425466;
+  font-size:12px;
+  font-weight:700;
 }
 
 .colorSwatch{
@@ -809,12 +860,29 @@ button{ cursor:pointer; }
 
   #toolRow{
     flex-direction:column;
-    align-items:flex-start;
+    align-items:stretch;
   }
 
   #drawModeWrap,
   #historyRow{
     width:100%;
+  }
+
+  #drawModeWrap,
+  #historyRow,
+  #colorRow{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-bottom:4px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+
+  #drawModeWrap::-webkit-scrollbar,
+  #historyRow::-webkit-scrollbar,
+  #colorRow::-webkit-scrollbar{
+    display:none;
   }
 
   #thicknessWrap{
@@ -831,6 +899,15 @@ button{ cursor:pointer; }
   .colorSwatch{
     width:30px;
     height:30px;
+  }
+
+  #noteColorRow{
+    display:none;
+    padding-top:2px;
+  }
+
+  #noteColorRow.open{
+    display:flex;
   }
 }
 </style>
@@ -853,7 +930,7 @@ button{ cursor:pointer; }
 
     <div id="inputArea">
       <div id="utilityRow">
-        <button id="togglePhoneBtn" type="button">
+        <button id="togglePhoneBtn" type="button" aria-label="전화번호 입력 열기">
           <span class="btnIcon">☎</span>
           <span class="btnText">전화번호 입력</span>
         </button>
@@ -861,11 +938,12 @@ button{ cursor:pointer; }
 
       <div id="phoneRow">
         <input id="phoneInput" type="tel" placeholder="전화번호 입력" />
-        <button id="savePhoneBtn" type="button">
+        <button id="savePhoneBtn" type="button" aria-label="전화번호 등록">
           <span class="btnIcon">✓</span>
           <span class="btnText">등록</span>
         </button>
       </div>
+      <div id="phoneStatus" aria-live="polite"></div>
 
       <div id="messageRow">
         <input id="msgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
@@ -891,10 +969,10 @@ button{ cursor:pointer; }
     </div>
 
     <div id="viewerActions">
-      <a id="downloadSketchBtn" class="viewerBtn" download="sketch.png" aria-label="스케치 다운로드">
+      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="스케치 다운로드">
         <span class="btnIcon">↓</span>
         <span class="btnText">다운로드</span>
-      </a>
+      </button>
       <button id="closeViewerBtn" class="viewerBtn" type="button" aria-label="뷰어 닫기">
         <span class="btnIcon">✕</span>
         <span class="btnText">닫기</span>
@@ -952,6 +1030,11 @@ button{ cursor:pointer; }
           <input id="customColorInput" type="color" value="#2491ff" aria-label="사용자 지정 색상" />
         </div>
 
+        <div id="noteColorHeader">
+          <div id="noteColorTitle">메모 색상</div>
+          <button id="toggleNoteColorsBtn" type="button">메모 색상</button>
+        </div>
+
         <div id="noteColorRow">
           <button class="noteColorSwatch active" type="button" data-note-color="#fff7c2" style="background:#fff7c2;"></button>
           <button class="noteColorSwatch" type="button" data-note-color="#dff5ff" style="background:#dff5ff;"></button>
@@ -995,7 +1078,7 @@ const STORAGE_KEYS = {
 };
 
 const params = new URLSearchParams(location.search);
-const role = params.has("admin") ? "admin" : "user";
+const role = params.get("role") === "admin" || params.has("admin") ? "admin" : "user";
 const userName =
   params.get("userName") ||
   localStorage.getItem(STORAGE_KEYS.userName) ||
@@ -1017,6 +1100,7 @@ const msgInput = document.getElementById("msgInput");
 const sendBtn = document.getElementById("sendBtn");
 const fileInput = document.getElementById("fileInput");
 const phoneInput = document.getElementById("phoneInput");
+const phoneStatus = document.getElementById("phoneStatus");
 const savePhoneBtn = document.getElementById("savePhoneBtn");
 const openViewerBtn = document.getElementById("openViewerBtn");
 const togglePhoneBtn = document.getElementById("togglePhoneBtn");
@@ -1049,6 +1133,8 @@ const colorSwatches = Array.from(document.querySelectorAll(".colorSwatch"));
 const customColorBtn = document.getElementById("customColorBtn");
 const customColorInput = document.getElementById("customColorInput");
 const noteColorSwatches = Array.from(document.querySelectorAll(".noteColorSwatch"));
+const noteColorRow = document.getElementById("noteColorRow");
+const toggleNoteColorsBtn = document.getElementById("toggleNoteColorsBtn");
 const textLayer = document.getElementById("textLayer");
 const imageStage = document.getElementById("imageStage");
 
@@ -1075,6 +1161,9 @@ let currentSize = 3;
 let currentNoteColor = "#fff7c2";
 let isDrawing = false;
 let lastPoint = null;
+let pendingStrokeBatch = [];
+let pendingStrokeImageId = "";
+let strokeBatchRaf = null;
 
 let draggingNoteId = null;
 let resizingNoteId = null;
@@ -1268,6 +1357,12 @@ togglePhoneBtn.addEventListener("click", () => {
   phoneRow.classList.toggle("open");
 });
 
+function setPhoneStatus(message, isError = false) {
+  phoneStatus.textContent = message;
+  phoneStatus.style.color = isError ? "#d14343" : "#5f7286";
+  phoneStatus.classList.toggle("show", Boolean(message));
+}
+
 function scrollBottom(container) {
   requestAnimationFrame(() => {
     container.scrollTop = container.scrollHeight;
@@ -1384,10 +1479,38 @@ function sendViewerMessage() {
 async function savePhone() {
   const phone = phoneInput.value.trim();
   if (!phone) {
-    alert("전화번호를 입력해주세요.");
+    setPhoneStatus("전화번호를 입력해주세요.", true);
     return;
   }
-  alert("전화번호 저장 기능은 현재 최소 버전에서는 UI만 포함되어 있습니다.");
+
+  savePhoneBtn.disabled = true;
+  setPhoneStatus("저장 중...");
+
+  try {
+    const response = await fetch("/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        roomId,
+        role,
+        phone
+      })
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "전화번호 저장에 실패했습니다.");
+    }
+
+    phoneInput.value = result.phone || phone;
+    setPhoneStatus("전화번호가 저장되었습니다.");
+  } catch (error) {
+    setPhoneStatus(error.message || "전화번호 저장에 실패했습니다.", true);
+  } finally {
+    savePhoneBtn.disabled = false;
+  }
 }
 
 async function uploadImage(file) {
@@ -1410,7 +1533,31 @@ async function uploadImage(file) {
   socket.emit("image", { url: result.url });
 }
 
+function openViewerInline(imageId, imageUrl) {
+  currentStrokes = [];
+  currentNotes = [];
+  historyUndoStack = [];
+  historyRedoStack = [];
+  clearCanvas();
+  renderNotes();
+  updateHistoryButtons();
+  currentViewerImageId = imageId;
+  currentViewerImageUrl = imageUrl;
+  viewerOverlay.classList.add("open");
+  viewerOverlay.setAttribute("aria-hidden", "false");
+  viewerImage.src = imageUrl;
+  saveViewerState();
+  updateViewerStats();
+}
+
 function openViewerPopup(imageId, imageUrl) {
+  if (!imageId || !imageUrl) return;
+
+  if (window.innerWidth <= 900) {
+    openViewerInline(imageId, imageUrl);
+    return;
+  }
+
   const url = new URL(window.location.origin + window.location.pathname);
   url.searchParams.set("viewer", "1");
   url.searchParams.set("room", roomId);
@@ -1426,7 +1573,7 @@ function openViewerPopup(imageId, imageUrl) {
   );
 
   if (!popup) {
-    alert("브라우저에서 팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
+    openViewerInline(imageId, imageUrl);
   }
 }
 
@@ -1444,6 +1591,12 @@ function closeViewer() {
   updateViewerStats();
   updateHistoryButtons();
   clearViewerState();
+  pendingStrokeBatch = [];
+  pendingStrokeImageId = "";
+  if (strokeBatchRaf) {
+    cancelAnimationFrame(strokeBatchRaf);
+    strokeBatchRaf = null;
+  }
 }
 
 function updateCanvasSize() {
@@ -1488,6 +1641,31 @@ function drawStroke(stroke) {
   ctx.lineTo(x2, y2);
   ctx.stroke();
   ctx.restore();
+}
+
+function flushStrokeBatch() {
+  if (!pendingStrokeBatch.length || !pendingStrokeImageId) {
+    strokeBatchRaf = null;
+    return;
+  }
+
+  socket.emit("draw-strokes", {
+    imageId: pendingStrokeImageId,
+    strokes: pendingStrokeBatch
+  });
+
+  pendingStrokeBatch = [];
+  pendingStrokeImageId = "";
+  strokeBatchRaf = null;
+}
+
+function queueStrokeForSync(stroke) {
+  pendingStrokeImageId = stroke.imageId;
+  pendingStrokeBatch.push(stroke);
+
+  if (strokeBatchRaf) return;
+
+  strokeBatchRaf = requestAnimationFrame(flushStrokeBatch);
 }
 
 function redrawAllStrokes() {
@@ -1568,7 +1746,7 @@ function buildDownload() {
 
   const stageWidth = imageStage.clientWidth || 1200;
   const stageHeight = imageStage.clientHeight || 760;
-
+  const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
   const img = new Image();
 
   img.onload = () => {
@@ -1669,9 +1847,16 @@ function buildDownload() {
     );
     exportCtx.restore();
 
-    const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
-    downloadSketchBtn.href = exportCanvas.toDataURL("image/png");
-    downloadSketchBtn.download = fileName;
+    const link = document.createElement("a");
+    link.href = exportCanvas.toDataURL("image/png");
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  img.onerror = () => {
+    alert("이미지를 다운로드용으로 불러오지 못했습니다.");
   };
 
   img.src = currentViewerImageUrl;
@@ -1964,6 +2149,9 @@ viewerMsgInput.addEventListener("keydown", (e) => {
 });
 
 savePhoneBtn.addEventListener("click", savePhone);
+toggleNoteColorsBtn.addEventListener("click", () => {
+  noteColorRow.classList.toggle("open");
+});
 
 fileInput.addEventListener("change", async (e) => {
   const selected = e.target.files[0];
@@ -2091,7 +2279,7 @@ drawCanvas.addEventListener("pointermove", (evt) => {
   currentStrokes.push(stroke);
   drawStroke(stroke);
   updateViewerStats();
-  socket.emit("draw-stroke", stroke);
+  queueStrokeForSync(stroke);
   lastPoint = current;
 });
 
@@ -2158,6 +2346,17 @@ socket.on("draw-stroke", (stroke) => {
   if (!stroke || stroke.imageId !== currentViewerImageId) return;
   currentStrokes.push(stroke);
   drawStroke(stroke);
+  updateViewerStats();
+});
+
+socket.on("draw-strokes", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+
+  const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+  strokes.forEach((stroke) => {
+    currentStrokes.push(stroke);
+    drawStroke(stroke);
+  });
   updateViewerStats();
 });
 
