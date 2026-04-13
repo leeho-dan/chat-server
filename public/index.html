@@ -36,26 +36,6 @@ body{ overflow:hidden; }
 button,input,textarea,label{ font:inherit; }
 button{ cursor:pointer; }
 
-.btnIcon{
-  display:none;
-  align-items:center;
-  justify-content:center;
-  font-size:16px;
-  line-height:1;
-}
-
-.srOnly{
-  position:absolute;
-  width:1px;
-  height:1px;
-  padding:0;
-  margin:-1px;
-  overflow:hidden;
-  clip:rect(0, 0, 0, 0);
-  white-space:nowrap;
-  border:0;
-}
-
 #app{
   width:100%;
   height:100%;
@@ -225,24 +205,10 @@ button{ cursor:pointer; }
   border-radius:999px;
   font-size:12px;
   font-weight:700;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
 }
 
 #phoneRow{ display:none; gap:8px; }
 #phoneRow.open{ display:flex; }
-
-#phoneStatus{
-  display:none;
-  font-size:12px;
-  color:#5f7286;
-  padding:0 2px;
-}
-
-#phoneStatus.show{
-  display:block;
-}
 
 #phoneInput{
   flex:1;
@@ -263,9 +229,6 @@ button{ cursor:pointer; }
   background:#607082;
   color:white;
   font-weight:800;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
 }
 
 #messageRow{
@@ -398,7 +361,6 @@ button{ cursor:pointer; }
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
   font-weight:700;
 }
 
@@ -580,10 +542,6 @@ button{ cursor:pointer; }
   color:#425466;
   font-weight:700;
   white-space:nowrap;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
 }
 
 .toolBtn.active{
@@ -611,30 +569,6 @@ button{ cursor:pointer; }
   min-height:30px;
 }
 
-#noteColorHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-}
-
-#noteColorTitle{
-  font-size:12px;
-  font-weight:800;
-  color:var(--sub);
-}
-
-#toggleNoteColorsBtn{
-  height:30px;
-  border:none;
-  border-radius:999px;
-  padding:0 12px;
-  background:#edf4fa;
-  color:#425466;
-  font-size:12px;
-  font-weight:700;
-}
-
 .colorSwatch{
   width:26px;
   height:26px;
@@ -647,41 +581,6 @@ button{ cursor:pointer; }
 
 .colorSwatch.active{
   box-shadow:0 0 0 3px rgba(36,145,255,0.20);
-}
-
-#customColorBtn{
-  position:relative;
-  overflow:hidden;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.95), rgba(228,236,245,0.95)),
-    conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30);
-}
-
-#customColorBtn::before{
-  content:"";
-  position:absolute;
-  inset:4px;
-  border-radius:50%;
-  background:var(--custom-color-preview, conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30));
-}
-
-#customColorBtn::after{
-  content:"+";
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#ffffff;
-  font-size:14px;
-  font-weight:900;
-  text-shadow:0 1px 2px rgba(0,0,0,0.35);
-}
-
-#customColorInput{
-  position:absolute;
-  pointer-events:none;
-  opacity:0;
 }
 
 .noteColorSwatch{
@@ -806,41 +705,12 @@ button{ cursor:pointer; }
   #msgInput, #sendBtn, #fileLabel{ height:44px; }
   #sendBtn, #fileLabel{ width:44px; }
 
-  #togglePhoneBtn,
-  #savePhoneBtn,
-  .viewerBtn,
-  .toolBtn{
-    min-width:40px;
-    width:40px;
-    padding:0;
-    border-radius:12px;
-  }
-
-  #togglePhoneBtn .btnText,
-  #savePhoneBtn .btnText,
-  .viewerBtn .btnText,
-  .toolBtn .btnText{
-    display:none;
-  }
-
-  #togglePhoneBtn .btnIcon,
-  #savePhoneBtn .btnIcon,
-  .viewerBtn .btnIcon,
-  .toolBtn .btnIcon{
-    display:inline-flex;
-  }
-
   #viewerTopbar{
     height:auto;
     min-height:72px;
     align-items:flex-start;
     padding:10px 12px;
     flex-direction:column;
-  }
-
-  #viewerActions{
-    width:100%;
-    justify-content:flex-end;
   }
 
   #viewerMain{
@@ -860,29 +730,7 @@ button{ cursor:pointer; }
 
   #toolRow{
     flex-direction:column;
-    align-items:stretch;
-  }
-
-  #drawModeWrap,
-  #historyRow{
-    width:100%;
-  }
-
-  #drawModeWrap,
-  #historyRow,
-  #colorRow{
-    flex-wrap:nowrap;
-    overflow-x:auto;
-    overflow-y:hidden;
-    padding-bottom:4px;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-  }
-
-  #drawModeWrap::-webkit-scrollbar,
-  #historyRow::-webkit-scrollbar,
-  #colorRow::-webkit-scrollbar{
-    display:none;
+    align-items:flex-start;
   }
 
   #thicknessWrap{
@@ -891,24 +739,6 @@ button{ cursor:pointer; }
   }
 
   #thicknessRange{ width:100px; }
-
-  #colorRow{
-    gap:10px;
-  }
-
-  .colorSwatch{
-    width:30px;
-    height:30px;
-  }
-
-  #noteColorRow{
-    display:none;
-    padding-top:2px;
-  }
-
-  #noteColorRow.open{
-    display:flex;
-  }
 }
 </style>
 </head>
@@ -930,20 +760,13 @@ button{ cursor:pointer; }
 
     <div id="inputArea">
       <div id="utilityRow">
-        <button id="togglePhoneBtn" type="button" aria-label="전화번호 입력 열기">
-          <span class="btnIcon">☎</span>
-          <span class="btnText">전화번호 입력</span>
-        </button>
+        <button id="togglePhoneBtn" type="button">전화번호 입력</button>
       </div>
 
       <div id="phoneRow">
         <input id="phoneInput" type="tel" placeholder="전화번호 입력" />
-        <button id="savePhoneBtn" type="button" aria-label="전화번호 등록">
-          <span class="btnIcon">✓</span>
-          <span class="btnText">등록</span>
-        </button>
+        <button id="savePhoneBtn" type="button">등록</button>
       </div>
-      <div id="phoneStatus" aria-live="polite"></div>
 
       <div id="messageRow">
         <input id="msgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
@@ -969,14 +792,8 @@ button{ cursor:pointer; }
     </div>
 
     <div id="viewerActions">
-      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="스케치 다운로드">
-        <span class="btnIcon">↓</span>
-        <span class="btnText">다운로드</span>
-      </button>
-      <button id="closeViewerBtn" class="viewerBtn" type="button" aria-label="뷰어 닫기">
-        <span class="btnIcon">✕</span>
-        <span class="btnText">닫기</span>
-      </button>
+      <a id="downloadSketchBtn" class="viewerBtn" download="sketch.png">다운로드</a>
+      <button id="closeViewerBtn" class="viewerBtn" type="button">닫기</button>
     </div>
   </div>
 
@@ -993,26 +810,11 @@ button{ cursor:pointer; }
       <div id="toolbar">
         <div id="toolRow">
           <div id="drawModeWrap">
-            <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">
-              <span class="btnIcon">✎</span>
-              <span class="btnText">펜</span>
-            </button>
-            <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">
-              <span class="btnIcon">⌫</span>
-              <span class="btnText">지우개</span>
-            </button>
-            <button id="addTextBtn" class="toolBtn" type="button" aria-label="텍스트 추가">
-              <span class="btnIcon">T</span>
-              <span class="btnText">텍스트 추가</span>
-            </button>
-            <button id="clearDrawingBtn" class="toolBtn" type="button" aria-label="선 지우기">
-              <span class="btnIcon">⌧</span>
-              <span class="btnText">선지우기</span>
-            </button>
-            <button id="clearNotesBtn" class="toolBtn" type="button" aria-label="메모 지우기">
-              <span class="btnIcon">⌦</span>
-              <span class="btnText">메모지우기</span>
-            </button>
+            <button id="penBtn" class="toolBtn active" type="button">펜</button>
+            <button id="eraserBtn" class="toolBtn" type="button">지우개</button>
+            <button id="addTextBtn" class="toolBtn" type="button">텍스트 추가</button>
+            <button id="clearDrawingBtn" class="toolBtn" type="button">선지우기</button>
+            <button id="clearNotesBtn" class="toolBtn" type="button">메모지우기</button>
           </div>
 
           <div id="thicknessWrap">
@@ -1022,17 +824,12 @@ button{ cursor:pointer; }
         </div>
 
         <div id="colorRow">
-          <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
-          <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
-          <button class="colorSwatch" type="button" data-color="#ffffff" style="background:#ffffff;" aria-label="흰색"></button>
-          <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
-          <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
-          <input id="customColorInput" type="color" value="#2491ff" aria-label="사용자 지정 색상" />
-        </div>
-
-        <div id="noteColorHeader">
-          <div id="noteColorTitle">메모 색상</div>
-          <button id="toggleNoteColorsBtn" type="button">메모 색상</button>
+          <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;"></button>
+          <button class="colorSwatch" type="button" data-color="#2491ff" style="background:#2491ff;"></button>
+          <button class="colorSwatch" type="button" data-color="#22c55e" style="background:#22c55e;"></button>
+          <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;"></button>
+          <button class="colorSwatch" type="button" data-color="#f59e0b" style="background:#f59e0b;"></button>
+          <button class="colorSwatch" type="button" data-color="#a855f7" style="background:#a855f7;"></button>
         </div>
 
         <div id="noteColorRow">
@@ -1044,14 +841,8 @@ button{ cursor:pointer; }
         </div>
 
         <div id="historyRow">
-          <button id="undoBtn" class="toolBtn" type="button" aria-label="실행 취소">
-            <span class="btnIcon">↶</span>
-            <span class="btnText">Undo</span>
-          </button>
-          <button id="redoBtn" class="toolBtn" type="button" aria-label="다시 실행">
-            <span class="btnIcon">↷</span>
-            <span class="btnText">Redo</span>
-          </button>
+          <button id="undoBtn" class="toolBtn" type="button">Undo</button>
+          <button id="redoBtn" class="toolBtn" type="button">Redo</button>
         </div>
       </div>
     </section>
@@ -1078,7 +869,7 @@ const STORAGE_KEYS = {
 };
 
 const params = new URLSearchParams(location.search);
-const role = params.get("role") === "admin" || params.has("admin") ? "admin" : "user";
+const role = params.has("admin") ? "admin" : "user";
 const userName =
   params.get("userName") ||
   localStorage.getItem(STORAGE_KEYS.userName) ||
@@ -1100,7 +891,6 @@ const msgInput = document.getElementById("msgInput");
 const sendBtn = document.getElementById("sendBtn");
 const fileInput = document.getElementById("fileInput");
 const phoneInput = document.getElementById("phoneInput");
-const phoneStatus = document.getElementById("phoneStatus");
 const savePhoneBtn = document.getElementById("savePhoneBtn");
 const openViewerBtn = document.getElementById("openViewerBtn");
 const togglePhoneBtn = document.getElementById("togglePhoneBtn");
@@ -1130,11 +920,7 @@ const undoBtn = document.getElementById("undoBtn");
 const redoBtn = document.getElementById("redoBtn");
 const thicknessRange = document.getElementById("thicknessRange");
 const colorSwatches = Array.from(document.querySelectorAll(".colorSwatch"));
-const customColorBtn = document.getElementById("customColorBtn");
-const customColorInput = document.getElementById("customColorInput");
 const noteColorSwatches = Array.from(document.querySelectorAll(".noteColorSwatch"));
-const noteColorRow = document.getElementById("noteColorRow");
-const toggleNoteColorsBtn = document.getElementById("toggleNoteColorsBtn");
 const textLayer = document.getElementById("textLayer");
 const imageStage = document.getElementById("imageStage");
 
@@ -1161,9 +947,6 @@ let currentSize = 3;
 let currentNoteColor = "#fff7c2";
 let isDrawing = false;
 let lastPoint = null;
-let pendingStrokeBatch = [];
-let pendingStrokeImageId = "";
-let strokeBatchRaf = null;
 
 let draggingNoteId = null;
 let resizingNoteId = null;
@@ -1317,58 +1100,6 @@ function debounceNoteCommit(noteId, fn, delay = 220) {
   noteTextTimers.set(noteId, timer);
 }
 
-function updateCustomColorPreview(color) {
-  customColorBtn.style.setProperty("--custom-color-preview", color);
-  customColorInput.value = color;
-}
-
-const isViewerMode = params.get("viewer") === "1";
-const initialImageId = params.get("imageId") || "";
-const initialImageUrl = params.get("imageUrl") || "";
-
-socket.on("connect", () => {
-  connectionBadge.textContent = "연결됨";
-});
-
-socket.on("disconnect", () => {
-  connectionBadge.textContent = "연결 끊김";
-});
-
-socket.emit("join", { roomId, role });
-
-if (isViewerMode) {
-  document.getElementById("app").style.display = "none";
-  viewerOverlay.classList.add("open");
-  viewerOverlay.setAttribute("aria-hidden", "false");
-
-  if (initialImageId && initialImageUrl) {
-    currentViewerImageId = initialImageId;
-    currentViewerImageUrl = initialImageUrl;
-    viewerImage.src = initialImageUrl;
-    saveViewerState();
-  }
-  updateViewerStats();
-  updateHistoryButtons();
-} else {
-  restoreViewerState();
-}
-
-togglePhoneBtn.addEventListener("click", () => {
-  phoneRow.classList.toggle("open");
-});
-
-function setPhoneStatus(message, isError = false) {
-  phoneStatus.textContent = message;
-  phoneStatus.style.color = isError ? "#d14343" : "#5f7286";
-  phoneStatus.classList.toggle("show", Boolean(message));
-}
-
-function scrollBottom(container) {
-  requestAnimationFrame(() => {
-    container.scrollTop = container.scrollHeight;
-  });
-}
-
 function formatTime(ts) {
   try {
     return new Date(ts).toLocaleTimeString("ko-KR", {
@@ -1394,6 +1125,39 @@ function sanitizeFileName(name) {
     .replace(/[\\/:*?"<>|]/g, "_")
     .replace(/\s+/g, "_")
     .slice(0, 40);
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+}
+
+function wrapTextLines(text, maxCharsPerLine) {
+  const result = [];
+  const source = String(text || "").split("\n");
+
+  source.forEach((part) => {
+    if (!part) {
+      result.push("");
+      return;
+    }
+    let current = "";
+    for (const ch of part) {
+      current += ch;
+      if (current.length >= maxCharsPerLine) {
+        result.push(current);
+        current = "";
+      }
+    }
+    if (current) result.push(current);
+  });
+
+  return result.slice(0, 10);
 }
 
 function createTextRow(data) {
@@ -1441,21 +1205,21 @@ function createImageRow(data) {
 
 function renderTextMessage(data) {
   chatInner.appendChild(createTextRow(data));
-  scrollBottom(chatBox);
+  chatBox.scrollTop = chatBox.scrollHeight;
 
   if (viewerOverlay.classList.contains("open")) {
     viewerChatInner.appendChild(createTextRow(data));
-    scrollBottom(viewerChatBox);
+    viewerChatBox.scrollTop = viewerChatBox.scrollHeight;
   }
 }
 
 function renderImageMessage(data) {
   chatInner.appendChild(createImageRow(data));
-  scrollBottom(chatBox);
+  chatBox.scrollTop = chatBox.scrollHeight;
 
   if (viewerOverlay.classList.contains("open")) {
     viewerChatInner.appendChild(createImageRow(data));
-    scrollBottom(viewerChatBox);
+    viewerChatBox.scrollTop = viewerChatBox.scrollHeight;
   }
 
   lastSelectedImageId = data.imageId;
@@ -1479,38 +1243,10 @@ function sendViewerMessage() {
 async function savePhone() {
   const phone = phoneInput.value.trim();
   if (!phone) {
-    setPhoneStatus("전화번호를 입력해주세요.", true);
+    alert("전화번호를 입력해주세요.");
     return;
   }
-
-  savePhoneBtn.disabled = true;
-  setPhoneStatus("저장 중...");
-
-  try {
-    const response = await fetch("/contact", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        roomId,
-        role,
-        phone
-      })
-    });
-
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(result.error || "전화번호 저장에 실패했습니다.");
-    }
-
-    phoneInput.value = result.phone || phone;
-    setPhoneStatus("전화번호가 저장되었습니다.");
-  } catch (error) {
-    setPhoneStatus(error.message || "전화번호 저장에 실패했습니다.", true);
-  } finally {
-    savePhoneBtn.disabled = false;
-  }
+  alert("전화번호 저장 기능은 현재 UI만 포함되어 있습니다.");
 }
 
 async function uploadImage(file) {
@@ -1523,9 +1259,11 @@ async function uploadImage(file) {
   });
 
   const result = await response.json().catch(() => ({}));
+
   if (!response.ok) {
     throw new Error(result.error || "이미지 업로드 실패");
   }
+
   if (!result.url) {
     throw new Error("업로드된 이미지 URL이 없습니다.");
   }
@@ -1533,31 +1271,7 @@ async function uploadImage(file) {
   socket.emit("image", { url: result.url });
 }
 
-function openViewerInline(imageId, imageUrl) {
-  currentStrokes = [];
-  currentNotes = [];
-  historyUndoStack = [];
-  historyRedoStack = [];
-  clearCanvas();
-  renderNotes();
-  updateHistoryButtons();
-  currentViewerImageId = imageId;
-  currentViewerImageUrl = imageUrl;
-  viewerOverlay.classList.add("open");
-  viewerOverlay.setAttribute("aria-hidden", "false");
-  viewerImage.src = imageUrl;
-  saveViewerState();
-  updateViewerStats();
-}
-
 function openViewerPopup(imageId, imageUrl) {
-  if (!imageId || !imageUrl) return;
-
-  if (window.innerWidth <= 900) {
-    openViewerInline(imageId, imageUrl);
-    return;
-  }
-
   const url = new URL(window.location.origin + window.location.pathname);
   url.searchParams.set("viewer", "1");
   url.searchParams.set("room", roomId);
@@ -1573,7 +1287,7 @@ function openViewerPopup(imageId, imageUrl) {
   );
 
   if (!popup) {
-    openViewerInline(imageId, imageUrl);
+    alert("브라우저에서 팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
   }
 }
 
@@ -1591,12 +1305,6 @@ function closeViewer() {
   updateViewerStats();
   updateHistoryButtons();
   clearViewerState();
-  pendingStrokeBatch = [];
-  pendingStrokeImageId = "";
-  if (strokeBatchRaf) {
-    cancelAnimationFrame(strokeBatchRaf);
-    strokeBatchRaf = null;
-  }
 }
 
 function updateCanvasSize() {
@@ -1643,31 +1351,6 @@ function drawStroke(stroke) {
   ctx.restore();
 }
 
-function flushStrokeBatch() {
-  if (!pendingStrokeBatch.length || !pendingStrokeImageId) {
-    strokeBatchRaf = null;
-    return;
-  }
-
-  socket.emit("draw-strokes", {
-    imageId: pendingStrokeImageId,
-    strokes: pendingStrokeBatch
-  });
-
-  pendingStrokeBatch = [];
-  pendingStrokeImageId = "";
-  strokeBatchRaf = null;
-}
-
-function queueStrokeForSync(stroke) {
-  pendingStrokeImageId = stroke.imageId;
-  pendingStrokeBatch.push(stroke);
-
-  if (strokeBatchRaf) return;
-
-  strokeBatchRaf = requestAnimationFrame(flushStrokeBatch);
-}
-
 function redrawAllStrokes() {
   clearCanvas();
   currentStrokes.forEach(drawStroke);
@@ -1688,18 +1371,9 @@ function setActiveTools() {
 }
 
 function setActiveColor(color) {
-  const normalizedColor = (color || "").toLowerCase();
-  let matchedPreset = false;
-
   colorSwatches.forEach((btn) => {
-    const swatchColor = (btn.dataset.color || "").toLowerCase();
-    const isActive = swatchColor && swatchColor === normalizedColor;
-    btn.classList.toggle("active", isActive);
-    if (isActive) matchedPreset = true;
+    btn.classList.toggle("active", btn.dataset.color === color);
   });
-
-  customColorBtn.classList.toggle("active", !matchedPreset);
-  updateCustomColorPreview(color);
 }
 
 function setActiveNoteColor(color) {
@@ -1708,45 +1382,11 @@ function setActiveNoteColor(color) {
   });
 }
 
-function roundRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + width, y, x + width, y + height, radius);
-  ctx.arcTo(x + width, y + height, x, y + height, radius);
-  ctx.arcTo(x, y + height, x, y, radius);
-  ctx.arcTo(x, y, x + width, y, radius);
-  ctx.closePath();
-}
-
-function wrapTextLines(text, maxCharsPerLine) {
-  const result = [];
-  const source = String(text || "").split("\n");
-
-  source.forEach((part) => {
-    if (!part) {
-      result.push("");
-      return;
-    }
-    let current = "";
-    for (const ch of part) {
-      current += ch;
-      if (current.length >= maxCharsPerLine) {
-        result.push(current);
-        current = "";
-      }
-    }
-    if (current) result.push(current);
-  });
-
-  return result.slice(0, 10);
-}
-
 function buildDownload() {
   if (!currentViewerImageUrl) return;
 
   const stageWidth = imageStage.clientWidth || 1200;
   const stageHeight = imageStage.clientHeight || 760;
-  const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
   const img = new Image();
 
   img.onload = () => {
@@ -1847,16 +1487,9 @@ function buildDownload() {
     );
     exportCtx.restore();
 
-    const link = document.createElement("a");
-    link.href = exportCanvas.toDataURL("image/png");
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
-  img.onerror = () => {
-    alert("이미지를 다운로드용으로 불러오지 못했습니다.");
+    const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
+    downloadSketchBtn.href = exportCanvas.toDataURL("image/png");
+    downloadSketchBtn.download = fileName;
   };
 
   img.src = currentViewerImageUrl;
@@ -2148,10 +1781,11 @@ viewerMsgInput.addEventListener("keydown", (e) => {
   }
 });
 
-savePhoneBtn.addEventListener("click", savePhone);
-toggleNoteColorsBtn.addEventListener("click", () => {
-  noteColorRow.classList.toggle("open");
+togglePhoneBtn.addEventListener("click", () => {
+  phoneRow.classList.toggle("open");
 });
+
+savePhoneBtn.addEventListener("click", savePhone);
 
 fileInput.addEventListener("change", async (e) => {
   const selected = e.target.files[0];
@@ -2191,6 +1825,7 @@ viewerImage.addEventListener("load", () => {
     socket.emit("request-note-history", { imageId: currentViewerImageId });
     saveViewerState();
   }
+
   updateViewerStats();
   updateHistoryButtons();
 });
@@ -2230,22 +1865,11 @@ thicknessRange.addEventListener("input", () => {
   currentSize = Number(thicknessRange.value || 3);
 });
 
-colorSwatches
-  .filter((btn) => btn !== customColorBtn)
-  .forEach((btn) => {
-    btn.addEventListener("click", () => {
-      currentColor = btn.dataset.color || "#ff3b30";
-      setActiveColor(currentColor);
-    });
+colorSwatches.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentColor = btn.dataset.color || "#ff3b30";
+    setActiveColor(currentColor);
   });
-
-customColorBtn.addEventListener("click", () => {
-  customColorInput.click();
-});
-
-customColorInput.addEventListener("input", () => {
-  currentColor = customColorInput.value || "#2491ff";
-  setActiveColor(currentColor);
 });
 
 noteColorSwatches.forEach((btn) => {
@@ -2279,7 +1903,7 @@ drawCanvas.addEventListener("pointermove", (evt) => {
   currentStrokes.push(stroke);
   drawStroke(stroke);
   updateViewerStats();
-  queueStrokeForSync(stroke);
+  socket.emit("draw-stroke", stroke);
   lastPoint = current;
 });
 
@@ -2317,6 +1941,38 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+socket.on("connect", () => {
+  connectionBadge.textContent = "연결됨";
+});
+
+socket.on("disconnect", () => {
+  connectionBadge.textContent = "연결 끊김";
+});
+
+socket.emit("join", { roomId, role });
+
+const isViewerMode = params.get("viewer") === "1";
+const initialImageId = params.get("imageId") || "";
+const initialImageUrl = params.get("imageUrl") || "";
+
+if (isViewerMode) {
+  document.getElementById("app").style.display = "none";
+  viewerOverlay.classList.add("open");
+  viewerOverlay.setAttribute("aria-hidden", "false");
+
+  if (initialImageId && initialImageUrl) {
+    currentViewerImageId = initialImageId;
+    currentViewerImageUrl = initialImageUrl;
+    viewerImage.src = initialImageUrl;
+    saveViewerState();
+  }
+
+  updateViewerStats();
+  updateHistoryButtons();
+} else {
+  restoreViewerState();
+}
+
 socket.on("history", (messages) => {
   chatInner.innerHTML = "";
   viewerChatInner.innerHTML = "";
@@ -2346,17 +2002,6 @@ socket.on("draw-stroke", (stroke) => {
   if (!stroke || stroke.imageId !== currentViewerImageId) return;
   currentStrokes.push(stroke);
   drawStroke(stroke);
-  updateViewerStats();
-});
-
-socket.on("draw-strokes", (payload) => {
-  if (!payload || payload.imageId !== currentViewerImageId) return;
-
-  const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-  strokes.forEach((stroke) => {
-    currentStrokes.push(stroke);
-    drawStroke(stroke);
-  });
   updateViewerStats();
 });
 
@@ -2426,11 +2071,6 @@ socket.on("clear-notes", (payload) => {
   renderNotes();
   updateViewerStats();
 });
-
-setActiveTools();
-setActiveColor(currentColor);
-setActiveNoteColor(currentNoteColor);
-updateHistoryButtons();
 </script>
 </body>
 </html>
