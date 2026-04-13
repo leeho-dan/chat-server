@@ -89,28 +89,6 @@ button{ cursor:pointer; }
   font-weight:700;
 }
 
-#headerActions{
-  position:absolute;
-  right:14px;
-  top:50%;
-  transform:translateY(-50%);
-  display:flex;
-  gap:8px;
-}
-
-.iconBtn{
-  width:40px;
-  height:40px;
-  border:none;
-  border-radius:50%;
-  background:#edf4fa;
-  color:#557086;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-}
-
 #chatBox{
   flex:1;
   min-height:0;
@@ -126,9 +104,19 @@ button{ cursor:pointer; }
   min-height:100%;
 }
 
-.messageRow{ display:flex; flex-direction:column; gap:4px; }
-.messageRow.me{ align-items:flex-end; }
-.messageRow.other{ align-items:flex-start; }
+.messageRow{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.messageRow.me{
+  align-items:flex-end;
+}
+
+.messageRow.other{
+  align-items:flex-start;
+}
 
 .bubble{
   max-width:min(74%, 520px);
@@ -169,8 +157,13 @@ button{ cursor:pointer; }
   cursor:pointer;
 }
 
-.messageRow.me .imageBubble{ border-bottom-right-radius:8px; }
-.messageRow.other .imageBubble{ border-bottom-left-radius:8px; }
+.messageRow.me .imageBubble{
+  border-bottom-right-radius:8px;
+}
+
+.messageRow.other .imageBubble{
+  border-bottom-left-radius:8px;
+}
 
 .chatImg{
   display:block;
@@ -207,8 +200,14 @@ button{ cursor:pointer; }
   font-weight:700;
 }
 
-#phoneRow{ display:none; gap:8px; }
-#phoneRow.open{ display:flex; }
+#phoneRow{
+  display:none;
+  gap:8px;
+}
+
+#phoneRow.open{
+  display:flex;
+}
 
 #phoneInput{
   flex:1;
@@ -268,7 +267,9 @@ button{ cursor:pointer; }
   box-shadow:0 8px 20px rgba(36,145,255,0.16);
 }
 
-#fileInput{ display:none; }
+#fileInput{
+  display:none;
+}
 
 #fileLabel{
   width:48px;
@@ -292,7 +293,9 @@ button{ cursor:pointer; }
   background:rgba(245,248,252,0.98);
 }
 
-#viewerOverlay.open{ display:flex; }
+#viewerOverlay.open{
+  display:flex;
+}
 
 #viewerTopbar{
   height:68px;
@@ -559,7 +562,9 @@ button{ cursor:pointer; }
   flex-shrink:0;
 }
 
-#thicknessRange{ width:120px; }
+#thicknessRange{
+  width:120px;
+}
 
 #colorRow, #noteColorRow{
   display:flex;
@@ -749,9 +754,6 @@ button{ cursor:pointer; }
     <div id="header">
       <div id="roleBadge">고객 채팅</div>
       <div id="title">디자인 상담</div>
-      <div id="headerActions">
-        <button id="openViewerBtn" class="iconBtn" type="button" aria-label="새 창으로 열기">⛶</button>
-      </div>
     </div>
 
     <div id="chatBox">
@@ -864,7 +866,6 @@ button{ cursor:pointer; }
 <script>
 const STORAGE_KEYS = {
   roomId: "chat_room_id",
-  viewerState: "chat_last_viewer_state",
   userName: "chat_user_name"
 };
 
@@ -892,7 +893,6 @@ const sendBtn = document.getElementById("sendBtn");
 const fileInput = document.getElementById("fileInput");
 const phoneInput = document.getElementById("phoneInput");
 const savePhoneBtn = document.getElementById("savePhoneBtn");
-const openViewerBtn = document.getElementById("openViewerBtn");
 const togglePhoneBtn = document.getElementById("togglePhoneBtn");
 const phoneRow = document.getElementById("phoneRow");
 
@@ -934,9 +934,6 @@ msgInput.addEventListener("compositionend", () => { isComposingMain = false; });
 viewerMsgInput.addEventListener("compositionstart", () => { isComposingViewer = true; });
 viewerMsgInput.addEventListener("compositionend", () => { isComposingViewer = false; });
 
-let lastSelectedImageId = "";
-let lastSelectedImageUrl = "";
-
 let currentViewerImageId = "";
 let currentViewerImageUrl = "";
 let currentStrokes = [];
@@ -961,46 +958,6 @@ const noteTextTimers = new Map();
 let historyUndoStack = [];
 let historyRedoStack = [];
 let historyLock = false;
-
-function saveViewerState() {
-  if (!currentViewerImageId || !currentViewerImageUrl) return;
-  const payload = {
-    roomId,
-    role,
-    imageId: currentViewerImageId,
-    imageUrl: currentViewerImageUrl,
-    isOpen: viewerOverlay.classList.contains("open"),
-    savedAt: Date.now()
-  };
-  localStorage.setItem(STORAGE_KEYS.viewerState, JSON.stringify(payload));
-}
-
-function clearViewerState() {
-  localStorage.removeItem(STORAGE_KEYS.viewerState);
-}
-
-function restoreViewerState() {
-  if (params.get("viewer") === "1") return;
-
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.viewerState);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-
-    if (!data || !data.isOpen) return;
-    if (!data.roomId || data.roomId !== roomId) return;
-    if (!data.imageId || !data.imageUrl) return;
-
-    currentViewerImageId = data.imageId;
-    currentViewerImageUrl = data.imageUrl;
-    viewerOverlay.classList.add("open");
-    viewerOverlay.setAttribute("aria-hidden", "false");
-    viewerImage.src = data.imageUrl;
-    updateViewerStats();
-  } catch (error) {
-    console.error("viewer 상태 복원 실패:", error);
-  }
-}
 
 function cloneState() {
   return {
@@ -1191,7 +1148,7 @@ function createImageRow(data) {
 
   wrap.appendChild(img);
   wrap.addEventListener("click", () => {
-    openViewerPopup(data.imageId, data.imageUrl);
+    openViewer(data.imageId, data.imageUrl);
   });
 
   const meta = document.createElement("div");
@@ -1221,9 +1178,6 @@ function renderImageMessage(data) {
     viewerChatInner.appendChild(createImageRow(data));
     viewerChatBox.scrollTop = viewerChatBox.scrollHeight;
   }
-
-  lastSelectedImageId = data.imageId;
-  lastSelectedImageUrl = data.imageUrl;
 }
 
 function sendMainMessage() {
@@ -1271,24 +1225,19 @@ async function uploadImage(file) {
   socket.emit("image", { url: result.url });
 }
 
-function openViewerPopup(imageId, imageUrl) {
-  const url = new URL(window.location.origin + window.location.pathname);
-  url.searchParams.set("viewer", "1");
-  url.searchParams.set("room", roomId);
-  url.searchParams.set("role", role);
-  url.searchParams.set("imageId", imageId);
-  url.searchParams.set("imageUrl", imageUrl);
-  url.searchParams.set("userName", userName);
+function openViewer(imageId, imageUrl) {
+  currentViewerImageId = imageId;
+  currentViewerImageUrl = imageUrl;
+  currentStrokes = [];
+  currentNotes = [];
+  historyUndoStack = [];
+  historyRedoStack = [];
+  updateHistoryButtons();
+  updateViewerStats();
 
-  const popup = window.open(
-    url.toString(),
-    "designImageViewer",
-    "width=1320,height=860,resizable=yes,scrollbars=yes"
-  );
-
-  if (!popup) {
-    alert("브라우저에서 팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
-  }
+  viewerOverlay.classList.add("open");
+  viewerOverlay.setAttribute("aria-hidden", "false");
+  viewerImage.src = imageUrl;
 }
 
 function closeViewer() {
@@ -1304,7 +1253,6 @@ function closeViewer() {
   renderNotes();
   updateViewerStats();
   updateHistoryButtons();
-  clearViewerState();
 }
 
 function updateCanvasSize() {
@@ -1801,21 +1749,7 @@ fileInput.addEventListener("change", async (e) => {
   }
 });
 
-openViewerBtn.addEventListener("click", () => {
-  if (!lastSelectedImageId || !lastSelectedImageUrl) {
-    alert("먼저 채팅에서 이미지를 선택해주세요.");
-    return;
-  }
-  openViewerPopup(lastSelectedImageId, lastSelectedImageUrl);
-});
-
-closeViewerBtn.addEventListener("click", () => {
-  if (isViewerMode) {
-    window.close();
-    return;
-  }
-  closeViewer();
-});
+closeViewerBtn.addEventListener("click", closeViewer);
 
 viewerImage.addEventListener("load", () => {
   updateCanvasSize();
@@ -1823,7 +1757,6 @@ viewerImage.addEventListener("load", () => {
   if (currentViewerImageId) {
     socket.emit("request-drawing-history", { imageId: currentViewerImageId });
     socket.emit("request-note-history", { imageId: currentViewerImageId });
-    saveViewerState();
   }
 
   updateViewerStats();
@@ -1932,11 +1865,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
-  if (e.key === "Escape") {
-    if (isViewerMode) {
-      window.close();
-      return;
-    }
+  if (e.key === "Escape" && viewerOverlay.classList.contains("open")) {
     closeViewer();
   }
 });
@@ -1950,28 +1879,6 @@ socket.on("disconnect", () => {
 });
 
 socket.emit("join", { roomId, role });
-
-const isViewerMode = params.get("viewer") === "1";
-const initialImageId = params.get("imageId") || "";
-const initialImageUrl = params.get("imageUrl") || "";
-
-if (isViewerMode) {
-  document.getElementById("app").style.display = "none";
-  viewerOverlay.classList.add("open");
-  viewerOverlay.setAttribute("aria-hidden", "false");
-
-  if (initialImageId && initialImageUrl) {
-    currentViewerImageId = initialImageId;
-    currentViewerImageUrl = initialImageUrl;
-    viewerImage.src = initialImageUrl;
-    saveViewerState();
-  }
-
-  updateViewerStats();
-  updateHistoryButtons();
-} else {
-  restoreViewerState();
-}
 
 socket.on("history", (messages) => {
   chatInner.innerHTML = "";
