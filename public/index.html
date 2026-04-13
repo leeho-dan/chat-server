@@ -7,6 +7,9 @@
 
 <style>
 :root{
+  --bg:#f4f8fc;
+  --card:#ffffff;
+  --soft:#f8fbff;
   --line:#e4ebf3;
   --text:#17212b;
   --sub:#758394;
@@ -32,6 +35,34 @@ body{ overflow:hidden; }
 
 button,input,textarea,label{ font:inherit; }
 button{ cursor:pointer; }
+
+.btnIcon{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  line-height:1;
+}
+
+.viewerBtn .btnIcon{
+  display:inline-flex;
+}
+
+.viewerBtn .btnText{
+  display:none;
+}
+
+.srOnly{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0, 0, 0, 0);
+  white-space:nowrap;
+  border:0;
+}
 
 #app{
   width:100%;
@@ -86,6 +117,28 @@ button{ cursor:pointer; }
   font-weight:700;
 }
 
+#headerActions{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  gap:8px;
+}
+
+.iconBtn{
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:#edf4fa;
+  color:#557086;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+}
+
 #chatBox{
   flex:1;
   min-height:0;
@@ -101,19 +154,9 @@ button{ cursor:pointer; }
   min-height:100%;
 }
 
-.messageRow{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-
-.messageRow.me{
-  align-items:flex-end;
-}
-
-.messageRow.other{
-  align-items:flex-start;
-}
+.messageRow{ display:flex; flex-direction:column; gap:4px; }
+.messageRow.me{ align-items:flex-end; }
+.messageRow.other{ align-items:flex-start; }
 
 .bubble{
   max-width:min(74%, 520px);
@@ -154,13 +197,8 @@ button{ cursor:pointer; }
   cursor:pointer;
 }
 
-.messageRow.me .imageBubble{
-  border-bottom-right-radius:8px;
-}
-
-.messageRow.other .imageBubble{
-  border-bottom-left-radius:8px;
-}
+.messageRow.me .imageBubble{ border-bottom-right-radius:8px; }
+.messageRow.other .imageBubble{ border-bottom-left-radius:8px; }
 
 .chatImg{
   display:block;
@@ -195,16 +233,13 @@ button{ cursor:pointer; }
   border-radius:999px;
   font-size:12px;
   font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
 }
 
-#phoneRow{
-  display:none;
-  gap:8px;
-}
-
-#phoneRow.open{
-  display:flex;
-}
+#phoneRow{ display:none; gap:8px; }
+#phoneRow.open{ display:flex; }
 
 #phoneStatus{
   display:none;
@@ -236,6 +271,9 @@ button{ cursor:pointer; }
   background:#607082;
   color:white;
   font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
 }
 
 #messageRow{
@@ -299,9 +337,7 @@ button{ cursor:pointer; }
   background:rgba(245,248,252,0.98);
 }
 
-#viewerOverlay.open{
-  display:flex;
-}
+#viewerOverlay.open{ display:flex; }
 
 #viewerTopbar{
   height:68px;
@@ -552,6 +588,10 @@ button{ cursor:pointer; }
   color:#425466;
   font-weight:700;
   white-space:nowrap;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
 }
 
 .toolBtn.active{
@@ -569,9 +609,7 @@ button{ cursor:pointer; }
   flex-shrink:0;
 }
 
-#thicknessRange{
-  width:120px;
-}
+#thicknessRange{ width:120px; }
 
 #colorRow, #noteColorRow{
   display:flex;
@@ -579,6 +617,30 @@ button{ cursor:pointer; }
   flex-wrap:wrap;
   align-items:center;
   min-height:30px;
+}
+
+#noteColorHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+#noteColorTitle{
+  font-size:12px;
+  font-weight:800;
+  color:var(--sub);
+}
+
+#toggleNoteColorsBtn{
+  height:30px;
+  border:none;
+  border-radius:999px;
+  padding:0 12px;
+  background:#edf4fa;
+  color:#425466;
+  font-size:12px;
+  font-weight:700;
 }
 
 .colorSwatch{
@@ -593,6 +655,41 @@ button{ cursor:pointer; }
 
 .colorSwatch.active{
   box-shadow:0 0 0 3px rgba(36,145,255,0.20);
+}
+
+#customColorBtn{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.95), rgba(228,236,245,0.95)),
+    conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30);
+}
+
+#customColorBtn::before{
+  content:"";
+  position:absolute;
+  inset:4px;
+  border-radius:50%;
+  background:var(--custom-color-preview, conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30));
+}
+
+#customColorBtn::after{
+  content:"+";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#ffffff;
+  font-size:14px;
+  font-weight:900;
+  text-shadow:0 1px 2px rgba(0,0,0,0.35);
+}
+
+#customColorInput{
+  position:absolute;
+  pointer-events:none;
+  opacity:0;
 }
 
 .noteColorSwatch{
@@ -717,12 +814,41 @@ button{ cursor:pointer; }
   #msgInput, #sendBtn, #fileLabel{ height:44px; }
   #sendBtn, #fileLabel{ width:44px; }
 
+  #togglePhoneBtn,
+  #savePhoneBtn,
+  .viewerBtn,
+  .toolBtn{
+    min-width:40px;
+    width:40px;
+    padding:0;
+    border-radius:12px;
+  }
+
+  #togglePhoneBtn .btnText,
+  #savePhoneBtn .btnText,
+  .viewerBtn .btnText,
+  .toolBtn .btnText{
+    display:none;
+  }
+
+  #togglePhoneBtn .btnIcon,
+  #savePhoneBtn .btnIcon,
+  .viewerBtn .btnIcon,
+  .toolBtn .btnIcon{
+    display:inline-flex;
+  }
+
   #viewerTopbar{
     height:auto;
     min-height:72px;
     align-items:flex-start;
     padding:10px 12px;
     flex-direction:column;
+  }
+
+  #viewerActions{
+    width:100%;
+    justify-content:flex-end;
   }
 
   #viewerMain{
@@ -742,7 +868,29 @@ button{ cursor:pointer; }
 
   #toolRow{
     flex-direction:column;
-    align-items:flex-start;
+    align-items:stretch;
+  }
+
+  #drawModeWrap,
+  #historyRow{
+    width:100%;
+  }
+
+  #drawModeWrap,
+  #historyRow,
+  #colorRow{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-bottom:4px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+
+  #drawModeWrap::-webkit-scrollbar,
+  #historyRow::-webkit-scrollbar,
+  #colorRow::-webkit-scrollbar{
+    display:none;
   }
 
   #thicknessWrap{
@@ -751,6 +899,24 @@ button{ cursor:pointer; }
   }
 
   #thicknessRange{ width:100px; }
+
+  #colorRow{
+    gap:10px;
+  }
+
+  .colorSwatch{
+    width:30px;
+    height:30px;
+  }
+
+  #noteColorRow{
+    display:none;
+    padding-top:2px;
+  }
+
+  #noteColorRow.open{
+    display:flex;
+  }
 }
 </style>
 </head>
@@ -761,6 +927,9 @@ button{ cursor:pointer; }
     <div id="header">
       <div id="roleBadge">고객 채팅</div>
       <div id="title">디자인 상담</div>
+      <div id="headerActions">
+        <button id="openViewerBtn" class="iconBtn" type="button" aria-label="새 창으로 열기">⛶</button>
+      </div>
     </div>
 
     <div id="chatBox">
@@ -769,14 +938,19 @@ button{ cursor:pointer; }
 
     <div id="inputArea">
       <div id="utilityRow">
-        <button id="togglePhoneBtn" type="button">전화번호 입력</button>
+        <button id="togglePhoneBtn" type="button" aria-label="전화번호 입력 열기">
+          <span class="btnIcon">☎</span>
+          <span class="btnText">전화번호 입력</span>
+        </button>
       </div>
 
       <div id="phoneRow">
         <input id="phoneInput" type="tel" placeholder="전화번호 입력" />
-        <button id="savePhoneBtn" type="button">등록</button>
+        <button id="savePhoneBtn" type="button" aria-label="전화번호 등록">
+          <span class="btnIcon">✓</span>
+          <span class="btnText">등록</span>
+        </button>
       </div>
-
       <div id="phoneStatus" aria-live="polite"></div>
 
       <div id="messageRow">
@@ -803,8 +977,14 @@ button{ cursor:pointer; }
     </div>
 
     <div id="viewerActions">
-      <a id="downloadSketchBtn" class="viewerBtn" download="sketch.png">다운로드</a>
-      <button id="closeViewerBtn" class="viewerBtn" type="button">닫기</button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="스케치 다운로드">
+        <span class="btnIcon">↓</span>
+        <span class="btnText">다운로드</span>
+      </button>
+      <button id="closeViewerBtn" class="viewerBtn" type="button" aria-label="뷰어 닫기">
+        <span class="btnIcon">✕</span>
+        <span class="btnText">닫기</span>
+      </button>
     </div>
   </div>
 
@@ -821,11 +1001,26 @@ button{ cursor:pointer; }
       <div id="toolbar">
         <div id="toolRow">
           <div id="drawModeWrap">
-            <button id="penBtn" class="toolBtn active" type="button">펜</button>
-            <button id="eraserBtn" class="toolBtn" type="button">지우개</button>
-            <button id="addTextBtn" class="toolBtn" type="button">텍스트 추가</button>
-            <button id="clearDrawingBtn" class="toolBtn" type="button">선지우기</button>
-            <button id="clearNotesBtn" class="toolBtn" type="button">메모지우기</button>
+            <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">
+              <span class="btnIcon">✎</span>
+              <span class="btnText">펜</span>
+            </button>
+            <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">
+              <span class="btnIcon">⌫</span>
+              <span class="btnText">지우개</span>
+            </button>
+            <button id="addTextBtn" class="toolBtn" type="button" aria-label="텍스트 추가">
+              <span class="btnIcon">T</span>
+              <span class="btnText">텍스트 추가</span>
+            </button>
+            <button id="clearDrawingBtn" class="toolBtn" type="button" aria-label="선 지우기">
+              <span class="btnIcon">⌧</span>
+              <span class="btnText">선지우기</span>
+            </button>
+            <button id="clearNotesBtn" class="toolBtn" type="button" aria-label="메모 지우기">
+              <span class="btnIcon">⌦</span>
+              <span class="btnText">메모지우기</span>
+            </button>
           </div>
 
           <div id="thicknessWrap">
@@ -835,12 +1030,16 @@ button{ cursor:pointer; }
         </div>
 
         <div id="colorRow">
-          <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;"></button>
-          <button class="colorSwatch" type="button" data-color="#2491ff" style="background:#2491ff;"></button>
-          <button class="colorSwatch" type="button" data-color="#22c55e" style="background:#22c55e;"></button>
-          <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;"></button>
-          <button class="colorSwatch" type="button" data-color="#f59e0b" style="background:#f59e0b;"></button>
-          <button class="colorSwatch" type="button" data-color="#a855f7" style="background:#a855f7;"></button>
+          <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
+          <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
+          <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
+          <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
+          <input id="customColorInput" type="color" value="#2491ff" aria-label="사용자 지정 색상" />
+        </div>
+
+        <div id="noteColorHeader">
+          <div id="noteColorTitle">메모 색상</div>
+          <button id="toggleNoteColorsBtn" type="button">메모 색상</button>
         </div>
 
         <div id="noteColorRow">
@@ -852,12 +1051,17 @@ button{ cursor:pointer; }
         </div>
 
         <div id="historyRow">
-          <button id="undoBtn" class="toolBtn" type="button">Undo</button>
-          <button id="redoBtn" class="toolBtn" type="button">Redo</button>
+          <button id="undoBtn" class="toolBtn" type="button" aria-label="실행 취소">
+            <span class="btnIcon">↶</span>
+            <span class="btnText">Undo</span>
+          </button>
+          <button id="redoBtn" class="toolBtn" type="button" aria-label="다시 실행">
+            <span class="btnIcon">↷</span>
+            <span class="btnText">Redo</span>
+          </button>
         </div>
       </div>
     </section>
-
     <section id="viewerRight">
       <div id="viewerChatHeader">채팅</div>
       <div id="viewerChatBox">
@@ -875,10 +1079,12 @@ button{ cursor:pointer; }
 <script>
 const STORAGE_KEYS = {
   roomId: "chat_room_id",
+  viewerState: "chat_last_viewer_state",
   userName: "chat_user_name"
 };
-
 const EMBED_MESSAGE_NAMESPACE = "design-chat-widget";
+const MAX_CLIENT_STROKES = 2000;
+const MAX_CLIENT_NOTES = 100;
 
 const params = new URLSearchParams(location.search);
 const role = params.get("role") === "admin" || params.has("admin") ? "admin" : "user";
@@ -905,6 +1111,7 @@ const fileInput = document.getElementById("fileInput");
 const phoneInput = document.getElementById("phoneInput");
 const phoneStatus = document.getElementById("phoneStatus");
 const savePhoneBtn = document.getElementById("savePhoneBtn");
+const openViewerBtn = document.getElementById("openViewerBtn");
 const togglePhoneBtn = document.getElementById("togglePhoneBtn");
 const phoneRow = document.getElementById("phoneRow");
 
@@ -932,7 +1139,11 @@ const undoBtn = document.getElementById("undoBtn");
 const redoBtn = document.getElementById("redoBtn");
 const thicknessRange = document.getElementById("thicknessRange");
 const colorSwatches = Array.from(document.querySelectorAll(".colorSwatch"));
+const customColorBtn = document.getElementById("customColorBtn");
+const customColorInput = document.getElementById("customColorInput");
 const noteColorSwatches = Array.from(document.querySelectorAll(".noteColorSwatch"));
+const noteColorRow = document.getElementById("noteColorRow");
+const toggleNoteColorsBtn = document.getElementById("toggleNoteColorsBtn");
 const textLayer = document.getElementById("textLayer");
 const imageStage = document.getElementById("imageStage");
 
@@ -945,6 +1156,9 @@ msgInput.addEventListener("compositionstart", () => { isComposingMain = true; })
 msgInput.addEventListener("compositionend", () => { isComposingMain = false; });
 viewerMsgInput.addEventListener("compositionstart", () => { isComposingViewer = true; });
 viewerMsgInput.addEventListener("compositionend", () => { isComposingViewer = false; });
+
+let lastSelectedImageId = "";
+let lastSelectedImageUrl = "";
 
 let currentViewerImageId = "";
 let currentViewerImageUrl = "";
@@ -995,6 +1209,46 @@ function announceReadyToParent() {
     roomId,
     role
   });
+}
+
+function saveViewerState() {
+  if (!currentViewerImageId || !currentViewerImageUrl) return;
+  const payload = {
+    roomId,
+    role,
+    imageId: currentViewerImageId,
+    imageUrl: currentViewerImageUrl,
+    isOpen: viewerOverlay.classList.contains("open"),
+    savedAt: Date.now()
+  };
+  localStorage.setItem(STORAGE_KEYS.viewerState, JSON.stringify(payload));
+}
+
+function clearViewerState() {
+  localStorage.removeItem(STORAGE_KEYS.viewerState);
+}
+
+function restoreViewerState() {
+  if (params.get("viewer") === "1") return;
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.viewerState);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    if (!data || !data.isOpen) return;
+    if (!data.roomId || data.roomId !== roomId) return;
+    if (!data.imageId || !data.imageUrl) return;
+
+    currentViewerImageId = data.imageId;
+    currentViewerImageUrl = data.imageUrl;
+    viewerOverlay.classList.add("open");
+    viewerOverlay.setAttribute("aria-hidden", "false");
+    viewerImage.src = data.imageUrl;
+    updateViewerStats();
+  } catch (error) {
+    console.error("viewer 상태 복원 실패:", error);
+  }
 }
 
 function cloneState() {
@@ -1069,12 +1323,6 @@ function updateViewerStats() {
   }
 }
 
-function setPhoneStatus(message, isError = false) {
-  phoneStatus.textContent = message;
-  phoneStatus.style.color = isError ? "#d14343" : "#5f7286";
-  phoneStatus.classList.toggle("show", Boolean(message));
-}
-
 function scheduleNoteLiveUpdate(noteId, imageId, patch) {
   noteLiveQueue.set(noteId, { imageId, noteId, patch });
 
@@ -1099,6 +1347,59 @@ function debounceNoteCommit(noteId, fn, delay = 220) {
   }, delay);
 
   noteTextTimers.set(noteId, timer);
+}
+
+function updateCustomColorPreview(color) {
+  customColorBtn.style.setProperty("--custom-color-preview", color);
+  customColorInput.value = color;
+}
+
+const isViewerMode = params.get("viewer") === "1";
+const initialImageId = params.get("imageId") || "";
+const initialImageUrl = params.get("imageUrl") || "";
+
+socket.on("connect", () => {
+  connectionBadge.textContent = "연결됨";
+  announceReadyToParent();
+});
+
+socket.on("disconnect", () => {
+  connectionBadge.textContent = "연결 끊김";
+});
+
+socket.emit("join", { roomId, role });
+
+if (isViewerMode) {
+  document.getElementById("app").style.display = "none";
+  viewerOverlay.classList.add("open");
+  viewerOverlay.setAttribute("aria-hidden", "false");
+
+  if (initialImageId && initialImageUrl) {
+    currentViewerImageId = initialImageId;
+    currentViewerImageUrl = initialImageUrl;
+    viewerImage.src = initialImageUrl;
+    saveViewerState();
+  }
+  updateViewerStats();
+  updateHistoryButtons();
+} else {
+  restoreViewerState();
+}
+
+togglePhoneBtn.addEventListener("click", () => {
+  phoneRow.classList.toggle("open");
+});
+
+function setPhoneStatus(message, isError = false) {
+  phoneStatus.textContent = message;
+  phoneStatus.style.color = isError ? "#d14343" : "#5f7286";
+  phoneStatus.classList.toggle("show", Boolean(message));
+}
+
+function scrollBottom(container) {
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight;
+  });
 }
 
 function formatTime(ts) {
@@ -1126,39 +1427,6 @@ function sanitizeFileName(name) {
     .replace(/[\\/:*?"<>|]/g, "_")
     .replace(/\s+/g, "_")
     .slice(0, 40);
-}
-
-function roundRect(ctx2d, x, y, width, height, radius) {
-  ctx2d.beginPath();
-  ctx2d.moveTo(x + radius, y);
-  ctx2d.arcTo(x + width, y, x + width, y + height, radius);
-  ctx2d.arcTo(x + width, y + height, x, y + height, radius);
-  ctx2d.arcTo(x, y + height, x, y, radius);
-  ctx2d.arcTo(x, y, x + width, y, radius);
-  ctx2d.closePath();
-}
-
-function wrapTextLines(text, maxCharsPerLine) {
-  const result = [];
-  const source = String(text || "").split("\n");
-
-  source.forEach((part) => {
-    if (!part) {
-      result.push("");
-      return;
-    }
-    let current = "";
-    for (const ch of part) {
-      current += ch;
-      if (current.length >= maxCharsPerLine) {
-        result.push(current);
-        current = "";
-      }
-    }
-    if (current) result.push(current);
-  });
-
-  return result.slice(0, 10);
 }
 
 function createTextRow(data) {
@@ -1192,7 +1460,7 @@ function createImageRow(data) {
 
   wrap.appendChild(img);
   wrap.addEventListener("click", () => {
-    openViewer(data.imageId, data.imageUrl);
+    openViewerPopup(data.imageId, data.imageUrl);
   });
 
   const meta = document.createElement("div");
@@ -1206,22 +1474,25 @@ function createImageRow(data) {
 
 function renderTextMessage(data) {
   chatInner.appendChild(createTextRow(data));
-  chatBox.scrollTop = chatBox.scrollHeight;
+  scrollBottom(chatBox);
 
   if (viewerOverlay.classList.contains("open")) {
     viewerChatInner.appendChild(createTextRow(data));
-    viewerChatBox.scrollTop = viewerChatBox.scrollHeight;
+    scrollBottom(viewerChatBox);
   }
 }
 
 function renderImageMessage(data) {
   chatInner.appendChild(createImageRow(data));
-  chatBox.scrollTop = chatBox.scrollHeight;
+  scrollBottom(chatBox);
 
   if (viewerOverlay.classList.contains("open")) {
     viewerChatInner.appendChild(createImageRow(data));
-    viewerChatBox.scrollTop = viewerChatBox.scrollHeight;
+    scrollBottom(viewerChatBox);
   }
+
+  lastSelectedImageId = data.imageId;
+  lastSelectedImageUrl = data.imageUrl;
 }
 
 function sendMainMessage() {
@@ -1285,11 +1556,9 @@ async function uploadImage(file) {
   });
 
   const result = await response.json().catch(() => ({}));
-
   if (!response.ok) {
     throw new Error(result.error || "이미지 업로드 실패");
   }
-
   if (!result.url) {
     throw new Error("업로드된 이미지 URL이 없습니다.");
   }
@@ -1297,21 +1566,44 @@ async function uploadImage(file) {
   socket.emit("image", { url: result.url });
 }
 
-function openViewer(imageId, imageUrl) {
-  currentViewerImageId = imageId;
-  currentViewerImageUrl = imageUrl;
+function openViewerInline(imageId, imageUrl) {
   currentStrokes = [];
   currentNotes = [];
   historyUndoStack = [];
   historyRedoStack = [];
+  clearCanvas();
+  renderNotes();
   updateHistoryButtons();
-  updateViewerStats();
-
+  currentViewerImageId = imageId;
+  currentViewerImageUrl = imageUrl;
   viewerOverlay.classList.add("open");
   viewerOverlay.setAttribute("aria-hidden", "false");
   viewerImage.src = imageUrl;
+  saveViewerState();
+  updateViewerStats();
 }
 
+function openViewerPopup(imageId, imageUrl) {
+  if (!imageId || !imageUrl) return;
+
+  const url = new URL(window.location.origin + window.location.pathname);
+  url.searchParams.set("viewer", "1");
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("role", role);
+  url.searchParams.set("imageId", imageId);
+  url.searchParams.set("imageUrl", imageUrl);
+  url.searchParams.set("userName", userName);
+
+  const popup = window.open(
+    url.toString(),
+    "designImageViewer",
+    "width=1320,height=860,resizable=yes,scrollbars=yes"
+  );
+
+  if (!popup) {
+    alert("브라우저에서 새 창이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
+  }
+}
 function closeViewer() {
   viewerOverlay.classList.remove("open");
   viewerOverlay.setAttribute("aria-hidden", "true");
@@ -1325,6 +1617,7 @@ function closeViewer() {
   renderNotes();
   updateViewerStats();
   updateHistoryButtons();
+  clearViewerState();
   pendingStrokeBatch = [];
   pendingStrokeImageId = "";
   if (strokeBatchRaf) {
@@ -1398,6 +1691,7 @@ function queueStrokeForSync(stroke) {
   pendingStrokeBatch.push(stroke);
 
   if (strokeBatchRaf) return;
+
   strokeBatchRaf = requestAnimationFrame(flushStrokeBatch);
 }
 
@@ -1421,9 +1715,18 @@ function setActiveTools() {
 }
 
 function setActiveColor(color) {
+  const normalizedColor = (color || "").toLowerCase();
+  let matchedPreset = false;
+
   colorSwatches.forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.color === color);
+    const swatchColor = (btn.dataset.color || "").toLowerCase();
+    const isActive = swatchColor && swatchColor === normalizedColor;
+    btn.classList.toggle("active", isActive);
+    if (isActive) matchedPreset = true;
   });
+
+  customColorBtn.classList.toggle("active", !matchedPreset);
+  updateCustomColorPreview(color);
 }
 
 function setActiveNoteColor(color) {
@@ -1432,11 +1735,45 @@ function setActiveNoteColor(color) {
   });
 }
 
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+}
+
+function wrapTextLines(text, maxCharsPerLine) {
+  const result = [];
+  const source = String(text || "").split("\n");
+
+  source.forEach((part) => {
+    if (!part) {
+      result.push("");
+      return;
+    }
+    let current = "";
+    for (const ch of part) {
+      current += ch;
+      if (current.length >= maxCharsPerLine) {
+        result.push(current);
+        current = "";
+      }
+    }
+    if (current) result.push(current);
+  });
+
+  return result.slice(0, 10);
+}
+
 function buildDownload() {
   if (!currentViewerImageUrl) return;
 
   const stageWidth = imageStage.clientWidth || 1200;
   const stageHeight = imageStage.clientHeight || 760;
+  const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
   const img = new Image();
 
   img.onload = () => {
@@ -1537,9 +1874,12 @@ function buildDownload() {
     );
     exportCtx.restore();
 
-    const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
-    downloadSketchBtn.href = exportCanvas.toDataURL("image/png");
-    downloadSketchBtn.download = fileName;
+    const link = document.createElement("a");
+    link.href = exportCanvas.toDataURL("image/png");
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   img.onerror = () => {
@@ -1714,6 +2054,9 @@ function applyNoteLayout(node, note) {
 
 function renderNotes() {
   textLayer.innerHTML = "";
+  if (currentNotes.length > MAX_CLIENT_NOTES) {
+    currentNotes = currentNotes.slice(-MAX_CLIENT_NOTES);
+  }
   currentNotes.forEach((note) => {
     textLayer.appendChild(createNoteNode(note));
   });
@@ -1835,11 +2178,10 @@ viewerMsgInput.addEventListener("keydown", (e) => {
   }
 });
 
-togglePhoneBtn.addEventListener("click", () => {
-  phoneRow.classList.toggle("open");
-});
-
 savePhoneBtn.addEventListener("click", savePhone);
+toggleNoteColorsBtn.addEventListener("click", () => {
+  noteColorRow.classList.toggle("open");
+});
 
 fileInput.addEventListener("change", async (e) => {
   const selected = e.target.files[0];
@@ -1855,7 +2197,21 @@ fileInput.addEventListener("change", async (e) => {
   }
 });
 
-closeViewerBtn.addEventListener("click", closeViewer);
+openViewerBtn.addEventListener("click", () => {
+  if (!lastSelectedImageId || !lastSelectedImageUrl) {
+    alert("먼저 채팅에서 이미지를 선택해주세요.");
+    return;
+  }
+  openViewerPopup(lastSelectedImageId, lastSelectedImageUrl);
+});
+
+closeViewerBtn.addEventListener("click", () => {
+  if (isViewerMode) {
+    window.close();
+    return;
+  }
+  closeViewer();
+});
 
 viewerImage.addEventListener("load", () => {
   updateCanvasSize();
@@ -1863,8 +2219,8 @@ viewerImage.addEventListener("load", () => {
   if (currentViewerImageId) {
     socket.emit("request-drawing-history", { imageId: currentViewerImageId });
     socket.emit("request-note-history", { imageId: currentViewerImageId });
+    saveViewerState();
   }
-
   updateViewerStats();
   updateHistoryButtons();
 });
@@ -1904,11 +2260,22 @@ thicknessRange.addEventListener("input", () => {
   currentSize = Number(thicknessRange.value || 3);
 });
 
-colorSwatches.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    currentColor = btn.dataset.color || "#ff3b30";
-    setActiveColor(currentColor);
+colorSwatches
+  .filter((btn) => btn !== customColorBtn)
+  .forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentColor = btn.dataset.color || "#ff3b30";
+      setActiveColor(currentColor);
+    });
   });
+
+customColorBtn.addEventListener("click", () => {
+  customColorInput.click();
+});
+
+customColorInput.addEventListener("input", () => {
+  currentColor = customColorInput.value || "#2491ff";
+  setActiveColor(currentColor);
 });
 
 noteColorSwatches.forEach((btn) => {
@@ -1971,21 +2338,14 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
-  if (e.key === "Escape" && viewerOverlay.classList.contains("open")) {
+  if (e.key === "Escape") {
+    if (isViewerMode) {
+      window.close();
+      return;
+    }
     closeViewer();
   }
 });
-
-socket.on("connect", () => {
-  connectionBadge.textContent = "연결됨";
-  announceReadyToParent();
-});
-
-socket.on("disconnect", () => {
-  connectionBadge.textContent = "연결 끊김";
-});
-
-socket.emit("join", { roomId, role });
 
 socket.on("history", (messages) => {
   chatInner.innerHTML = "";
@@ -2009,7 +2369,9 @@ socket.on("image", (data) => {
 
 socket.on("drawing-history", (payload) => {
   if (!payload || payload.imageId !== currentViewerImageId) return;
-  currentStrokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+  currentStrokes = Array.isArray(payload.strokes)
+    ? payload.strokes.slice(-MAX_CLIENT_STROKES)
+    : [];
   redrawAllStrokes();
   updateViewerStats();
 });
@@ -2017,6 +2379,9 @@ socket.on("drawing-history", (payload) => {
 socket.on("draw-stroke", (stroke) => {
   if (!stroke || stroke.imageId !== currentViewerImageId) return;
   currentStrokes.push(stroke);
+  if (currentStrokes.length > MAX_CLIENT_STROKES) {
+    currentStrokes.splice(0, currentStrokes.length - MAX_CLIENT_STROKES);
+  }
   drawStroke(stroke);
   updateViewerStats();
 });
@@ -2027,8 +2392,15 @@ socket.on("draw-strokes", (payload) => {
   const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
   strokes.forEach((stroke) => {
     currentStrokes.push(stroke);
-    drawStroke(stroke);
   });
+  if (currentStrokes.length > MAX_CLIENT_STROKES) {
+    currentStrokes.splice(0, currentStrokes.length - MAX_CLIENT_STROKES);
+    redrawAllStrokes();
+  } else {
+    strokes.forEach((stroke) => {
+      drawStroke(stroke);
+    });
+  }
   updateViewerStats();
 });
 
@@ -2041,7 +2413,9 @@ socket.on("clear-drawing", (payload) => {
 
 socket.on("note-history", (payload) => {
   if (!payload || payload.imageId !== currentViewerImageId) return;
-  currentNotes = Array.isArray(payload.notes) ? payload.notes : [];
+  currentNotes = Array.isArray(payload.notes)
+    ? payload.notes.slice(-MAX_CLIENT_NOTES)
+    : [];
   renderNotes();
 });
 
@@ -2051,6 +2425,11 @@ socket.on("note-added", (payload) => {
   const exists = currentNotes.some((n) => n.id === payload.note.id);
   if (!exists) {
     currentNotes.push(payload.note);
+    if (currentNotes.length > MAX_CLIENT_NOTES) {
+      currentNotes.splice(0, currentNotes.length - MAX_CLIENT_NOTES);
+      renderNotes();
+      return;
+    }
     upsertNoteNode(payload.note);
     updateViewerStats();
   }
