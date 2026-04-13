@@ -1,7 +1,7 @@
 {
   "name": "realtime-design-chat",
-  "version": "1.6.0",
-  "description": "Realtime design consultation chat with collaborative drawing, notes, undo/redo, MongoDB persistence, viewer restore, and username-based download filename",
+  "version": "1.7.0",
+  "description": "Realtime design consultation chat with collaborative drawing, notes, MongoDB persistence, Cloudinary upload, and Cafe24 widget integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,6 +10,7 @@
     "node": "22.x"
   },
   "dependencies": {
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "mongoose": "^8.6.1",
