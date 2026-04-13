@@ -1,7 +1,7 @@
 {
   "name": "realtime-design-chat",
-  "version": "1.7.0",
-  "description": "Realtime design consultation chat with collaborative drawing, notes, MongoDB persistence, Cloudinary upload, and Cafe24 widget integration",
+  "version": "1.5.0",
+  "description": "Realtime design consultation chat with collaborative image sketching, notes, undo redo, and MongoDB persistence",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
