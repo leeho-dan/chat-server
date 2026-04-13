@@ -839,10 +839,15 @@ button{ cursor:pointer; }
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+const STORAGE_KEYS = {
+  roomId: "chat_room_id",
+  viewerState: "chat_last_viewer_state"
+};
+
 const params = new URLSearchParams(location.search);
 const role = params.has("admin") ? "admin" : "user";
-let roomId = params.get("room") || localStorage.getItem("roomId") || crypto.randomUUID();
-localStorage.setItem("roomId", roomId);
+let roomId = params.get("room") || localStorage.getItem(STORAGE_KEYS.roomId) || crypto.randomUUID();
+localStorage.setItem(STORAGE_KEYS.roomId, roomId);
 
 const socket = io({
   transports: ["websocket", "polling"]
@@ -924,6 +929,46 @@ const noteTextTimers = new Map();
 let historyUndoStack = [];
 let historyRedoStack = [];
 let historyLock = false;
+
+function saveViewerState() {
+  if (!currentViewerImageId || !currentViewerImageUrl) return;
+  const payload = {
+    roomId,
+    role,
+    imageId: currentViewerImageId,
+    imageUrl: currentViewerImageUrl,
+    isOpen: viewerOverlay.classList.contains("open"),
+    savedAt: Date.now()
+  };
+  localStorage.setItem(STORAGE_KEYS.viewerState, JSON.stringify(payload));
+}
+
+function clearViewerState() {
+  localStorage.removeItem(STORAGE_KEYS.viewerState);
+}
+
+function restoreViewerState() {
+  if (params.get("viewer") === "1") return;
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.viewerState);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    if (!data || !data.isOpen) return;
+    if (!data.roomId || data.roomId !== roomId) return;
+    if (!data.imageId || !data.imageUrl) return;
+
+    currentViewerImageId = data.imageId;
+    currentViewerImageUrl = data.imageUrl;
+    viewerOverlay.classList.add("open");
+    viewerOverlay.setAttribute("aria-hidden", "false");
+    viewerImage.src = data.imageUrl;
+    updateViewerStats();
+  } catch (error) {
+    console.error("viewer 상태 복원 실패:", error);
+  }
+}
 
 function cloneState() {
   return {
@@ -1046,9 +1091,12 @@ if (isViewerMode) {
     currentViewerImageId = initialImageId;
     currentViewerImageUrl = initialImageUrl;
     viewerImage.src = initialImageUrl;
+    saveViewerState();
   }
   updateViewerStats();
   updateHistoryButtons();
+} else {
+  restoreViewerState();
 }
 
 togglePhoneBtn.addEventListener("click", () => {
@@ -1213,6 +1261,7 @@ function closeViewer() {
   renderNotes();
   updateViewerStats();
   updateHistoryButtons();
+  clearViewerState();
 }
 
 function updateCanvasSize() {
@@ -1728,6 +1777,7 @@ viewerImage.addEventListener("load", () => {
   if (currentViewerImageId) {
     socket.emit("request-drawing-history", { imageId: currentViewerImageId });
     socket.emit("request-note-history", { imageId: currentViewerImageId });
+    saveViewerState();
   }
   updateViewerStats();
   updateHistoryButtons();
