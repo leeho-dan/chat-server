@@ -935,10 +935,8 @@ button{ cursor:pointer; }
     height:auto;
     min-height:0;
     display:grid;
-    grid-template-columns:minmax(0, 1fr) auto;
-    grid-template-areas:
-      "stats actions"
-      "title actions";
+    grid-template-columns:auto minmax(0, 1fr) auto;
+    grid-template-areas:"stats title actions";
     align-items:center;
     gap:6px 10px;
     padding:8px 10px;
@@ -948,6 +946,7 @@ button{ cursor:pointer; }
     grid-area:title;
     width:100%;
     gap:0;
+    justify-self:start;
   }
 
   #viewerTitle{
@@ -961,7 +960,7 @@ button{ cursor:pointer; }
 
   #viewerStats{
     grid-area:stats;
-    width:100%;
+    width:auto;
     gap:6px;
     flex-wrap:nowrap;
     overflow-x:auto;
@@ -1003,21 +1002,23 @@ button{ cursor:pointer; }
     grid-area:actions;
     width:auto;
     justify-content:flex-end;
-    align-self:start;
+    align-self:center;
   }
 
   #viewerMain{
-    grid-template-columns:1fr;
-    grid-template-rows:minmax(0, 57dvh) minmax(0, 1fr);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
   }
 
   #viewerLeft{
-    border-right:none;
-    border-bottom:1px solid var(--line);
+    display:contents;
   }
 
   #canvasWrap{
+    flex:5 1 0;
     padding:8px;
+    min-height:0;
   }
 
   #imageStage{
@@ -1026,9 +1027,18 @@ button{ cursor:pointer; }
     border-radius:18px;
   }
 
+  #toolbar{
+    flex:2 1 0;
+    min-height:0;
+    padding:8px 10px 10px;
+    gap:8px;
+    overflow:hidden;
+  }
+
   #toolRow{
     flex-direction:column;
     align-items:stretch;
+    gap:8px;
   }
 
   #drawModeWrap,
@@ -1053,25 +1063,58 @@ button{ cursor:pointer; }
     display:none;
   }
 
+  #historyRow{
+    order:-1;
+    width:auto;
+    flex:0 0 auto;
+  }
+
+  #colorRow{
+    flex:1 1 auto;
+    min-width:0;
+    gap:6px;
+  }
+
   #thicknessWrap{
     width:100%;
     justify-content:flex-start;
   }
 
-  #thicknessRange{ width:100px; }
-
-  #colorRow{
-    gap:7px;
-  }
+  #thicknessRange{ width:92px; }
 
   .colorSwatch{
     width:24px;
     height:24px;
   }
 
+  #noteColorHeader{
+    justify-content:flex-start;
+    gap:8px;
+  }
+
+  #noteColorTitle{
+    display:none;
+  }
+
+  #toggleNoteColorsBtn{
+    width:30px;
+    min-width:30px;
+    height:30px;
+    padding:0;
+    border-radius:10px;
+    font-size:0;
+  }
+
+  #toggleNoteColorsBtn::before{
+    content:"◐";
+    font-size:14px;
+    line-height:1;
+  }
+
   #noteColorRow{
     display:none;
     padding-top:2px;
+    gap:6px;
   }
 
   #noteColorRow.open{
@@ -1079,7 +1122,9 @@ button{ cursor:pointer; }
   }
 
   #viewerRight{
+    flex:3 1 0;
     min-height:0;
+    border-top:1px solid var(--line);
   }
 
   #viewerChatHeader{
@@ -1224,6 +1269,17 @@ button{ cursor:pointer; }
           </div>
         </div>
 
+        <div id="historyRow">
+          <button id="undoBtn" class="toolBtn" type="button" aria-label="실행 취소">
+            <span class="btnIcon">↶</span>
+            <span class="btnText">Undo</span>
+          </button>
+          <button id="redoBtn" class="toolBtn" type="button" aria-label="다시 실행">
+            <span class="btnIcon">↷</span>
+            <span class="btnText">Redo</span>
+          </button>
+        </div>
+
         <div id="colorRow">
           <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
           <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
@@ -1244,19 +1300,9 @@ button{ cursor:pointer; }
           <button class="noteColorSwatch" type="button" data-note-color="#ffe4ef" style="background:#ffe4ef;"></button>
           <button class="noteColorSwatch" type="button" data-note-color="#efe7ff" style="background:#efe7ff;"></button>
         </div>
-
-        <div id="historyRow">
-          <button id="undoBtn" class="toolBtn" type="button" aria-label="실행 취소">
-            <span class="btnIcon">↶</span>
-            <span class="btnText">Undo</span>
-          </button>
-          <button id="redoBtn" class="toolBtn" type="button" aria-label="다시 실행">
-            <span class="btnIcon">↷</span>
-            <span class="btnText">Redo</span>
-          </button>
-        </div>
       </div>
     </section>
+
     <section id="viewerRight">
       <div id="viewerChatHeader">채팅</div>
       <div id="viewerChatBox">
@@ -1899,6 +1945,7 @@ function redrawAllStrokes() {
   currentStrokes.forEach(drawStroke);
   updateViewerStats();
 }
+
 function getNormalizedPoint(evt) {
   const rect = drawCanvas.getBoundingClientRect();
   return {
