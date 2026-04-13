@@ -33,6 +33,10 @@ html, body{
 
 body{ overflow:hidden; }
 
+body.viewer-inline-open #app{
+  visibility:visible;
+}
+
 button,input,textarea,label{ font:inherit; }
 button{ cursor:pointer; }
 
@@ -847,6 +851,14 @@ button{ cursor:pointer; }
 }
 
 @media (max-width: 900px){
+  body.viewer-inline-open #app{
+    visibility:hidden;
+  }
+
+  body.viewer-inline-open #viewerOverlay{
+    background:#f5f8fc;
+  }
+
   #app{ padding:0; }
 
   #chatCard{
@@ -1818,6 +1830,7 @@ function openViewerInline(imageId, imageUrl) {
   updateHistoryButtons();
   currentViewerImageId = imageId;
   currentViewerImageUrl = imageUrl;
+  document.body.classList.add("viewer-inline-open");
   viewerOverlay.classList.add("open");
   viewerOverlay.setAttribute("aria-hidden", "false");
   viewerImage.src = imageUrl;
@@ -1827,6 +1840,11 @@ function openViewerInline(imageId, imageUrl) {
 
 function openViewerPopup(imageId, imageUrl) {
   if (!imageId || !imageUrl) return;
+
+  if (window.innerWidth <= 900) {
+    openViewerInline(imageId, imageUrl);
+    return;
+  }
 
   const url = new URL(window.location.origin + window.location.pathname);
   url.searchParams.set("viewer", "1");
@@ -1850,6 +1868,7 @@ function openViewerPopup(imageId, imageUrl) {
 }
 
 function closeViewer() {
+  document.body.classList.remove("viewer-inline-open");
   viewerOverlay.classList.remove("open");
   viewerOverlay.setAttribute("aria-hidden", "true");
   currentViewerImageId = "";
