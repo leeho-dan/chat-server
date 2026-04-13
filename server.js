@@ -24,6 +24,14 @@ const MONGODB_URI = process.env.MONGODB_URI || "";
 const CLOUD_NAME = process.env.CLOUD_NAME || "";
 const CLOUD_KEY = process.env.CLOUD_KEY || "";
 const CLOUD_SECRET = process.env.CLOUD_SECRET || "";
+const MESSAGE_HISTORY_LIMIT = Math.max(20, Number(process.env.MESSAGE_HISTORY_LIMIT || 200));
+const MAX_ROOM_MESSAGES = Math.max(MESSAGE_HISTORY_LIMIT, Number(process.env.MAX_ROOM_MESSAGES || 300));
+const MAX_IMAGE_STROKES = Math.max(100, Number(process.env.MAX_IMAGE_STROKES || 2000));
+const MAX_IMAGE_NOTES = Math.max(10, Number(process.env.MAX_IMAGE_NOTES || 100));
+const MAX_ROOM_IMAGES = Math.max(1, Number(process.env.MAX_ROOM_IMAGES || 20));
+const MAX_CACHED_ROOMS = Math.max(10, Number(process.env.MAX_CACHED_ROOMS || 300));
+const ROOM_TTL_MS = Math.max(1000 * 60 * 5, Number(process.env.ROOM_TTL_MS || 1000 * 60 * 60));
+const STATE_PERSIST_DEBOUNCE_MS = Math.max(100, Number(process.env.STATE_PERSIST_DEBOUNCE_MS || 600));
 
 const PUBLIC_DIR = path.join(__dirname, "public");
 const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
@@ -230,7 +238,6 @@ const noteSaveTimers = new Map();
 const drawingLoadedKeys = new Set();
 const noteLoadedKeys = new Set();
 const memoryContacts = [];
-const ROOM_TTL_MS = 1000 * 60 * 60 * 6;
 
 function getRoom(roomId) {
   if (!rooms.has(roomId)) {
@@ -238,6 +245,7 @@ function getRoom(roomId) {
       messages: [],
       drawings: {},
       notes: {},
+      imageActivity: {},
       socketCount: 0,
       lastActiveAt: Date.now()
     });
@@ -258,8 +266,39 @@ function getStateKey(roomId, imageId) {
 function addMemoryMessage(roomId, message) {
   const room = touchRoom(roomId);
   room.messages.push(message);
-  if (room.messages.length > 1000) {
-    room.messages.shift();
+  if (room.messages.length > MAX_ROOM_MESSAGES) {
+    room.messages.splice(0, room.messages.length - MAX_ROOM_MESSAGES);
+  }
+}
+
+function touchImageState(roomId, imageId) {
+  if (!imageId) return;
+  const room = touchRoom(roomId);
+  room.imageActivity[imageId] = Date.now();
+  pruneRoomImages(roomId);
+}
+
+function pruneRoomImages(roomId) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  const imageIds = Object.keys(room.imageActivity);
+  if (imageIds.length <= MAX_ROOM_IMAGES) return;
+
+  const sortedIds = imageIds
+    .sort((a, b) => (room.imageActivity[a] || 0) - (room.imageActivity[b] || 0));
+
+  for (const imageId of sortedIds) {
+    if (Object.keys(room.imageActivity).length <= MAX_ROOM_IMAGES) break;
+
+    const key = getStateKey(roomId, imageId);
+    if (drawingSaveTimers.has(key) || noteSaveTimers.has(key)) continue;
+
+    delete room.drawings[imageId];
+    delete room.notes[imageId];
+    delete room.imageActivity[imageId];
+    drawingLoadedKeys.delete(key);
+    noteLoadedKeys.delete(key);
   }
 }
 
@@ -268,6 +307,7 @@ function getMemoryDrawingList(roomId, imageId) {
   if (!room.drawings[imageId]) {
     room.drawings[imageId] = [];
   }
+  touchImageState(roomId, imageId);
   return room.drawings[imageId];
 }
 
@@ -276,7 +316,14 @@ function getMemoryNoteList(roomId, imageId) {
   if (!room.notes[imageId]) {
     room.notes[imageId] = [];
   }
+  touchImageState(roomId, imageId);
   return room.notes[imageId];
+}
+
+function sanitizeColor(value, fallback) {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(value || "").trim())
+    ? String(value).trim()
+    : fallback;
 }
 
 function sanitizePhone(value) {
@@ -285,10 +332,51 @@ function sanitizePhone(value) {
     .slice(0, 20);
 }
 
-function sanitizeColor(value, fallback) {
-  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(value || "").trim())
-    ? String(value).trim()
-    : fallback;
+function getUploadExtension(file = {}) {
+  const originalExt = path.extname(file.originalname || "").toLowerCase();
+  if (originalExt) return originalExt;
+
+  const mimeType = String(file.mimetype || "").toLowerCase();
+  if (mimeType === "image/jpeg") return ".jpg";
+  if (mimeType === "image/png") return ".png";
+  if (mimeType === "image/webp") return ".webp";
+  if (mimeType === "image/gif") return ".gif";
+  return ".png";
+}
+
+function uploadImageToCloudinary(file) {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "design-chat",
+        resource_type: "image",
+        public_id: `${Date.now()}-${uuidv4()}`
+      },
+      (error, result) => {
+        if (error) {
+          reject(new Error("Cloudinary 업로드에 실패했습니다."));
+          return;
+        }
+
+        if (!result?.secure_url) {
+          reject(new Error("Cloudinary URL을 받지 못했습니다."));
+          return;
+        }
+
+        resolve(result.secure_url);
+      }
+    );
+
+    Readable.from(file.buffer).pipe(uploadStream);
+  });
+}
+
+async function saveImageLocally(file) {
+  const ext = getUploadExtension(file);
+  const fileName = `${Date.now()}-${uuidv4()}${ext}`;
+  const filePath = path.join(UPLOAD_DIR, fileName);
+  await fs.promises.writeFile(filePath, file.buffer);
+  return `/uploads/${fileName}`;
 }
 
 function sanitizeStroke(stroke = {}) {
@@ -324,53 +412,6 @@ function sanitizeNote(note = {}) {
   };
 }
 
-function getUploadExtension(file = {}) {
-  const originalExt = path.extname(file.originalname || "").toLowerCase();
-  if (originalExt) return originalExt;
-
-  const mimeType = String(file.mimetype || "").toLowerCase();
-  if (mimeType === "image/jpeg") return ".jpg";
-  if (mimeType === "image/png") return ".png";
-  if (mimeType === "image/webp") return ".webp";
-  if (mimeType === "image/gif") return ".gif";
-  return ".png";
-}
-
-function uploadImageToCloudinary(file) {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: "design-chat",
-        resource_type: "image",
-        public_id: `${Date.now()}-${uuidv4()}`
-      },
-      (error, result) => {
-        if (error) {
-          reject(new Error("Cloudinary 업로드에 실패했습니다."));
-          return;
-        }
-
-        if (!result || !result.secure_url) {
-          reject(new Error("Cloudinary URL을 받지 못했습니다."));
-          return;
-        }
-
-        resolve(result.secure_url);
-      }
-    );
-
-    Readable.from(file.buffer).pipe(uploadStream);
-  });
-}
-
-async function saveImageLocally(file) {
-  const ext = getUploadExtension(file);
-  const fileName = `${Date.now()}-${uuidv4()}${ext}`;
-  const filePath = path.join(UPLOAD_DIR, fileName);
-  await fs.promises.writeFile(filePath, file.buffer);
-  return `/uploads/${fileName}`;
-}
-
 function scheduleDrawingPersist(roomId, imageId) {
   if (!mongoReady) return;
 
@@ -390,7 +431,7 @@ function scheduleDrawingPersist(roomId, imageId) {
     } catch (error) {
       console.error("스케치 저장 실패:", error.message);
     }
-  }, 180);
+  }, STATE_PERSIST_DEBOUNCE_MS);
 
   drawingSaveTimers.set(key, timer);
 }
@@ -414,7 +455,7 @@ function scheduleNotePersist(roomId, imageId) {
     } catch (error) {
       console.error("메모 저장 실패:", error.message);
     }
-  }, 180);
+  }, STATE_PERSIST_DEBOUNCE_MS);
 
   noteSaveTimers.set(key, timer);
 }
@@ -441,7 +482,7 @@ async function loadMessages(roomId) {
   try {
     const docs = await MessageModel.find({ roomId })
       .sort({ time: -1, _id: -1 })
-      .limit(1000)
+      .limit(MESSAGE_HISTORY_LIMIT)
       .lean();
 
     docs.reverse();
@@ -461,9 +502,12 @@ async function loadDrawingState(roomId, imageId) {
 
   try {
     const doc = await DrawingStateModel.findOne({ roomId, imageId }).lean();
-    const strokes = Array.isArray(doc?.strokes) ? doc.strokes.map(sanitizeStroke) : [];
+    const strokes = Array.isArray(doc?.strokes)
+      ? doc.strokes.slice(-MAX_IMAGE_STROKES).map(sanitizeStroke)
+      : [];
     getRoom(roomId).drawings[imageId] = strokes;
     drawingLoadedKeys.add(key);
+    touchImageState(roomId, imageId);
     return strokes;
   } catch (error) {
     console.error("스케치 로드 실패:", error.message);
@@ -473,10 +517,11 @@ async function loadDrawingState(roomId, imageId) {
 
 async function replaceDrawingState(roomId, imageId, strokes) {
   getRoom(roomId).drawings[imageId] = Array.isArray(strokes)
-    ? strokes.map(sanitizeStroke)
+    ? strokes.slice(-MAX_IMAGE_STROKES).map(sanitizeStroke)
     : [];
 
   drawingLoadedKeys.add(getStateKey(roomId, imageId));
+  touchImageState(roomId, imageId);
   scheduleDrawingPersist(roomId, imageId);
 }
 
@@ -488,9 +533,12 @@ async function loadNoteState(roomId, imageId) {
 
   try {
     const doc = await NoteStateModel.findOne({ roomId, imageId }).lean();
-    const notes = Array.isArray(doc?.notes) ? doc.notes.map(sanitizeNote) : [];
+    const notes = Array.isArray(doc?.notes)
+      ? doc.notes.slice(-MAX_IMAGE_NOTES).map(sanitizeNote)
+      : [];
     getRoom(roomId).notes[imageId] = notes;
     noteLoadedKeys.add(key);
+    touchImageState(roomId, imageId);
     return notes;
   } catch (error) {
     console.error("메모 로드 실패:", error.message);
@@ -500,10 +548,11 @@ async function loadNoteState(roomId, imageId) {
 
 async function replaceNoteState(roomId, imageId, notes) {
   getRoom(roomId).notes[imageId] = Array.isArray(notes)
-    ? notes.map(sanitizeNote)
+    ? notes.slice(-MAX_IMAGE_NOTES).map(sanitizeNote)
     : [];
 
   noteLoadedKeys.add(getStateKey(roomId, imageId));
+  touchImageState(roomId, imageId);
   scheduleNotePersist(roomId, imageId);
 }
 
@@ -519,6 +568,13 @@ io.on("connection", (socket) => {
 
     const role = payload.role === "admin" ? "admin" : "user";
     if (!roomId) return;
+
+    if (currentRoomId && currentRoomId !== roomId && rooms.has(currentRoomId)) {
+      const previousRoom = getRoom(currentRoomId);
+      previousRoom.socketCount = Math.max(0, previousRoom.socketCount - 1);
+      previousRoom.lastActiveAt = Date.now();
+      socket.leave(currentRoomId);
+    }
 
     currentRoomId = roomId;
     currentRole = role;
@@ -593,7 +649,9 @@ io.on("connection", (socket) => {
 
     const strokes = await loadDrawingState(currentRoomId, imageId);
     strokes.push(stroke);
-    if (strokes.length > 5000) strokes.shift();
+    if (strokes.length > MAX_IMAGE_STROKES) {
+      strokes.splice(0, strokes.length - MAX_IMAGE_STROKES);
+    }
 
     scheduleDrawingPersist(currentRoomId, imageId);
     socket.to(currentRoomId).emit("draw-stroke", stroke);
@@ -612,8 +670,8 @@ io.on("connection", (socket) => {
       .map((stroke) => sanitizeStroke({ ...stroke, imageId }));
 
     sanitized.forEach((stroke) => strokes.push(stroke));
-    if (strokes.length > 5000) {
-      strokes.splice(0, strokes.length - 5000);
+    if (strokes.length > MAX_IMAGE_STROKES) {
+      strokes.splice(0, strokes.length - MAX_IMAGE_STROKES);
     }
 
     scheduleDrawingPersist(currentRoomId, imageId);
@@ -666,6 +724,9 @@ io.on("connection", (socket) => {
     });
 
     const notes = await loadNoteState(currentRoomId, imageId);
+    if (notes.length >= MAX_IMAGE_NOTES) {
+      notes.splice(0, notes.length - MAX_IMAGE_NOTES + 1);
+    }
     notes.push(note);
 
     scheduleNotePersist(currentRoomId, imageId);
@@ -768,12 +829,101 @@ io.on("connection", (socket) => {
   });
 });
 
+connectMongo().finally(() => {
+  server.listen(PORT, () => {
+    console.log(`🚀 서버 실행: ${PORT}`);
+  });
+});
+
+async function flushPendingState() {
+  if (!mongoReady) return;
+
+  const drawingKeys = Array.from(drawingSaveTimers.keys());
+  const noteKeys = Array.from(noteSaveTimers.keys());
+
+  drawingKeys.forEach((key) => {
+    const timer = drawingSaveTimers.get(key);
+    if (timer) clearTimeout(timer);
+    drawingSaveTimers.delete(key);
+  });
+
+  noteKeys.forEach((key) => {
+    const timer = noteSaveTimers.get(key);
+    if (timer) clearTimeout(timer);
+    noteSaveTimers.delete(key);
+  });
+
+  const drawingJobs = drawingKeys.map(async (key) => {
+    const [roomId, imageId] = key.split(":");
+    if (!roomId || !imageId) return;
+
+    try {
+      await DrawingStateModel.findOneAndUpdate(
+        { roomId, imageId },
+        { $set: { strokes: getMemoryDrawingList(roomId, imageId) } },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      console.error("종료 전 스케치 저장 실패:", error.message);
+    }
+  });
+
+  const noteJobs = noteKeys.map(async (key) => {
+    const [roomId, imageId] = key.split(":");
+    if (!roomId || !imageId) return;
+
+    try {
+      await NoteStateModel.findOneAndUpdate(
+        { roomId, imageId },
+        { $set: { notes: getMemoryNoteList(roomId, imageId) } },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      console.error("종료 전 메모 저장 실패:", error.message);
+    }
+  });
+
+  await Promise.allSettled([...drawingJobs, ...noteJobs]);
+}
+
 function pruneInactiveRooms() {
   const now = Date.now();
+  const staleRoomIds = [];
 
   rooms.forEach((room, roomId) => {
     if (room.socketCount > 0) return;
     if (now - room.lastActiveAt < ROOM_TTL_MS) return;
+    staleRoomIds.push(roomId);
+  });
+
+  staleRoomIds.forEach((roomId) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    Object.keys(room.drawings).forEach((imageId) => {
+      drawingLoadedKeys.delete(getStateKey(roomId, imageId));
+      drawingSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    Object.keys(room.notes).forEach((imageId) => {
+      noteLoadedKeys.delete(getStateKey(roomId, imageId));
+      noteSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    rooms.delete(roomId);
+  });
+
+  if (rooms.size <= MAX_CACHED_ROOMS) return;
+
+  const extraRoomIds = Array.from(rooms.entries())
+    .filter(([, room]) => room.socketCount === 0)
+    .sort((a, b) => a[1].lastActiveAt - b[1].lastActiveAt)
+    .slice(0, Math.max(0, rooms.size - MAX_CACHED_ROOMS))
+    .map(([roomId]) => roomId);
+
+  extraRoomIds.forEach((roomId) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
 
     Object.keys(room.drawings).forEach((imageId) => {
       drawingLoadedKeys.delete(getStateKey(roomId, imageId));
@@ -791,8 +941,32 @@ function pruneInactiveRooms() {
 
 setInterval(pruneInactiveRooms, 1000 * 60 * 10).unref();
 
-connectMongo().finally(() => {
-  server.listen(PORT, () => {
-    console.log(`🚀 서버 실행: ${PORT}`);
-  });
+let shuttingDown = false;
+
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  console.log(`${signal} 신호 수신, 서버를 종료합니다.`);
+
+  try {
+    await flushPendingState();
+  } finally {
+    server.close(async () => {
+      if (mongoReady) {
+        await mongoose.disconnect().catch(() => {});
+      }
+      process.exit(0);
+    });
+
+    setTimeout(() => process.exit(1), 5000).unref();
+  }
+}
+
+process.on("SIGINT", () => {
+  shutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+  shutdown("SIGTERM");
 });
