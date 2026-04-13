@@ -530,10 +530,10 @@ button{ cursor:pointer; }
 
 .text-note{
   position:absolute;
-  min-width:120px;
-  min-height:56px;
-  max-width:260px;
-  padding:10px 12px 12px;
+  min-width:104px;
+  min-height:40px;
+  max-width:240px;
+  padding:8px 10px 10px;
   border-radius:14px;
   border:2px solid #2491ff;
   box-shadow:0 10px 20px rgba(36,145,255,0.12);
@@ -541,37 +541,60 @@ button{ cursor:pointer; }
   will-change: transform, width, height;
 }
 
-.text-note[data-author="me"]{ border-color:#2491ff; }
-.text-note[data-author="other"]{ border-color:#8a5cff; }
+.text-note[data-author="me"]{
+  border-color:#2491ff;
+  box-shadow:0 10px 20px rgba(36,145,255,0.12);
+}
+
+.text-note[data-author="other"]{
+  border-color:#8a5cff;
+  box-shadow:0 10px 20px rgba(138,92,255,0.14);
+}
 
 .text-note.selected{
   box-shadow:0 0 0 3px rgba(255,139,61,0.18);
 }
 
 .text-note-header{
-  height:18px;
-  margin:-4px -4px 6px;
+  height:14px;
+  margin:-2px -2px 4px;
   cursor:move;
 }
 
 .text-note-author{
-  font-size:11px;
-  font-weight:700;
-  color:#5a6f82;
+  display:inline-flex;
+  align-items:center;
+  height:20px;
+  padding:0 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
   margin-bottom:4px;
+  letter-spacing:-0.01em;
+}
+
+.text-note[data-author="me"] .text-note-author{
+  background:#e8f2ff;
+  color:#216fcb;
+}
+
+.text-note[data-author="other"] .text-note-author{
+  background:#f0e9ff;
+  color:#7a46d1;
 }
 
 .text-note textarea{
   width:100%;
-  min-height:28px;
+  min-height:20px;
   resize:none;
   border:none;
   background:transparent;
   outline:none;
   color:var(--text);
-  font-size:14px;
-  line-height:1.4;
+  font-size:13px;
+  line-height:1.35;
   overflow:hidden;
+  padding:0;
 }
 
 .text-note-delete{
@@ -693,6 +716,19 @@ button{ cursor:pointer; }
   flex-wrap:wrap;
   align-items:center;
   min-height:30px;
+}
+
+#colorRow{
+  display:none;
+  padding:8px 10px;
+  border:1px solid #dce7f1;
+  border-radius:14px;
+  background:#f8fbff;
+  box-shadow:0 10px 24px rgba(18,36,61,0.08);
+}
+
+#colorRow.open{
+  display:flex;
 }
 
 #noteColorHeader{
@@ -1085,6 +1121,7 @@ button{ cursor:pointer; }
     flex:1 1 auto;
     min-width:0;
     gap:6px;
+    padding:6px 8px;
   }
 
   #thicknessWrap{
@@ -1434,6 +1471,7 @@ let activeNoteNode = null;
 const noteLiveQueue = new Map();
 let noteLiveRaf = null;
 const noteTextTimers = new Map();
+let isColorPaletteOpen = false;
 
 let historyUndoStack = [];
 let historyRedoStack = [];
@@ -1605,6 +1643,11 @@ function debounceNoteCommit(noteId, fn, delay = 220) {
 function updateCustomColorPreview(color) {
   customColorBtn.style.setProperty("--custom-color-preview", color);
   customColorInput.value = color;
+}
+
+function setColorPaletteOpen(nextOpen) {
+  isColorPaletteOpen = Boolean(nextOpen);
+  colorRow.classList.toggle("open", isColorPaletteOpen);
 }
 
 const isViewerMode = params.get("viewer") === "1";
@@ -2161,9 +2204,9 @@ function addTextNote() {
     id: crypto.randomUUID(),
     x: 0.08,
     y: 0.08,
-    width: 0.20,
-    height: 0.12,
-    text: "메모 입력",
+    width: 0.16,
+    height: 0.075,
+    text: "",
     color: currentNoteColor,
     author: role
   };
@@ -2224,7 +2267,7 @@ function createNoteNode(note) {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
 
-    const nextHeight = Math.max(0.10, textarea.scrollHeight / Math.max(drawCanvas.height, 1));
+    const nextHeight = Math.max(0.06, (textarea.scrollHeight + 24) / Math.max(drawCanvas.height, 1));
     model.text = textarea.value;
     model.height = nextHeight;
 
@@ -2303,7 +2346,7 @@ function applyNoteLayout(node, note) {
   node.style.left = (note.x * 100) + "%";
   node.style.top = (note.y * 100) + "%";
   node.style.width = (note.width * 100) + "%";
-  node.style.minHeight = Math.max(56, note.height * drawCanvas.height) + "px";
+  node.style.height = Math.max(40, note.height * drawCanvas.height) + "px";
   node.style.background = note.color || "#fff7c2";
 
   const textarea = node.querySelector("textarea");
@@ -2492,13 +2535,16 @@ viewerImage.addEventListener("load", () => {
 window.addEventListener("resize", updateCanvasSize);
 
 penBtn.addEventListener("click", () => {
+  const nextIsDraw = drawMode !== "draw";
   drawMode = "draw";
   setActiveTools();
+  setColorPaletteOpen(nextIsDraw ? true : !isColorPaletteOpen);
 });
 
 eraserBtn.addEventListener("click", () => {
   drawMode = "erase";
   setActiveTools();
+  setColorPaletteOpen(false);
 });
 
 addTextBtn.addEventListener("click", addTextNote);
@@ -2530,6 +2576,7 @@ colorSwatches
     btn.addEventListener("click", () => {
       currentColor = btn.dataset.color || "#ff3b30";
       setActiveColor(currentColor);
+      setColorPaletteOpen(false);
     });
   });
 
@@ -2540,6 +2587,14 @@ customColorBtn.addEventListener("click", () => {
 customColorInput.addEventListener("input", () => {
   currentColor = customColorInput.value || "#2491ff";
   setActiveColor(currentColor);
+  setColorPaletteOpen(false);
+});
+
+document.addEventListener("click", (event) => {
+  if (!isColorPaletteOpen) return;
+  const target = event.target;
+  if (penBtn.contains(target) || colorRow.contains(target)) return;
+  setColorPaletteOpen(false);
 });
 
 noteColorSwatches.forEach((btn) => {
