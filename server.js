@@ -1,1204 +1,974 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>디자인 상담</title>
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const fs = require("fs");
+const { Readable } = require("stream");
+const cors = require("cors");
+const multer = require("multer");
+const mongoose = require("mongoose");
+const { v2: cloudinary } = require("cloudinary");
+const { v4: uuidv4 } = require("uuid");
+const { Server } = require("socket.io");
 
-<style>
-:root{
-  --bg:#f4f8fc;
-  --bg-soft:#f8fbff;
-  --card:#ffffff;
-  --card-soft:rgba(255,255,255,0.92);
-  --line:#e4ebf3;
-  --line-strong:#d8e2ec;
-  --text:#17212b;
-  --text-soft:#24313f;
-  --sub:#758394;
-  --sub-soft:#8e9baa;
-  --primary:#2491ff;
-  --primary-soft:#6fc3ff;
-  --success:#2f9e44;
-  --danger:#ff5b5b;
-  --danger-soft:#fff3f3;
-  --warning:#f59e0b;
-  --warning-soft:#fff7ea;
-  --shadow:0 18px 50px rgba(18,36,61,0.10);
-  --radius-xl:30px;
-  --radius-lg:22px;
-  --radius-md:18px;
-  --radius-sm:14px;
-}
-
-*{ box-sizing:border-box; }
-html, body{
-  margin:0;
-  width:100%;
-  height:100%;
-  font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(36,145,255,0.08), transparent 24%),
-    linear-gradient(180deg, #f9fbff 0%, #edf4fa 100%);
-  color:var(--text);
-}
-body{
-  overflow:hidden;
-  -webkit-text-size-adjust:100%;
-}
-button, input, textarea, label{ font:inherit; }
-button{ cursor:pointer; border:none; }
-button:disabled{ cursor:not-allowed; opacity:0.5; }
-input, textarea{ border:none; outline:none; }
-
-.srOnly{
-  position:absolute;
-  width:1px;
-  height:1px;
-  padding:0;
-  margin:-1px;
-  overflow:hidden;
-  clip:rect(0,0,0,0);
-  white-space:nowrap;
-  border:0;
-}
-
-.btnIcon{
-  display:none;
-  align-items:center;
-  justify-content:center;
-  width:1em;
-  height:1em;
-  line-height:1;
-  flex-shrink:0;
-  transform:translateY(-0.02em);
-}
-
-#app{
-  width:100%;
-  height:100%;
-  padding:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-#chatCard{
-  width:min(940px, 100%);
-  height:min(94dvh, 900px);
-  background:var(--card-soft);
-  backdrop-filter:blur(14px);
-  border:1px solid rgba(255,255,255,0.84);
-  border-radius:var(--radius-xl);
-  box-shadow:var(--shadow);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-}
-
-#header{
-  height:76px;
-  flex-shrink:0;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  background:rgba(255,255,255,0.94);
-}
-
-#title{
-  font-size:26px;
-  font-weight:800;
-  letter-spacing:-0.03em;
-}
-
-#roleBadge{
-  position:absolute;
-  left:16px;
-  top:50%;
-  transform:translateY(-50%);
-  padding:8px 12px;
-  border-radius:999px;
-  background:#f7faff;
-  border:1px solid var(--line);
-  color:var(--sub);
-  font-size:12px;
-  font-weight:700;
-}
-
-#headerActions{
-  position:absolute;
-  right:14px;
-  top:50%;
-  transform:translateY(-50%);
-  display:flex;
-  gap:8px;
-}
-
-.iconBtn{
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:#edf4fa;
-  color:#557086;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-  line-height:1;
-  box-shadow:0 1px 0 rgba(255,255,255,0.6) inset;
-}
-
-#chatBox{
-  flex:1;
-  min-height:0;
-  overflow-y:auto;
-  padding:18px 16px 10px;
-  background:var(--bg-soft);
-}
-
-#chatInner{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  min-height:100%;
-}
-
-.messageRow{
-  display:flex;
-  flex-direction:column;
-  gap:5px;
-}
-.messageRow.me{ align-items:flex-end; }
-.messageRow.other{ align-items:flex-start; }
-
-.bubble{
-  max-width:min(74%, 560px);
-  padding:12px 16px;
-  border-radius:22px;
-  font-size:15px;
-  line-height:1.52;
-  letter-spacing:-0.02em;
-  word-break:break-word;
-}
-.messageRow.me .bubble{
-  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
-  color:white;
-  border-bottom-right-radius:8px;
-  box-shadow:0 8px 20px rgba(36,145,255,0.16);
-}
-.messageRow.other .bubble{
-  background:#ffffff;
-  color:var(--text);
-  border:1px solid var(--line);
-  border-bottom-left-radius:8px;
-}
-.meta{
-  font-size:10px;
-  color:#95a3b1;
-  padding:0 8px;
-}
-
-.imageBubble{
-  max-width:min(72%, 520px);
-  background:#ffffff;
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:8px;
-  cursor:pointer;
-  box-shadow:0 8px 18px rgba(18,36,61,0.04);
-  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-}
-.imageBubble:hover{
-  transform:translateY(-1px);
-  box-shadow:0 14px 26px rgba(18,36,61,0.08);
-  border-color:#d5e4f3;
-}
-.messageRow.me .imageBubble{ border-bottom-right-radius:8px; }
-.messageRow.other .imageBubble{ border-bottom-left-radius:8px; }
-
-.chatImg{
-  display:block;
-  width:100%;
-  max-width:240px;
-  border-radius:14px;
-}
-
-#inputArea{
-  flex-shrink:0;
-  border-top:1px solid var(--line);
-  background:rgba(255,255,255,0.96);
-  padding:10px 14px 12px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-#contactToggleBar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:10px 12px;
-  border:1px solid var(--line);
-  border-radius:16px;
-  background:#fbfdff;
-}
-
-#contactToggleText{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-}
-
-#contactToggleTitle{
-  font-size:13px;
-  font-weight:800;
-  color:var(--text-soft);
-}
-
-#contactToggleDesc{
-  font-size:11px;
-  color:var(--sub);
-  line-height:1.4;
-}
-
-#toggleContactPanelBtn{
-  height:34px;
-  border-radius:999px;
-  padding:0 12px;
-  background:#edf4fa;
-  color:#425466;
-  font-size:12px;
-  font-weight:800;
-  flex-shrink:0;
-}
-
-#utilityRow{ display:none; }
-#utilityRow.open{ display:block; }
-
-#phonePanel{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding:12px;
-  border:1px solid #dce7f1;
-  border-radius:18px;
-  background:linear-gradient(180deg, #f8fbff, #f3f8fd);
-}
-#phonePanelHeader{
-  display:flex;
-  align-items:flex-start;
-  gap:10px;
-}
-#phonePanelIcon{
-  width:34px;
-  height:34px;
-  border-radius:12px;
-  background:#e8f2ff;
-  color:#3d88ea;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:16px;
-  line-height:1;
-  flex-shrink:0;
-}
-#phonePanelText{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:3px;
-}
-#phonePanelTitle{
-  font-size:13px;
-  font-weight:800;
-  color:var(--text-soft);
-  letter-spacing:-0.01em;
-}
-#phonePanelDesc{
-  font-size:12px;
-  color:#708092;
-  line-height:1.45;
-}
-#phoneRow{
-  display:flex;
-  gap:8px;
-}
-#phoneStatus{
-  display:none;
-  font-size:12px;
-  color:#5f7286;
-  padding:0 2px;
-}
-#phoneStatus.show{ display:block; }
-
-#phoneInput{
-  flex:1;
-  height:42px;
-  border:1px solid var(--line-strong);
-  background:#f8fbff;
-  border-radius:16px;
-  padding:0 14px;
-  font-size:16px;
-}
-#savePhoneBtn{
-  height:42px;
-  border-radius:16px;
-  min-width:64px;
-  padding:0 16px;
-  background:#607082;
-  color:white;
-  font-weight:800;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-}
-
-#messageRow{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-#msgInput{
-  flex:1;
-  height:48px;
-  border:1px solid var(--line-strong);
-  background:#f8fbff;
-  border-radius:18px;
-  padding:0 16px;
-  font-size:16px;
-}
-#msgInput:focus,
-#phoneInput:focus,
-#viewerMsgInput:focus,
-#noteEditorTextarea:focus{
-  background:#ffffff;
-  border-color:rgba(36,145,255,0.45);
-  box-shadow:0 0 0 4px rgba(36,145,255,0.08);
-}
-#sendBtn{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
-  color:white;
-  font-size:20px;
-  font-weight:800;
-  box-shadow:0 8px 20px rgba(36,145,255,0.16);
-}
-#fileInput{ display:none; }
-#fileLabel{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  background:#f2f6fa;
-  color:#7b8d9f;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  cursor:pointer;
-  border:1px solid #e5edf4;
-}
-
-#viewerOverlay{
-  position:fixed;
-  inset:0;
-  z-index:100;
-  display:none;
-  flex-direction:column;
-  background:rgba(245,248,252,0.98);
-}
-#viewerOverlay.open{ display:flex; }
-
-#viewerTopbar{
-  height:76px;
-  flex-shrink:0;
-  border-bottom:1px solid var(--line);
-  background:rgba(255,255,255,0.96);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 14px;
-  gap:12px;
-}
-
-#viewerTopLeft{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-#viewerTitle{
-  font-size:18px;
-  font-weight:800;
-}
-#viewerSubtitle{
-  font-size:12px;
-  color:var(--sub);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-#viewerStats{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-.statBadge{
-  height:30px;
-  padding:0 10px;
-  border-radius:999px;
-  background:#eef4fa;
-  color:#587085;
-  font-size:12px;
-  display:flex;
-  align-items:center;
-  font-weight:700;
-}
-.statBadge.state-connected{
-  background:#ecf9ef;
-  color:#2f7b42;
-}
-.statBadge.state-pending{
-  background:var(--warning-soft);
-  color:#9a6500;
-}
-.statBadge.state-saved{
-  background:#ecf9ef;
-  color:#2f7b42;
-}
-.statBadge.state-offline{
-  background:#fff3f3;
-  color:#c74242;
-}
-
-#viewerActions{
-  display:flex;
-  gap:8px;
-  flex-shrink:0;
-}
-.viewerBtn{
-  height:38px;
-  border-radius:12px;
-  padding:0 14px;
-  background:#edf4fa;
-  color:#425466;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  font-weight:700;
-  line-height:1;
-}
-
-#viewerMain{
-  flex:1;
-  min-height:0;
-  display:grid;
-  grid-template-columns:7fr 3fr;
-}
-#viewerLeft{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  border-right:1px solid var(--line);
-  background:#f8fbff;
-}
-#canvasWrap{
-  flex:1;
-  min-height:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:14px;
-  background:#f7fbff;
-}
-#imageStage{
-  position:relative;
-  width:min(100%, 1200px);
-  height:min(100%, 760px);
-  min-height:420px;
-  border-radius:22px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.92), rgba(247,251,255,0.96));
-  border:1px solid #dfe9f3;
-  box-shadow:0 18px 38px rgba(18,36,61,0.08);
-  overflow:hidden;
-}
-#viewerImage{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%, -50%);
-  max-width:84%;
-  max-height:84%;
-  border-radius:18px;
-  box-shadow:0 14px 32px rgba(18,36,61,0.12);
-  pointer-events:none;
-  user-select:none;
-  -webkit-user-drag:none;
-  z-index:1;
-}
-#drawCanvas{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border-radius:22px;
-  touch-action:none;
-  pointer-events:auto;
-  z-index:2;
-}
-#textLayer{
-  position:absolute;
-  inset:0;
-  z-index:3;
-  pointer-events:none;
-}
-
-.noteMarker{
-  position:absolute;
-  min-width:56px;
-  height:42px;
-  padding:0 12px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  background:rgba(255,255,255,0.70);
-  backdrop-filter:blur(8px);
-  color:#24313f;
-  border:1px solid rgba(36,145,255,0.16);
-  box-shadow:0 10px 18px rgba(18,36,61,0.08);
-  transform:translate(-50%, -50%);
-  pointer-events:auto;
-  user-select:none;
-  touch-action:none;
-}
-.noteMarker[data-author="admin"]{
-  border-color:rgba(138,92,255,0.18);
-}
-.noteMarker.selected{
-  border-color:rgba(255,139,61,0.55);
-  box-shadow:0 0 0 3px rgba(255,139,61,0.14), 0 10px 18px rgba(18,36,61,0.10);
-}
-.noteMarkerText{
-  max-width:132px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  font-size:12px;
-  font-weight:800;
-}
-.noteResize{
-  position:absolute;
-  right:-5px;
-  bottom:-5px;
-  width:14px;
-  height:14px;
-  border-radius:5px;
-  background:#2491ff;
-  box-shadow:0 4px 10px rgba(36,145,255,0.18);
-  cursor:nwse-resize;
-}
-.noteMarker[data-author="admin"] .noteResize{
-  background:#8a5cff;
-}
-
-#toolbar{
-  border-top:1px solid var(--line);
-  background:#ffffff;
-  padding:14px 12px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  flex-shrink:0;
-}
-#mobileToolHint{
-  display:none;
-  padding:8px 10px;
-  border-radius:12px;
-  background:#f6fbff;
-  border:1px solid #dceaf8;
-  color:#5b7085;
-  font-size:11px;
-  font-weight:700;
-  line-height:1.4;
-}
-.toolSection{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.toolSectionLabel{
-  font-size:11px;
-  font-weight:800;
-  color:var(--sub-soft);
-  padding:0 2px;
-  letter-spacing:0.02em;
-  text-transform:uppercase;
-}
-.toolRow{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-.toolGroup{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  flex-wrap:wrap;
-  padding-bottom:8px;
-}
-.toolGroup.fill{
-  flex:1;
-}
-.toolBtn{
-  height:38px;
-  border-radius:12px;
-  padding:0 12px;
-  background:#edf4fa;
-  color:#425466;
-  font-weight:700;
-  white-space:nowrap;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  line-height:1;
-}
-.toolBtn.active{
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
-  color:white;
-}
-.toolBtn.danger{
-  background:var(--danger-soft);
-  color:#c74242;
-}
-#thicknessWrap{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color:var(--sub);
-  font-size:12px;
-  font-weight:700;
-  flex-shrink:0;
-}
-#thicknessRange{ width:120px; }
-
-#colorRow,
-#noteColorRow{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  align-items:center;
-  min-height:30px;
-}
-#colorRow{
-  display:none;
-  padding:10px 10px 12px;
-  border:1px solid #dce7f1;
-  border-radius:14px;
-  background:#f8fbff;
-  box-shadow:0 10px 24px rgba(18,36,61,0.08);
-}
-#colorRow.open{ display:flex; }
-
-#noteColorHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-}
-#noteColorTitle{
-  font-size:12px;
-  font-weight:800;
-  color:var(--sub);
-}
-#toggleNoteColorsBtn{
-  height:30px;
-  border-radius:999px;
-  padding:0 12px;
-  background:#edf4fa;
-  color:#425466;
-  font-size:12px;
-  font-weight:700;
-}
-.colorSwatch{
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  box-shadow:0 0 0 1px rgba(0,0,0,0.10);
-  flex:0 0 auto;
-}
-.colorSwatch.active{
-  box-shadow:0 0 0 3px rgba(36,145,255,0.20);
-}
-#customColorBtn{
-  position:relative;
-  overflow:hidden;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.95), rgba(228,236,245,0.95)),
-    conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30);
-}
-#customColorBtn::before{
-  content:"";
-  position:absolute;
-  inset:4px;
-  border-radius:50%;
-  background:var(--custom-color-preview, conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30));
-}
-#customColorBtn::after{
-  content:"+";
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#ffffff;
-  font-size:14px;
-  font-weight:900;
-  text-shadow:0 1px 2px rgba(0,0,0,0.35);
-}
-#customColorInput{
-  position:absolute;
-  pointer-events:none;
-  opacity:0;
-}
-.noteColorSwatch{
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  box-shadow:0 0 0 1px rgba(0,0,0,0.10);
-}
-.noteColorSwatch.active{
-  box-shadow:0 0 0 3px rgba(36,145,255,0.18);
-}
-#noteColorRow{
-  padding-bottom:8px;
-}
-
-#viewerRight{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  background:#ffffff;
-}
-#viewerChatHeader{
-  height:52px;
-  flex-shrink:0;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:16px;
-  font-weight:800;
-}
-#viewerChatBox{
-  flex:1;
-  min-height:0;
-  overflow-y:auto;
-  padding:12px;
-  background:#fbfdff;
-}
-#viewerChatInner{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-#viewerInputBar{
-  flex-shrink:0;
-  border-top:1px solid var(--line);
-  padding:10px 12px 12px;
-  background:#ffffff;
-  display:flex;
-  gap:8px;
-}
-#viewerMsgInput{
-  flex:1;
-  height:44px;
-  border:1px solid var(--line-strong);
-  background:#f8fbff;
-  border-radius:16px;
-  padding:0 14px;
-  font-size:16px;
-}
-#viewerSendBtn{
-  width:44px;
-  height:44px;
-  border-radius:50%;
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
-  color:white;
-  font-size:18px;
-  font-weight:800;
-}
-
-#noteEditorOverlay{
-  position:fixed;
-  inset:0;
-  z-index:220;
-  display:none;
-  flex-direction:column;
-  background:rgba(245,248,252,0.98);
-}
-#noteEditorOverlay.open{ display:flex; }
-
-#noteEditorHeader{
-  height:68px;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:0 14px;
-  border-bottom:1px solid var(--line);
-  background:#ffffff;
-}
-#noteEditorTitleWrap{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-#noteEditorTitle{
-  font-size:17px;
-  font-weight:800;
-}
-#noteEditorMeta{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-#noteEditorTimestamp{
-  font-size:12px;
-  color:var(--sub);
-}
-#noteEditorSaveBadge{
-  height:24px;
-  padding:0 8px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:800;
-  display:inline-flex;
-  align-items:center;
-  background:#eef4fa;
-  color:#587085;
-}
-#noteEditorSaveBadge.pending{
-  background:var(--warning-soft);
-  color:#9a6500;
-}
-#noteEditorSaveBadge.saved{
-  background:#ecf9ef;
-  color:#2f7b42;
-}
-#noteEditorSaveBadge.offline{
-  background:#fff3f3;
-  color:#c74242;
-}
-#noteEditorDoneBtn{
-  height:38px;
-  border-radius:12px;
-  padding:0 14px;
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
-  color:#fff;
-  font-weight:800;
-}
-#noteEditorBody{
-  flex:1;
-  min-height:0;
-  padding:14px;
-  background:#f7fbff;
-}
-#noteEditorTextarea{
-  width:100%;
-  height:100%;
-  border:1px solid var(--line-strong);
-  border-radius:20px;
-  background:#fffef8;
-  resize:none;
-  padding:16px;
-  font-size:16px;
-  line-height:1.55;
-  color:var(--text);
-}
-
-@media (max-width: 900px){
-  #app{ padding:0; }
-  #chatCard{
-    width:100%;
-    height:100dvh;
-    border-radius:0;
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
   }
-  #header{
-    height:64px;
-    min-height:64px;
-  }
-  #title{ font-size:22px; }
-  #roleBadge{
-    left:10px;
-    padding:6px 10px;
-    font-size:11px;
-  }
-  #chatBox{ padding:14px 12px 8px; }
-  .bubble{
-    max-width:84%;
-    font-size:14px;
-    padding:11px 14px;
-  }
-  .chatImg{ max-width:200px; }
+});
 
-  #inputArea{
-    padding:8px 10px 10px;
-    gap:6px;
-  }
-  #msgInput, #sendBtn, #fileLabel{ height:44px; }
-  #sendBtn, #fileLabel{ width:44px; }
-  #msgInput, #viewerMsgInput, #phoneInput{ font-size:16px; }
+const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI || "";
+const CLOUD_NAME = process.env.CLOUD_NAME || "";
+const CLOUD_KEY = process.env.CLOUD_KEY || "";
+const CLOUD_SECRET = process.env.CLOUD_SECRET || "";
+const MESSAGE_HISTORY_LIMIT = Math.max(20, Number(process.env.MESSAGE_HISTORY_LIMIT || 200));
+const MAX_ROOM_MESSAGES = Math.max(MESSAGE_HISTORY_LIMIT, Number(process.env.MAX_ROOM_MESSAGES || 300));
+const MAX_IMAGE_STROKES = Math.max(100, Number(process.env.MAX_IMAGE_STROKES || 2000));
+const MAX_IMAGE_NOTES = Math.max(10, Number(process.env.MAX_IMAGE_NOTES || 100));
+const MAX_ROOM_IMAGES = Math.max(1, Number(process.env.MAX_ROOM_IMAGES || 20));
+const MAX_CACHED_ROOMS = Math.max(10, Number(process.env.MAX_CACHED_ROOMS || 300));
+const ROOM_TTL_MS = Math.max(1000 * 60 * 5, Number(process.env.ROOM_TTL_MS || 1000 * 60 * 60));
+const STATE_PERSIST_DEBOUNCE_MS = Math.max(100, Number(process.env.STATE_PERSIST_DEBOUNCE_MS || 600));
 
-  #contactToggleBar{ padding:9px 10px; }
-  #contactToggleDesc{ font-size:10px; }
+const PUBLIC_DIR = path.join(__dirname, "public");
+const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
 
-  #phonePanel{ padding:11px; gap:9px; }
-  #phonePanelHeader{ gap:8px; }
-  #phonePanelIcon{
-    width:32px; height:32px; border-radius:10px;
-  }
-  #phoneRow{ flex-direction:column; }
-  #savePhoneBtn{
-    width:100%;
-    min-width:0;
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const cloudinaryReady = Boolean(CLOUD_NAME && CLOUD_KEY && CLOUD_SECRET);
+
+if (cloudinaryReady) {
+  cloudinary.config({
+    cloud_name: CLOUD_NAME,
+    api_key: CLOUD_KEY,
+    api_secret: CLOUD_SECRET
+  });
+} else {
+  console.warn("⚠️ Cloudinary 설정이 없어 로컬 업로드 모드로 동작합니다.");
+}
+
+app.disable("x-powered-by");
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(PUBLIC_DIR));
+
+let mongoReady = false;
+
+async function connectMongo() {
+  if (!MONGODB_URI) {
+    console.warn("⚠️ MONGODB_URI가 없습니다. 메모리 모드로 동작합니다.");
+    return;
   }
 
-  #viewerTopbar{
-    height:auto;
-    min-height:0;
-    display:grid;
-    grid-template-columns:auto minmax(0, 1fr) auto;
-    grid-template-areas:"stats title actions";
-    align-items:center;
-    gap:6px 10px;
-    padding:8px 10px;
-  }
-  #viewerTopLeft{
-    grid-area:title;
-    width:100%;
-    gap:0;
-    justify-self:start;
-  }
-  #viewerTitle{
-    font-size:15px;
-    line-height:1.2;
-  }
-  #viewerSubtitle{ display:none; }
-
-  #viewerStats{
-    grid-area:stats;
-    width:auto;
-    gap:6px;
-    flex-wrap:nowrap;
-    overflow-x:auto;
-    scrollbar-width:none;
-  }
-  #viewerStats::-webkit-scrollbar{ display:none; }
-
-  .statBadge{
-    height:24px;
-    padding:0 7px;
-    font-size:0;
-    gap:0;
-    white-space:nowrap;
-  }
-  .statBadge::before{
-    content:attr(data-icon);
-    font-size:11px;
-    line-height:1;
-  }
-  .statBadge::after{
-    content:attr(data-count);
-    margin-left:4px;
-    font-size:10px;
-    line-height:1;
-    font-weight:800;
-  }
-
-  #viewerActions{
-    grid-area:actions;
-    width:auto;
-    justify-content:flex-end;
-    align-self:center;
-  }
-
-  #viewerMain{
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-  }
-  #viewerLeft{ display:contents; }
-  #canvasWrap{
-    flex:5 1 0;
-    padding:8px;
-    min-height:0;
-  }
-  #imageStage{
-    min-height:0;
-    height:100%;
-    border-radius:18px;
-  }
-
-  #toolbar{
-    flex:2 1 0;
-    min-height:0;
-    padding:8px 10px 10px;
-    gap:8px;
-    overflow:hidden;
-  }
-  #mobileToolHint{ display:block; }
-
-  .toolGroup{
-    flex-wrap:nowrap;
-    overflow-x:auto;
-    overflow-y:hidden;
-    padding-bottom:10px;
-    scrollbar-width:none;
-    -webkit-overflow-scrolling:touch;
-  }
-  .toolGroup::-webkit-scrollbar{ display:none; }
-
-  .toolBtn{
-    min-width:44px;
-    height:40px;
-    padding:0 10px;
-    border-radius:12px;
-  }
-  .toolBtn .btnText,
-  .viewerBtn .btnText,
-  #savePhoneBtn .btnText{ display:none; }
-  .toolBtn .btnIcon,
-  .viewerBtn .btnIcon,
-  #savePhoneBtn .btnIcon{ display:inline-flex; }
-
-  #noteColorHeader{
-    justify-content:flex-start;
-    gap:8px;
-  }
-  #noteColorTitle{ display:none; }
-
-  #toggleNoteColorsBtn{
-    width:30px;
-    min-width:30px;
-    height:30px;
-    padding:0;
-    border-radius:10px;
-    font-size:0;
-  }
-  #toggleNoteColorsBtn::before{
-    content:"◐";
-    font-size:14px;
-    line-height:1;
-  }
-
-  #noteColorRow{
-    display:none;
-    gap:6px;
-    padding-bottom:10px;
-  }
-  #noteColorRow.open{ display:flex; }
-  #colorRow{ padding:10px 8px 12px; }
-
-  #viewerRight{
-    flex:3 1 0;
-    min-height:0;
-    border-top:1px solid var(--line);
-  }
-  #viewerChatHeader{ display:none; }
-  #viewerChatBox{ padding:10px 10px 6px; }
-  #viewerChatInner{ gap:8px; }
-  #viewerInputBar{ padding:8px 10px 10px; }
-  #viewerMsgInput{
-    height:42px;
-    font-size:16px;
-  }
-  #viewerSendBtn{
-    width:42px;
-    height:42px;
-  }
-
-  .noteMarker{
-    min-width:50px;
-    height:38px;
-    padding:0 10px;
-  }
-  .noteMarkerText{
-    max-width:96px;
-    font-size:11px;
-  }
-
-  #noteEditorHeader{
-    height:auto;
-    min-height:64px;
-    align-items:flex-start;
-    padding:10px 12px;
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000
+    });
+    mongoReady = true;
+    console.log("✅ MongoDB 연결 성공");
+  } catch (error) {
+    mongoReady = false;
+    console.error("❌ MongoDB 연결 실패:", error.message);
+    console.warn("⚠️ 메모리 모드로 계속 동작합니다.");
   }
 }
-</style>
-</head>
-<body>
 
-<div id="app">
-  <section id="chatCard">
-    <div id="header">
-      <div id="roleBadge">고객 채팅</div>
-      <div id="title">디자인 상담</div>
-      <div id="headerActions">
-        <button id="openViewerBtn" class="iconBtn" type="button" aria-label="선택한 이미지를 뷰어로 열기">⛶</button>
-      </div>
-    </div>
+const MessageSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true, index: true },
+    roomId: { type: String, index: true, required: true },
+    type: { type: String, enum: ["text", "image"], required: true },
+    sender: { type: String, enum: ["user", "admin"], required: true },
+    text: { type: String, default: "" },
+    imageId: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
+    time: { type: Number, required: true, index: true }
+  },
+  { versionKey: false }
+);
 
-    <div id="chatBox">
-      <div id="chatInner"></div>
-    </div>
+const DrawingStateSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, index: true, required: true },
+    imageId: { type: String, index: true, required: true },
+    strokes: { type: Array, default: [] }
+  },
+  { versionKey: false }
+);
 
-    <div id="inputArea">
-      <div id="contactToggleBar">
-        <div id="contactToggleText">
-          <div id="contactToggleTitle">연락처 남기기</div>
-          <div id="contactToggleDesc">이미지 검토를 마친 뒤 필요할 때만 연락처를 남길 수 있어요.</div>
-        </div>
-        <button id="toggleContactPanelBtn" type="button" aria-expanded="false">열기</button>
-      </div>
+const NoteStateSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, index: true, required: true },
+    imageId: { type: String, index: true, required: true },
+    notes: { type: Array, default: [] }
+  },
+  { versionKey: false }
+);
 
-      <div id="utilityRow">
-        <div id="phonePanel">
-          <div id="phonePanelHeader">
-            <div id="phonePanelIcon" aria-hidden="true">☎</div>
-            <div id="phonePanelText">
-              <div id="phonePanelTitle">연락받으실 전화번호</div>
-              <div id="phonePanelDesc">상담 진행상 필요할 때만 연락드려요.</div>
-            </div>
-          </div>
+const ContactSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, index: true, required: true },
+    phone: { type: String, required: true },
+    role: { type: String, enum: ["user", "admin"], required: true },
+    createdAt: { type: Number, required: true, index: true }
+  },
+  { versionKey: false }
+);
 
-          <div id="phoneRow">
-            <input id="phoneInput" type="tel" placeholder="연락받으실 전화번호를 입력해 주세요." />
-            <button id="savePhoneBtn" type="button" aria-label="전화번호 등록">
-              <span class="btnIcon">✓</span>
-              <span class="btnText">등록</span>
-            </button>
-          </div>
-        </div>
-      </div>
+MessageSchema.index({ roomId: 1, time: 1, _id: 1 });
+DrawingStateSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
+NoteStateSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
 
-      <div id="phoneStatus" aria-live="polite"></div>
+const MessageModel = mongoose.model("Message", MessageSchema);
+const DrawingStateModel = mongoose.model("DrawingState", DrawingStateSchema);
+const NoteStateModel = mongoose.model("NoteState", NoteStateSchema);
+const ContactModel = mongoose.model("Contact", ContactSchema);
 
-      <div id="messageRow">
-        <input id="msgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
-        <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
-        <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
-        <input id="fileInput" type="file" accept="image/*"
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("이미지 파일만 업로드할 수 있습니다."));
+    }
+    cb(null, true);
+  }
+});
+
+app.get("/health", (_req, res) => {
+  res.json({
+    ok: true,
+    mongoReady,
+    cloudinaryReady
+  });
+});
+
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+app.post("/upload", (req, res) => {
+  upload.single("image")(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        ok: false,
+        error: err.message || "이미지 업로드에 실패했습니다."
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        ok: false,
+        error: "업로드된 파일이 없습니다."
+      });
+    }
+
+    try {
+      const url = cloudinaryReady
+        ? await uploadImageToCloudinary(req.file)
+        : await saveImageLocally(req.file);
+
+      return res.json({
+        ok: true,
+        url
+      });
+    } catch (error) {
+      return res.status(500).json({
+        ok: false,
+        error: error.message || "이미지 업로드에 실패했습니다."
+      });
+    }
+  });
+});
+
+app.post("/contact", async (req, res) => {
+  const roomId = typeof req.body.roomId === "string" ? req.body.roomId.trim() : "";
+  const role = req.body.role === "admin" ? "admin" : "user";
+  const phone = sanitizePhone(req.body.phone);
+
+  if (!roomId) {
+    return res.status(400).json({
+      ok: false,
+      error: "roomId가 필요합니다."
+    });
+  }
+
+  if (phone.length < 8) {
+    return res.status(400).json({
+      ok: false,
+      error: "유효한 전화번호를 입력해주세요."
+    });
+  }
+
+  const record = {
+    roomId,
+    phone,
+    role,
+    createdAt: Date.now()
+  };
+
+  memoryContacts.push(record);
+  if (memoryContacts.length > 1000) {
+    memoryContacts.shift();
+  }
+
+  if (mongoReady) {
+    try {
+      await ContactModel.create(record);
+    } catch (error) {
+      console.error("연락처 저장 실패:", error.message);
+    }
+  }
+
+  return res.json({
+    ok: true,
+    phone
+  });
+});
+
+const rooms = new Map();
+const drawingSaveTimers = new Map();
+const noteSaveTimers = new Map();
+const drawingLoadedKeys = new Set();
+const noteLoadedKeys = new Set();
+const memoryContacts = [];
+
+function getRoom(roomId) {
+  if (!rooms.has(roomId)) {
+    rooms.set(roomId, {
+      messages: [],
+      drawings: {},
+      notes: {},
+      imageActivity: {},
+      socketCount: 0,
+      lastActiveAt: Date.now()
+    });
+  }
+  return rooms.get(roomId);
+}
+
+function touchRoom(roomId) {
+  const room = getRoom(roomId);
+  room.lastActiveAt = Date.now();
+  return room;
+}
+
+function getStateKey(roomId, imageId) {
+  return `${roomId}:${imageId}`;
+}
+
+function addMemoryMessage(roomId, message) {
+  const room = touchRoom(roomId);
+  room.messages.push(message);
+  if (room.messages.length > MAX_ROOM_MESSAGES) {
+    room.messages.splice(0, room.messages.length - MAX_ROOM_MESSAGES);
+  }
+}
+
+function touchImageState(roomId, imageId) {
+  if (!imageId) return;
+  const room = touchRoom(roomId);
+  room.imageActivity[imageId] = Date.now();
+  pruneRoomImages(roomId);
+}
+
+function pruneRoomImages(roomId) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  const imageIds = Object.keys(room.imageActivity);
+  if (imageIds.length <= MAX_ROOM_IMAGES) return;
+
+  const sortedIds = imageIds
+    .sort((a, b) => (room.imageActivity[a] || 0) - (room.imageActivity[b] || 0));
+
+  for (const imageId of sortedIds) {
+    if (Object.keys(room.imageActivity).length <= MAX_ROOM_IMAGES) break;
+
+    const key = getStateKey(roomId, imageId);
+    if (drawingSaveTimers.has(key) || noteSaveTimers.has(key)) continue;
+
+    delete room.drawings[imageId];
+    delete room.notes[imageId];
+    delete room.imageActivity[imageId];
+    drawingLoadedKeys.delete(key);
+    noteLoadedKeys.delete(key);
+  }
+}
+
+function getMemoryDrawingList(roomId, imageId) {
+  const room = touchRoom(roomId);
+  if (!room.drawings[imageId]) {
+    room.drawings[imageId] = [];
+  }
+  touchImageState(roomId, imageId);
+  return room.drawings[imageId];
+}
+
+function getMemoryNoteList(roomId, imageId) {
+  const room = touchRoom(roomId);
+  if (!room.notes[imageId]) {
+    room.notes[imageId] = [];
+  }
+  touchImageState(roomId, imageId);
+  return room.notes[imageId];
+}
+
+function sanitizeColor(value, fallback) {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(value || "").trim())
+    ? String(value).trim()
+    : fallback;
+}
+
+function sanitizePhone(value) {
+  return String(value || "")
+    .replace(/[^\d+]/g, "")
+    .slice(0, 20);
+}
+
+function getUploadExtension(file = {}) {
+  const originalExt = path.extname(file.originalname || "").toLowerCase();
+  if (originalExt) return originalExt;
+
+  const mimeType = String(file.mimetype || "").toLowerCase();
+  if (mimeType === "image/jpeg") return ".jpg";
+  if (mimeType === "image/png") return ".png";
+  if (mimeType === "image/webp") return ".webp";
+  if (mimeType === "image/gif") return ".gif";
+  return ".png";
+}
+
+function uploadImageToCloudinary(file) {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "design-chat",
+        resource_type: "image",
+        public_id: `${Date.now()}-${uuidv4()}`
+      },
+      (error, result) => {
+        if (error) {
+          reject(new Error("Cloudinary 업로드에 실패했습니다."));
+          return;
+        }
+
+        if (!result?.secure_url) {
+          reject(new Error("Cloudinary URL을 받지 못했습니다."));
+          return;
+        }
+
+        resolve(result.secure_url);
+      }
+    );
+
+    Readable.from(file.buffer).pipe(uploadStream);
+  });
+}
+
+async function saveImageLocally(file) {
+  const ext = getUploadExtension(file);
+  const fileName = `${Date.now()}-${uuidv4()}${ext}`;
+  const filePath = path.join(UPLOAD_DIR, fileName);
+  await fs.promises.writeFile(filePath, file.buffer);
+  return `/uploads/${fileName}`;
+}
+
+function sanitizeStroke(stroke = {}) {
+  const last = stroke.last || {};
+  const current = stroke.current || {};
+
+  return {
+    imageId: String(stroke.imageId || ""),
+    mode: stroke.mode === "erase" ? "erase" : "draw",
+    color: sanitizeColor(stroke.color, "#ff3b30"),
+    size: Math.max(1, Math.min(48, Number(stroke.size || 3))),
+    last: {
+      x: Math.max(0, Math.min(1, Number(last.x || 0))),
+      y: Math.max(0, Math.min(1, Number(last.y || 0)))
+    },
+    current: {
+      x: Math.max(0, Math.min(1, Number(current.x || 0))),
+      y: Math.max(0, Math.min(1, Number(current.y || 0)))
+    }
+  };
+}
+
+function sanitizeNote(note = {}) {
+  return {
+    id: String(note.id || uuidv4()),
+    x: Math.max(0, Math.min(1, Number(note.x || 0.1))),
+    y: Math.max(0, Math.min(1, Number(note.y || 0.1))),
+    width: Math.max(0.1, Math.min(0.6, Number(note.width || 0.22))),
+    height: Math.max(0.08, Math.min(0.5, Number(note.height || 0.12))),
+    text: String(note.text || "").slice(0, 500),
+    color: sanitizeColor(note.color, "#fff7c2"),
+    author: note.author === "admin" ? "admin" : "user",
+    updatedAt: Number.isFinite(Number(note.updatedAt)) ? Number(note.updatedAt) : Date.now()
+  };
+}
+
+function scheduleDrawingPersist(roomId, imageId) {
+  if (!mongoReady) return;
+
+  const key = getStateKey(roomId, imageId);
+  const prev = drawingSaveTimers.get(key);
+  if (prev) clearTimeout(prev);
+
+  const timer = setTimeout(async () => {
+    drawingSaveTimers.delete(key);
+
+    try {
+      await DrawingStateModel.findOneAndUpdate(
+        { roomId, imageId },
+        { $set: { strokes: getMemoryDrawingList(roomId, imageId) } },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      console.error("스케치 저장 실패:", error.message);
+    }
+  }, STATE_PERSIST_DEBOUNCE_MS);
+
+  drawingSaveTimers.set(key, timer);
+}
+
+function scheduleNotePersist(roomId, imageId) {
+  if (!mongoReady) return;
+
+  const key = getStateKey(roomId, imageId);
+  const prev = noteSaveTimers.get(key);
+  if (prev) clearTimeout(prev);
+
+  const timer = setTimeout(async () => {
+    noteSaveTimers.delete(key);
+
+    try {
+      await NoteStateModel.findOneAndUpdate(
+        { roomId, imageId },
+        { $set: { notes: getMemoryNoteList(roomId, imageId) } },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      console.error("메모 저장 실패:", error.message);
+    }
+  }, STATE_PERSIST_DEBOUNCE_MS);
+
+  noteSaveTimers.set(key, timer);
+}
+
+async function saveMessage(roomId, message) {
+  addMemoryMessage(roomId, message);
+
+  if (!mongoReady) return;
+
+  try {
+    await MessageModel.create({
+      roomId,
+      ...message
+    });
+  } catch (error) {
+    console.error("메시지 저장 실패:", error.message);
+  }
+}
+
+async function loadMessages(roomId) {
+  const memory = getRoom(roomId).messages;
+  if (!mongoReady) return memory;
+
+  try {
+    const docs = await MessageModel.find({ roomId })
+      .sort({ time: -1, _id: -1 })
+      .limit(MESSAGE_HISTORY_LIMIT)
+      .lean();
+
+    docs.reverse();
+    getRoom(roomId).messages = docs;
+    return docs;
+  } catch (error) {
+    console.error("메시지 로드 실패:", error.message);
+    return memory;
+  }
+}
+
+async function loadDrawingState(roomId, imageId) {
+  const key = getStateKey(roomId, imageId);
+  const memory = getMemoryDrawingList(roomId, imageId);
+  if (!mongoReady || drawingLoadedKeys.has(key)) return memory;
+
+  try {
+    const doc = await DrawingStateModel.findOne({ roomId, imageId }).lean();
+    const strokes = Array.isArray(doc?.strokes)
+      ? doc.strokes.slice(-MAX_IMAGE_STROKES).map(sanitizeStroke)
+      : [];
+    getRoom(roomId).drawings[imageId] = strokes;
+    drawingLoadedKeys.add(key);
+    touchImageState(roomId, imageId);
+    return strokes;
+  } catch (error) {
+    console.error("스케치 로드 실패:", error.message);
+    return memory;
+  }
+}
+
+async function replaceDrawingState(roomId, imageId, strokes) {
+  getRoom(roomId).drawings[imageId] = Array.isArray(strokes)
+    ? strokes.slice(-MAX_IMAGE_STROKES).map(sanitizeStroke)
+    : [];
+
+  drawingLoadedKeys.add(getStateKey(roomId, imageId));
+  touchImageState(roomId, imageId);
+  scheduleDrawingPersist(roomId, imageId);
+}
+
+async function loadNoteState(roomId, imageId) {
+  const key = getStateKey(roomId, imageId);
+  const memory = getMemoryNoteList(roomId, imageId);
+
+  if (!mongoReady || noteLoadedKeys.has(key)) return memory;
+
+  try {
+    const doc = await NoteStateModel.findOne({ roomId, imageId }).lean();
+    const notes = Array.isArray(doc?.notes)
+      ? doc.notes.slice(-MAX_IMAGE_NOTES).map(sanitizeNote)
+      : [];
+    getRoom(roomId).notes[imageId] = notes;
+    noteLoadedKeys.add(key);
+    touchImageState(roomId, imageId);
+    return notes;
+  } catch (error) {
+    console.error("메모 로드 실패:", error.message);
+    return memory;
+  }
+}
+
+async function replaceNoteState(roomId, imageId, notes) {
+  getRoom(roomId).notes[imageId] = Array.isArray(notes)
+    ? notes.slice(-MAX_IMAGE_NOTES).map(sanitizeNote)
+    : [];
+
+  noteLoadedKeys.add(getStateKey(roomId, imageId));
+  touchImageState(roomId, imageId);
+  scheduleNotePersist(roomId, imageId);
+}
+
+io.on("connection", (socket) => {
+  let currentRoomId = null;
+  let currentRole = "user";
+
+  socket.on("join", async (payload = {}) => {
+    const roomId =
+      typeof payload.roomId === "string" && payload.roomId.trim()
+        ? payload.roomId.trim()
+        : null;
+
+    const role = payload.role === "admin" ? "admin" : "user";
+    if (!roomId) return;
+
+    if (currentRoomId && currentRoomId !== roomId && rooms.has(currentRoomId)) {
+      const previousRoom = getRoom(currentRoomId);
+      previousRoom.socketCount = Math.max(0, previousRoom.socketCount - 1);
+      previousRoom.lastActiveAt = Date.now();
+      socket.leave(currentRoomId);
+    }
+
+    currentRoomId = roomId;
+    currentRole = role;
+
+    socket.join(currentRoomId);
+    touchRoom(currentRoomId).socketCount += 1;
+
+    const messages = await loadMessages(currentRoomId);
+    socket.emit("history", messages);
+  });
+
+  socket.on("message", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const text = String(payload.text || "").trim();
+    if (!text) return;
+
+    const message = {
+      id: uuidv4(),
+      type: "text",
+      sender: currentRole,
+      text: text.slice(0, 2000),
+      imageId: "",
+      imageUrl: "",
+      time: Date.now()
+    };
+
+    await saveMessage(currentRoomId, message);
+    io.to(currentRoomId).emit("message", message);
+  });
+
+  socket.on("image", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageUrl = String(payload.url || "").trim();
+    if (!imageUrl) return;
+
+    const imageMessage = {
+      id: uuidv4(),
+      type: "image",
+      sender: currentRole,
+      text: "",
+      imageId: uuidv4(),
+      imageUrl,
+      time: Date.now()
+    };
+
+    await saveMessage(currentRoomId, imageMessage);
+    await replaceDrawingState(currentRoomId, imageMessage.imageId, []);
+    await replaceNoteState(currentRoomId, imageMessage.imageId, []);
+
+    io.to(currentRoomId).emit("image", imageMessage);
+  });
+
+  socket.on("request-drawing-history", async (payload = {}) => {
+    if (!currentRoomId) return;
+    const imageId = String(payload.imageId || "").trim();
+    if (!imageId) return;
+
+    const strokes = await loadDrawingState(currentRoomId, imageId);
+    socket.emit("drawing-history", { imageId, strokes });
+  });
+
+  socket.on("draw-stroke", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageId = String(payload.imageId || "").trim();
+    if (!imageId) return;
+
+    const stroke = sanitizeStroke(payload);
+    if (!stroke.imageId) stroke.imageId = imageId;
+
+    const strokes = await loadDrawingState(currentRoomId, imageId);
+    strokes.push(stroke);
+    if (strokes.length > MAX_IMAGE_STROKES) {
+      strokes.splice(0, strokes.length - MAX_IMAGE_STROKES);
+    }
+
+    scheduleDrawingPersist(currentRoomId, imageId);
+    socket.to(currentRoomId).emit("draw-stroke", stroke);
+  });
+
+  socket.on("draw-strokes", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageId = String(payload.imageId || "").trim();
+    const incoming = Array.isArray(payload.strokes) ? payload.strokes : [];
+    if (!imageId || incoming.length === 0) return;
+
+    const strokes = await loadDrawingState(currentRoomId, imageId);
+    const sanitized = incoming
+      .slice(0, 200)
+      .map((stroke) => sanitizeStroke({ ...stroke, imageId }));
+
+    sanitized.forEach((stroke) => strokes.push(stroke));
+    if (strokes.length > MAX_IMAGE_STROKES) {
+      strokes.splice(0, strokes.length - MAX_IMAGE_STROKES);
+    }
+
+    scheduleDrawingPersist(currentRoomId, imageId);
+    socket.to(currentRoomId).emit("draw-strokes", {
+      imageId,
+      strokes: sanitized
+    });
+  });
+
+  socket.on("replace-drawing-history", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageId = String(payload.imageId || "").trim();
+    const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+    if (!imageId) return;
+
+    await replaceDrawingState(currentRoomId, imageId, strokes);
+    io.to(currentRoomId).emit("drawing-history", {
+      imageId,
+      strokes: getMemoryDrawingList(currentRoomId, imageId)
+    });
+  });
+
+  socket.on("clear-drawing", async (payload = {}) => {
+    if (!currentRoomId) return;
+    const imageId = String(payload.imageId || "").trim();
+    if (!imageId) return;
+
+    await replaceDrawingState(currentRoomId, imageId, []);
+    io.to(currentRoomId).emit("clear-drawing", { imageId });
+  });
+
+  socket.on("request-note-history", async (payload = {}) => {
+    if (!currentRoomId) return;
+    const imageId = String(payload.imageId || "").trim();
+    if (!imageId) return;
+
+    const notes = await loadNoteState(currentRoomId, imageId);
+    socket.emit("note-history", { imageId, notes });
+  });
+
+  socket.on("add-note", async (payload = {}) => {
+    if (!currentRoomId) return;
+    const imageId = String(payload.imageId || "").trim();
+    if (!imageId || !payload.note) return;
+
+    const note = sanitizeNote({
+      ...payload.note,
+      author: currentRole
+    });
+
+    const notes = await loadNoteState(currentRoomId, imageId);
+    if (notes.length >= MAX_IMAGE_NOTES) {
+      notes.splice(0, notes.length - MAX_IMAGE_NOTES + 1);
+    }
+    notes.push(note);
+
+    scheduleNotePersist(currentRoomId, imageId);
+    io.to(currentRoomId).emit("note-added", { imageId, note });
+  });
+
+  socket.on("note-live-update", (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageId = String(payload.imageId || "").trim();
+    const noteId = String(payload.noteId || "").trim();
+    const patch = payload.patch || {};
+
+    if (!imageId || !noteId) return;
+
+    socket.to(currentRoomId).emit("note-live-update", {
+      imageId,
+      noteId,
+      patch
+    });
+  });
+
+  socket.on("update-note", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageId = String(payload.imageId || "").trim();
+    const noteId = String(payload.noteId || "").trim();
+    const patch = payload.patch || {};
+
+    if (!imageId || !noteId) return;
+
+    const notes = await loadNoteState(currentRoomId, imageId);
+    const target = notes.find((n) => n.id === noteId);
+    if (!target) return;
+
+    if (typeof patch.x === "number") target.x = Math.max(0, Math.min(1, patch.x));
+    if (typeof patch.y === "number") target.y = Math.max(0, Math.min(1, patch.y));
+    if (typeof patch.width === "number") target.width = Math.max(0.1, Math.min(0.6, patch.width));
+    if (typeof patch.height === "number") target.height = Math.max(0.08, Math.min(0.5, patch.height));
+    if (typeof patch.text === "string") target.text = patch.text.slice(0, 500);
+    if (typeof patch.color === "string") target.color = sanitizeColor(patch.color, target.color);
+    if (typeof patch.updatedAt === "number" && Number.isFinite(patch.updatedAt)) target.updatedAt = patch.updatedAt;
+
+    scheduleNotePersist(currentRoomId, imageId);
+    io.to(currentRoomId).emit("note-updated", {
+      imageId,
+      noteId,
+      patch: {
+        x: target.x,
+        y: target.y,
+        width: target.width,
+        height: target.height,
+        text: target.text,
+        color: target.color,
+        updatedAt: target.updatedAt
+      }
+    });
+  });
+
+  socket.on("replace-note-history", async (payload = {}) => {
+    if (!currentRoomId) return;
+    const imageId = String(payload.imageId || "").trim();
+    const notes = Array.isArray(payload.notes) ? payload.notes : [];
+    if (!imageId) return;
+
+    await replaceNoteState(currentRoomId, imageId, notes);
+    io.to(currentRoomId).emit("note-history", {
+      imageId,
+      notes: getMemoryNoteList(currentRoomId, imageId)
+    });
+  });
+
+  socket.on("delete-note", async (payload = {}) => {
+    if (!currentRoomId) return;
+
+    const imageId = String(payload.imageId || "").trim();
+    const noteId = String(payload.noteId || "").trim();
+    if (!imageId || !noteId) return;
+
+    const notes = await loadNoteState(currentRoomId, imageId);
+    getRoom(currentRoomId).notes[imageId] = notes.filter((note) => note.id !== noteId);
+
+    scheduleNotePersist(currentRoomId, imageId);
+    io.to(currentRoomId).emit("note-deleted", { imageId, noteId });
+  });
+
+  socket.on("clear-notes", async (payload = {}) => {
+    if (!currentRoomId) return;
+    const imageId = String(payload.imageId || "").trim();
+    if (!imageId) return;
+
+    await replaceNoteState(currentRoomId, imageId, []);
+    io.to(currentRoomId).emit("clear-notes", { imageId });
+  });
+
+  socket.on("disconnect", () => {
+    if (!currentRoomId || !rooms.has(currentRoomId)) return;
+
+    const room = getRoom(currentRoomId);
+    room.socketCount = Math.max(0, room.socketCount - 1);
+    room.lastActiveAt = Date.now();
+  });
+});
+
+connectMongo().finally(() => {
+  server.listen(PORT, () => {
+    console.log(`🚀 서버 실행: ${PORT}`);
+  });
+});
+
+async function flushPendingState() {
+  if (!mongoReady) return;
+
+  const drawingKeys = Array.from(drawingSaveTimers.keys());
+  const noteKeys = Array.from(noteSaveTimers.keys());
+
+  drawingKeys.forEach((key) => {
+    const timer = drawingSaveTimers.get(key);
+    if (timer) clearTimeout(timer);
+    drawingSaveTimers.delete(key);
+  });
+
+  noteKeys.forEach((key) => {
+    const timer = noteSaveTimers.get(key);
+    if (timer) clearTimeout(timer);
+    noteSaveTimers.delete(key);
+  });
+
+  const drawingJobs = drawingKeys.map(async (key) => {
+    const [roomId, imageId] = key.split(":");
+    if (!roomId || !imageId) return;
+
+    try {
+      await DrawingStateModel.findOneAndUpdate(
+        { roomId, imageId },
+        { $set: { strokes: getMemoryDrawingList(roomId, imageId) } },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      console.error("종료 전 스케치 저장 실패:", error.message);
+    }
+  });
+
+  const noteJobs = noteKeys.map(async (key) => {
+    const [roomId, imageId] = key.split(":");
+    if (!roomId || !imageId) return;
+
+    try {
+      await NoteStateModel.findOneAndUpdate(
+        { roomId, imageId },
+        { $set: { notes: getMemoryNoteList(roomId, imageId) } },
+        { upsert: true, new: true }
+      );
+    } catch (error) {
+      console.error("종료 전 메모 저장 실패:", error.message);
+    }
+  });
+
+  await Promise.allSettled([...drawingJobs, ...noteJobs]);
+}
+
+function pruneInactiveRooms() {
+  const now = Date.now();
+  const staleRoomIds = [];
+
+  rooms.forEach((room, roomId) => {
+    if (room.socketCount > 0) return;
+    if (now - room.lastActiveAt < ROOM_TTL_MS) return;
+    staleRoomIds.push(roomId);
+  });
+
+  staleRoomIds.forEach((roomId) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    Object.keys(room.drawings).forEach((imageId) => {
+      drawingLoadedKeys.delete(getStateKey(roomId, imageId));
+      drawingSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    Object.keys(room.notes).forEach((imageId) => {
+      noteLoadedKeys.delete(getStateKey(roomId, imageId));
+      noteSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    rooms.delete(roomId);
+  });
+
+  if (rooms.size <= MAX_CACHED_ROOMS) return;
+
+  const extraRoomIds = Array.from(rooms.entries())
+    .filter(([, room]) => room.socketCount === 0)
+    .sort((a, b) => a[1].lastActiveAt - b[1].lastActiveAt)
+    .slice(0, Math.max(0, rooms.size - MAX_CACHED_ROOMS))
+    .map(([roomId]) => roomId);
+
+  extraRoomIds.forEach((roomId) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    Object.keys(room.drawings).forEach((imageId) => {
+      drawingLoadedKeys.delete(getStateKey(roomId, imageId));
+      drawingSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    Object.keys(room.notes).forEach((imageId) => {
+      noteLoadedKeys.delete(getStateKey(roomId, imageId));
+      noteSaveTimers.delete(getStateKey(roomId, imageId));
+    });
+
+    rooms.delete(roomId);
+  });
+}
+
+setInterval(pruneInactiveRooms, 1000 * 60 * 10).unref();
+
+let shuttingDown = false;
+
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  console.log(`${signal} 신호 수신, 서버를 종료합니다.`);
+
+  try {
+    await flushPendingState();
+  } finally {
+    server.close(async () => {
+      if (mongoReady) {
+        await mongoose.disconnect().catch(() => {});
+      }
+      process.exit(0);
+    });
+
+    setTimeout(() => process.exit(1), 5000).unref();
+  }
+}
+
+process.on("SIGINT", () => {
+  shutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+  shutdown("SIGTERM");
+});
