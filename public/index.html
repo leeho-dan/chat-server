@@ -25,7 +25,6 @@
   --danger-soft:#fff3f3;
   --shadow:0 18px 50px rgba(18,36,61,0.10);
   --shadow-soft:0 10px 28px rgba(18,36,61,0.08);
-  --shadow-strong:0 16px 36px rgba(18,36,61,0.14);
   --radius-xl:30px;
   --radius-lg:22px;
   --radius-md:18px;
@@ -636,7 +635,7 @@ input, textarea{
 }
 
 .noteMarkerText{
-  max-width:120px;
+  max-width:132px;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
@@ -663,10 +662,10 @@ input, textarea{
 #toolbar{
   border-top:1px solid var(--line);
   background:#ffffff;
-  padding:12px;
+  padding:14px 12px 16px;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:16px;
   flex-shrink:0;
 }
 
@@ -685,7 +684,7 @@ input, textarea{
 .toolSection{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:10px;
 }
 
 .toolSectionLabel{
@@ -709,6 +708,7 @@ input, textarea{
   align-items:center;
   gap:6px;
   flex-wrap:wrap;
+  padding-bottom:8px;
 }
 
 .toolGroup.fill{
@@ -765,7 +765,7 @@ input, textarea{
 
 #colorRow{
   display:none;
-  padding:8px 10px;
+  padding:10px 10px 12px;
   border:1px solid #dce7f1;
   border-radius:14px;
   background:#f8fbff;
@@ -855,6 +855,10 @@ input, textarea{
 
 .noteColorSwatch.active{
   box-shadow:0 0 0 3px rgba(36,145,255,0.18);
+}
+
+#noteColorRow{
+  padding-bottom:8px;
 }
 
 #viewerRight{
@@ -1192,7 +1196,7 @@ input, textarea{
     flex-wrap:nowrap;
     overflow-x:auto;
     overflow-y:hidden;
-    padding-bottom:4px;
+    padding-bottom:10px;
     scrollbar-width:none;
     -webkit-overflow-scrolling:touch;
   }
@@ -1246,12 +1250,16 @@ input, textarea{
 
   #noteColorRow{
     display:none;
-    padding-top:2px;
     gap:6px;
+    padding-bottom:10px;
   }
 
   #noteColorRow.open{
     display:flex;
+  }
+
+  #colorRow{
+    padding:10px 8px 12px;
   }
 
   #viewerRight{
@@ -1293,7 +1301,7 @@ input, textarea{
   }
 
   .noteMarkerText{
-    max-width:88px;
+    max-width:96px;
     font-size:11px;
   }
 }
@@ -1562,7 +1570,8 @@ input, textarea{
       startWidth: 0,
       startHeight: 0,
       startClientX: 0,
-      startClientY: 0
+      startClientY: 0,
+      moved: false
     }
   };
 
@@ -1631,16 +1640,16 @@ input, textarea{
 
   el.roleBadge.textContent = role === "admin" ? "관리자 화면" : "고객 채팅";
 
-  function isMobileViewport() {
-    return window.innerWidth <= 900;
-  }
-
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
 
   function deepClone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function isMobileViewport() {
+    return window.innerWidth <= 900;
   }
 
   function formatTime(ts) {
@@ -2074,10 +2083,6 @@ input, textarea{
     marker.dataset.author = note.author;
     marker.style.background = note.color;
 
-    const icon = document.createElement("span");
-    icon.textContent = note.author === "admin" ? "🟣" : "🔵";
-    icon.setAttribute("aria-hidden", "true");
-
     const text = document.createElement("span");
     text.className = "noteMarkerText";
     text.textContent = getNotePreview(note.text);
@@ -2087,17 +2092,16 @@ input, textarea{
     resize.type = "button";
     resize.setAttribute("aria-label", "메모 크기 조절");
 
-    marker.appendChild(icon);
     marker.appendChild(text);
     marker.appendChild(resize);
 
     marker.addEventListener("click", (event) => {
       event.stopPropagation();
-      selectMarker(note.id);
-    });
 
-    marker.addEventListener("dblclick", (event) => {
-      event.stopPropagation();
+      const interaction = state.noteInteraction;
+      if (interaction.noteId === note.id && interaction.moved) return;
+
+      selectMarker(note.id);
       openNoteEditor(note.id);
     });
 
@@ -2110,6 +2114,7 @@ input, textarea{
       if (event.target === resize) {
         event.preventDefault();
         pushHistory();
+
         state.noteInteraction = {
           type: "resize",
           noteId: note.id,
@@ -2119,8 +2124,10 @@ input, textarea{
           startWidth: current.width,
           startHeight: current.height,
           startClientX: event.clientX,
-          startClientY: event.clientY
+          startClientY: event.clientY,
+          moved: false
         };
+
         marker.setPointerCapture?.(event.pointerId);
         return;
       }
@@ -2140,7 +2147,8 @@ input, textarea{
         startWidth: current.width,
         startHeight: current.height,
         startClientX: event.clientX,
-        startClientY: event.clientY
+        startClientY: event.clientY,
+        moved: false
       };
 
       marker.setPointerCapture?.(event.pointerId);
@@ -2266,6 +2274,13 @@ input, textarea{
     const stageRect = el.imageStage.getBoundingClientRect();
     if (!marker || !stageRect.width || !stageRect.height) return;
 
+    const moveX = Math.abs(event.clientX - interaction.startClientX);
+    const moveY = Math.abs(event.clientY - interaction.startClientY);
+
+    if (moveX > 4 || moveY > 4) {
+      interaction.moved = true;
+    }
+
     if (interaction.type === "drag") {
       note.x = clamp(
         (event.clientX - stageRect.left - interaction.dragOffsetX) / stageRect.width,
@@ -2289,16 +2304,33 @@ input, textarea{
       note.width = clamp(interaction.startWidth + (deltaX / stageRect.width), 0.12, 0.30);
       note.height = clamp(interaction.startHeight + (deltaY / stageRect.height), 0.09, 0.28);
       note.updatedAt = Date.now();
+      interaction.moved = true;
       applyMarkerLayout(marker, note);
     }
   }
 
   function finishNoteInteraction() {
     const interaction = state.noteInteraction;
-    if (!interaction.type || !interaction.noteId) return;
+
+    if (!interaction.type || !interaction.noteId) {
+      state.noteInteraction = {
+        type: "",
+        noteId: "",
+        pointerId: null,
+        dragOffsetX: 0,
+        dragOffsetY: 0,
+        startWidth: 0,
+        startHeight: 0,
+        startClientX: 0,
+        startClientY: 0,
+        moved: false
+      };
+      return;
+    }
 
     const note = getNoteById(interaction.noteId);
-    if (note) {
+
+    if (note && interaction.moved) {
       socket.emit("update-note", {
         imageId: getCurrentImageId(),
         noteId: note.id,
@@ -2321,7 +2353,8 @@ input, textarea{
       startWidth: 0,
       startHeight: 0,
       startClientX: 0,
-      startClientY: 0
+      startClientY: 0,
+      moved: false
     };
   }
 
