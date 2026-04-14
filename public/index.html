@@ -619,6 +619,10 @@ button{ cursor:pointer; }
   line-height:1.35;
   overflow:hidden;
   padding:0;
+  pointer-events:auto;
+  user-select:text;
+  -webkit-user-select:text;
+  touch-action:auto;
 }
 
 .text-note-toggle{
@@ -2265,6 +2269,29 @@ function getNoteById(noteId) {
   return currentNotes.find((n) => n.id === noteId);
 }
 
+function expandNote(noteId, node, textarea) {
+  const model = getNoteById(noteId);
+  if (!model) return;
+  model.expanded = true;
+  applyNoteLayout(node, model);
+  if (textarea) {
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const length = textarea.value.length;
+      try {
+        textarea.setSelectionRange(length, length);
+      } catch (_error) {}
+    });
+  }
+}
+
+function collapseNote(noteId, node) {
+  const model = getNoteById(noteId);
+  if (!model) return;
+  model.expanded = false;
+  applyNoteLayout(node, model);
+}
+
 function createNoteNode(note) {
   const node = document.createElement("div");
   node.className = "text-note";
@@ -2307,23 +2334,37 @@ function createNoteNode(note) {
 
   toggleBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    const model = getNoteById(note.id);
-    if (!model) return;
-    model.expanded = true;
-    applyNoteLayout(node, model);
-    requestAnimationFrame(() => {
-      textarea.focus();
-    });
+    expandNote(note.id, node, textarea);
   });
 
   textarea.addEventListener("focus", () => {
-    const model = getNoteById(note.id);
-    if (model) {
-      model.expanded = true;
-      applyNoteLayout(node, model);
+    expandNote(note.id, node);
+    if (!textarea.dataset.historyPushed) {
+      pushHistory();
+      textarea.dataset.historyPushed = "true";
     }
-    pushHistory();
-  }, { once: true });
+  });
+
+  textarea.addEventListener("blur", () => {
+    textarea.dataset.historyPushed = "";
+    requestAnimationFrame(() => {
+      if (document.activeElement === textarea) return;
+      collapseNote(note.id, node);
+    });
+  });
+
+  textarea.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  textarea.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+  });
+
+  node.addEventListener("dblclick", (e) => {
+    e.stopPropagation();
+    expandNote(note.id, node, textarea);
+  });
 
   textarea.addEventListener("input", () => {
     const model = getNoteById(note.id);
