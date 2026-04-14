@@ -408,7 +408,8 @@ function sanitizeNote(note = {}) {
     height: Math.max(0.08, Math.min(0.5, Number(note.height || 0.12))),
     text: String(note.text || "").slice(0, 500),
     color: sanitizeColor(note.color, "#fff7c2"),
-    author: note.author === "admin" ? "admin" : "user"
+    author: note.author === "admin" ? "admin" : "user",
+    updatedAt: Number.isFinite(Number(note.updatedAt)) ? Number(note.updatedAt) : Date.now()
   };
 }
 
@@ -497,7 +498,6 @@ async function loadMessages(roomId) {
 async function loadDrawingState(roomId, imageId) {
   const key = getStateKey(roomId, imageId);
   const memory = getMemoryDrawingList(roomId, imageId);
-
   if (!mongoReady || drawingLoadedKeys.has(key)) return memory;
 
   try {
@@ -768,6 +768,7 @@ io.on("connection", (socket) => {
     if (typeof patch.height === "number") target.height = Math.max(0.08, Math.min(0.5, patch.height));
     if (typeof patch.text === "string") target.text = patch.text.slice(0, 500);
     if (typeof patch.color === "string") target.color = sanitizeColor(patch.color, target.color);
+    if (typeof patch.updatedAt === "number" && Number.isFinite(patch.updatedAt)) target.updatedAt = patch.updatedAt;
 
     scheduleNotePersist(currentRoomId, imageId);
     io.to(currentRoomId).emit("note-updated", {
@@ -779,7 +780,8 @@ io.on("connection", (socket) => {
         width: target.width,
         height: target.height,
         text: target.text,
-        color: target.color
+        color: target.color,
+        updatedAt: target.updatedAt
       }
     });
   });
