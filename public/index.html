@@ -304,7 +304,7 @@ button{ cursor:pointer; }
   border-radius:16px;
   outline:none;
   padding:0 14px;
-  font-size:14px;
+  font-size:16px;
 }
 
 #savePhoneBtn{
@@ -336,7 +336,7 @@ button{ cursor:pointer; }
   border-radius:18px;
   outline:none;
   padding:0 16px;
-  font-size:15px;
+  font-size:16px;
 }
 
 #msgInput:focus,
@@ -926,7 +926,7 @@ button{ cursor:pointer; }
   border-radius:16px;
   outline:none;
   padding:0 14px;
-  font-size:14px;
+  font-size:16px;
 }
 
 #viewerSendBtn{
@@ -1060,6 +1060,12 @@ button{ cursor:pointer; }
 
   #msgInput, #sendBtn, #fileLabel{ height:44px; }
   #sendBtn, #fileLabel{ width:44px; }
+
+  #msgInput,
+  #viewerMsgInput,
+  #phoneInput{
+    font-size:16px;
+  }
 
   #savePhoneBtn,
   .viewerBtn,
@@ -1321,7 +1327,7 @@ button{ cursor:pointer; }
 
   #viewerMsgInput{
     height:42px;
-    font-size:13px;
+    font-size:16px;
   }
 
   #viewerSendBtn{
@@ -1815,6 +1821,28 @@ function estimateNoteHeight(text) {
   return Math.min(0.24, Math.max(0.085, 0.07 + lines * 0.028));
 }
 
+function restoreMobileViewport() {
+  if (!isMobileViewport()) return;
+
+  const active = document.activeElement;
+  if (active && typeof active.blur === "function") {
+    active.blur();
+  }
+
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  if (window.visualViewport) {
+    requestAnimationFrame(() => {
+      const offsetTop = window.visualViewport.offsetTop || 0;
+      if (offsetTop > 0) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
+}
+
 function openNoteEditor(noteId) {
   const note = getNoteById(noteId);
   if (!note) return;
@@ -2011,6 +2039,7 @@ function sendMainMessage() {
   if (!text || isComposingMain) return;
   socket.emit("message", { text });
   msgInput.value = "";
+  restoreMobileViewport();
 }
 
 function sendViewerMessage() {
@@ -2018,6 +2047,7 @@ function sendViewerMessage() {
   if (!text || isComposingViewer) return;
   socket.emit("message", { text });
   viewerMsgInput.value = "";
+  restoreMobileViewport();
 }
 
 async function savePhone() {
@@ -2431,6 +2461,12 @@ function addTextNote() {
     imageId: currentViewerImageId,
     note
   });
+
+  if (!currentNotes.some((n) => n.id === note.id)) {
+    currentNotes.push(note);
+  }
+  renderNotes();
+  openNoteEditor(note.id);
 }
 
 function getNoteById(noteId) {
@@ -2515,7 +2551,7 @@ function createNoteNode(note) {
 
   toggleBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-    expandNote(note.id, node, textarea);
+    openNoteEditor(note.id);
   });
 
   textarea.addEventListener("focus", () => {
@@ -2528,106 +2564,112 @@ function createNoteNode(note) {
 
   textarea.addEventListener("blur", () => {
     textarea.dataset.historyPushed = "";
-    requestAnimationFrame(() => {
-      if (document.activeElement === textarea) return;
-      collapseNote(note.id, node);
-    });
-  });
-
-  textarea.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  textarea.addEventListener("pointerdown", (e) => {
-    e.stopPropagation();
-  });
-
-  node.addEventListener("click", (e) => {
-    if (e.target === delBtn || e.target === resize || e.target === toggleBtn) return;
-    if (e.target === textarea) return;
-    focusTextareaFromContainer();
-  });
-
-  node.addEventListener("touchend", (e) => {
-    if (e.target === delBtn || e.target === resize || e.target === toggleBtn) return;
-    if (e.target === textarea) return;
-    e.preventDefault();
-    focusTextareaFromContainer();
-  }, { passive: false });
-
-  node.addEventListener("dblclick", (e) => {
-    e.stopPropagation();
-    focusTextareaFromContainer();
-  });
-
-  textarea.addEventListener("input", () => {
     const model = getNoteById(note.id);
     if (!model) return;
-
-    textarea.style.height = "auto";
-    textarea.style.height = textarea.scrollHeight + "px";
-
-    const nextHeight = Math.max(0.06, (textarea.scrollHeight + 24) / Math.max(drawCanvas.height, 1));
-    model.text = textarea.value;
-    model.height = nextHeight;
-
-    applyNoteLayout(node, model);
-
+    model.text = textarea.value.slice(0, 500);
+    model.height = estimateNoteHeight(model.text);
+    model.updatedAt = Date.now();
     scheduleNoteLiveUpdate(note.id, currentViewerImageId, {
       text: model.text,
-      height: model.height
+      height: model.height,
+      updatedAt: model.updatedAt
     });
-
     debounceNoteCommit(note.id, () => {
       socket.emit("update-note", {
         imageId: currentViewerImageId,
         noteId: note.id,
         patch: {
           text: model.text,
-          height: model.height
+          height: model.height,
+          updatedAt: model.updatedAt
+        }
+      });
+    });
+    collapseNote(note.id, node);
+  });
+
+  textarea.addEventListener("input", () => {
+    const model = getNoteById(note.id);
+    if (!model) return;
+    const nextText = textarea.value.slice(0, 500);
+    if (textarea.value !== nextText) textarea.value = nextText;
+    model.text = nextText;
+    model.height = estimateNoteHeight(nextText);
+    model.updatedAt = Date.now();
+    autoResizeTextarea(textarea);
+    applyNoteLayout(node, model);
+    scheduleNoteLiveUpdate(note.id, currentViewerImageId, {
+      text: model.text,
+      height: model.height,
+      updatedAt: model.updatedAt
+    });
+    debounceNoteCommit(note.id, () => {
+      socket.emit("update-note", {
+        imageId: currentViewerImageId,
+        noteId: note.id,
+        patch: {
+          text: model.text,
+          height: model.height,
+          updatedAt: model.updatedAt
         }
       });
     });
   });
 
-  header.addEventListener("pointerdown", (e) => {
+  node.addEventListener("dblclick", (e) => {
     e.stopPropagation();
-    const model = getNoteById(note.id);
-    if (!model) return;
-
-    pushHistory();
-    draggingNoteId = note.id;
-    activeNoteNode = node;
-    node.classList.add("selected");
-
-    const rect = textLayer.getBoundingClientRect();
-    const noteLeftPx = model.x * rect.width;
-    const noteTopPx = model.y * rect.height;
-
-    dragOffset.x = e.clientX - rect.left - noteLeftPx;
-    dragOffset.y = e.clientY - rect.top - noteTopPx;
-
-    e.preventDefault();
+    openNoteEditor(note.id);
   });
 
-  resize.addEventListener("pointerdown", (e) => {
-    e.stopPropagation();
+  node.addEventListener("pointerdown", (e) => {
+    if (e.target === resize) {
+      e.preventDefault();
+      e.stopPropagation();
+      resizingNoteId = note.id;
+      const model = getNoteById(note.id);
+      if (!model) return;
+      resizeStart = {
+        x: e.clientX,
+        y: e.clientY,
+        width: model.width,
+        height: model.height
+      };
+      pushHistory();
+      return;
+    }
+
+    if (
+      e.target === textarea ||
+      e.target.closest(".text-note-delete") ||
+      e.target.closest(".text-note-toggle")
+    ) {
+      return;
+    }
+
     const model = getNoteById(note.id);
     if (!model) return;
 
-    pushHistory();
-    resizingNoteId = note.id;
+    if (isMobileViewport()) {
+      openNoteEditor(note.id);
+      return;
+    }
+
     activeNoteNode = node;
 
-    const rect = textLayer.getBoundingClientRect();
-    resizeStart = {
-      x: e.clientX,
-      y: e.clientY,
-      width: model.width * rect.width,
-      height: model.height * rect.height
-    };
-
-    e.preventDefault();
+    if (e.target === header || e.target === authorLabel || e.target === metaLabel) {
+      e.preventDefault();
+      draggingNoteId = note.id;
+      const rect = node.getBoundingClientRect();
+      dragOffset = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      pushHistory();
+    } else if (model.expanded) {
+      focusTextareaFromContainer();
+    } else {
+      expandNote(note.id, node, textarea);
+    }
   });
 
   node.appendChild(header);
@@ -2639,119 +2681,111 @@ function createNoteNode(note) {
   node.appendChild(resize);
 
   applyNoteLayout(node, note);
+  autoResizeTextarea(textarea);
   return node;
 }
 
-function applyNoteLayout(node, note) {
-  if (!node || !note) return;
+function autoResizeTextarea(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = Math.max(24, textarea.scrollHeight) + "px";
+}
 
-  node.style.left = (note.x * 100) + "%";
-  node.style.top = (note.y * 100) + "%";
-  const isExpanded = note.expanded !== false;
-  node.classList.toggle("collapsed", !isExpanded);
-  node.style.width = isExpanded ? (note.width * 100) + "%" : "44px";
-  node.style.height = isExpanded ? Math.max(40, note.height * drawCanvas.height) + "px" : "44px";
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function applyNoteLayout(node, note) {
+  if (!node || !note || !imageStage.clientWidth || !imageStage.clientHeight) return;
+
+  node.style.left = `${note.x * imageStage.clientWidth}px`;
+  node.style.top = `${note.y * imageStage.clientHeight}px`;
+  node.style.width = `${note.width * imageStage.clientWidth}px`;
+  node.style.height = `${note.height * imageStage.clientHeight}px`;
   node.style.background = note.color || "#fff7c2";
 
-  const textarea = node.querySelector("textarea");
-  if (textarea && textarea.value !== note.text) {
-    textarea.value = note.text || "";
-  }
-  if (textarea && isExpanded) {
-    textarea.style.height = "auto";
-    textarea.style.height = textarea.scrollHeight + "px";
-  }
-
   const metaLabel = node.querySelector(".text-note-meta");
+  const textarea = node.querySelector("textarea");
+
   if (metaLabel) {
     metaLabel.textContent = formatNoteTimestamp(note.updatedAt);
   }
+
+  if (textarea && textarea.value !== (note.text || "")) {
+    textarea.value = note.text || "";
+    autoResizeTextarea(textarea);
+  }
+
+  node.classList.toggle("collapsed", !note.expanded);
 }
 
 function renderNotes() {
   textLayer.innerHTML = "";
-  if (currentNotes.length > MAX_CLIENT_NOTES) {
-    currentNotes = currentNotes.slice(-MAX_CLIENT_NOTES);
-  }
   currentNotes.forEach((note) => {
-    textLayer.appendChild(createNoteNode(note));
+    const node = createNoteNode(note);
+    textLayer.appendChild(node);
   });
-  updateViewerStats();
 }
 
 function upsertNoteNode(note) {
   const existing = textLayer.querySelector(`.text-note[data-id="${note.id}"]`);
   if (existing) {
     applyNoteLayout(existing, note);
-    return;
+    return existing;
   }
-  textLayer.appendChild(createNoteNode(note));
-  updateViewerStats();
+  const node = createNoteNode(note);
+  textLayer.appendChild(node);
+  return node;
 }
 
-window.addEventListener("pointermove", (e) => {
+function pointerMoveOnNoteLayer(e) {
   if (!currentViewerImageId) return;
-  const rect = textLayer.getBoundingClientRect();
-  if (!rect.width || !rect.height) return;
 
-  if (draggingNoteId && activeNoteNode) {
+  if (draggingNoteId) {
     const note = getNoteById(draggingNoteId);
-    if (!note) return;
+    const node = textLayer.querySelector(`.text-note[data-id="${draggingNoteId}"]`);
+    if (!note || !node) return;
 
-    const noteWidthPx = note.width * rect.width;
-    const noteHeightPx = Math.max(60, note.height * rect.height);
+    const stageRect = imageStage.getBoundingClientRect();
+    const left = clamp(e.clientX - stageRect.left - dragOffset.x, 0, stageRect.width - node.offsetWidth);
+    const top = clamp(e.clientY - stageRect.top - dragOffset.y, 0, stageRect.height - node.offsetHeight);
 
-    let leftPx = e.clientX - rect.left - dragOffset.x;
-    let topPx = e.clientY - rect.top - dragOffset.y;
-
-    leftPx = Math.max(0, Math.min(rect.width - noteWidthPx, leftPx));
-    topPx = Math.max(0, Math.min(rect.height - noteHeightPx, topPx));
-
-    note.x = leftPx / rect.width;
-    note.y = topPx / rect.height;
-
-    applyNoteLayout(activeNoteNode, note);
-
-    scheduleNoteLiveUpdate(note.id, currentViewerImageId, {
-      x: note.x,
-      y: note.y
-    });
+    note.x = left / stageRect.width;
+    note.y = top / stageRect.height;
+    applyNoteLayout(node, note);
+    scheduleNoteLiveUpdate(note.id, currentViewerImageId, { x: note.x, y: note.y });
     return;
   }
 
-  if (resizingNoteId && activeNoteNode) {
+  if (resizingNoteId) {
     const note = getNoteById(resizingNoteId);
-    if (!note) return;
+    const node = textLayer.querySelector(`.text-note[data-id="${resizingNoteId}"]`);
+    if (!note || !node) return;
 
+    const stageRect = imageStage.getBoundingClientRect();
     const deltaX = e.clientX - resizeStart.x;
     const deltaY = e.clientY - resizeStart.y;
 
-    const nextWidthPx = Math.max(120, Math.min(rect.width * 0.6, resizeStart.width + deltaX));
-    const nextHeightPx = Math.max(56, Math.min(rect.height * 0.5, resizeStart.height + deltaY));
+    const nextWidth = clamp(resizeStart.width + deltaX / stageRect.width, 0.12, 0.42);
+    const nextHeight = clamp(resizeStart.height + deltaY / stageRect.height, 0.085, 0.36);
 
-    note.width = nextWidthPx / rect.width;
-    note.height = nextHeightPx / rect.height;
-
-    applyNoteLayout(activeNoteNode, note);
-
+    note.width = nextWidth;
+    note.height = nextHeight;
+    applyNoteLayout(node, note);
     scheduleNoteLiveUpdate(note.id, currentViewerImageId, {
       width: note.width,
       height: note.height
     });
   }
-});
+}
 
-window.addEventListener("pointerup", () => {
+function finishNoteInteraction() {
   if (draggingNoteId) {
     const note = getNoteById(draggingNoteId);
     if (note) {
       socket.emit("update-note", {
         imageId: currentViewerImageId,
         noteId: note.id,
-        patch: {
-          x: note.x,
-          y: note.y
-        }
+        patch: { x: note.x, y: note.y }
       });
     }
   }
@@ -2762,113 +2796,179 @@ window.addEventListener("pointerup", () => {
       socket.emit("update-note", {
         imageId: currentViewerImageId,
         noteId: note.id,
-        patch: {
-          width: note.width,
-          height: note.height
-        }
+        patch: { width: note.width, height: note.height }
       });
     }
   }
 
   draggingNoteId = null;
   resizingNoteId = null;
+}
+
+function clearSelection() {
+  const selected = textLayer.querySelector(".text-note.selected");
+  if (selected) selected.classList.remove("selected");
   activeNoteNode = null;
-});
+}
+
+function selectNode(node) {
+  clearSelection();
+  if (!node) return;
+  node.classList.add("selected");
+  activeNoteNode = node;
+}
+
+function pointerDownOnCanvas(e) {
+  if (!currentViewerImageId) return;
+
+  if (drawMode === "text") {
+    return;
+  }
+
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+
+  isDrawing = true;
+  lastPoint = getNormalizedPoint(e);
+  pushHistory();
+  drawCanvas.setPointerCapture?.(e.pointerId);
+}
+
+function pointerMoveOnCanvas(e) {
+  if (!isDrawing || !lastPoint || !currentViewerImageId) return;
+
+  const point = getNormalizedPoint(e);
+  const stroke = {
+    imageId: currentViewerImageId,
+    mode: drawMode === "erase" ? "erase" : "draw",
+    color: currentColor,
+    size: currentSize,
+    last: lastPoint,
+    current: point
+  };
+
+  currentStrokes.push(stroke);
+  if (currentStrokes.length > MAX_CLIENT_STROKES) {
+    currentStrokes = currentStrokes.slice(-MAX_CLIENT_STROKES);
+  }
+
+  drawStroke(stroke);
+  queueStrokeForSync(stroke);
+  lastPoint = point;
+  updateViewerStats();
+}
+
+function pointerUpOnCanvas(e) {
+  isDrawing = false;
+  lastPoint = null;
+  drawCanvas.releasePointerCapture?.(e.pointerId);
+}
+
+function syncViewerState(imageId) {
+  if (!imageId) return;
+  socket.emit("request-drawing-history", { imageId });
+  socket.emit("request-note-history", { imageId });
+}
+
+function setDrawMode(mode) {
+  drawMode = mode;
+  setActiveTools();
+  setColorPaletteOpen(mode === "draw");
+}
 
 sendBtn.addEventListener("click", sendMainMessage);
 viewerSendBtn.addEventListener("click", sendViewerMessage);
 
 msgInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    if (isComposingMain || e.isComposing) return;
+  if (e.key === "Enter" && !isComposingMain) {
     e.preventDefault();
     sendMainMessage();
   }
 });
 
 viewerMsgInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    if (isComposingViewer || e.isComposing) return;
+  if (e.key === "Enter" && !isComposingViewer) {
     e.preventDefault();
     sendViewerMessage();
   }
 });
 
 savePhoneBtn.addEventListener("click", savePhone);
-toggleNoteColorsBtn.addEventListener("click", () => {
-  noteColorRow.classList.toggle("open");
+
+phoneInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    savePhone();
+  }
 });
 
 fileInput.addEventListener("change", async (e) => {
-  const selected = e.target.files[0];
-  if (!selected) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
   try {
-    await uploadImage(selected);
+    await uploadImage(file);
   } catch (error) {
-    console.error(error);
-    alert(error.message || "이미지 업로드에 실패했습니다.");
+    alert(error.message || "이미지 업로드 중 오류가 발생했습니다.");
   } finally {
     fileInput.value = "";
   }
 });
 
 openViewerBtn.addEventListener("click", () => {
-  if (!lastSelectedImageId || !lastSelectedImageUrl) {
-    alert("먼저 채팅에서 이미지를 선택해주세요.");
+  const imageId = currentViewerImageId || lastSelectedImageId;
+  const imageUrl = currentViewerImageUrl || lastSelectedImageUrl;
+
+  if (!imageId || !imageUrl) {
+    alert("먼저 이미지를 선택해 주세요.");
     return;
   }
-  openViewerPopup(lastSelectedImageId, lastSelectedImageUrl);
+
+  openViewerPopup(imageId, imageUrl);
 });
 
-closeViewerBtn.addEventListener("click", () => {
-  if (isViewerMode) {
-    window.close();
-    return;
+closeViewerBtn.addEventListener("click", closeViewer);
+downloadSketchBtn.addEventListener("click", buildDownload);
+
+noteEditorDoneBtn.addEventListener("click", () => closeNoteEditor(true));
+
+noteEditorOverlay.addEventListener("click", (e) => {
+  if (e.target === noteEditorOverlay) {
+    closeNoteEditor(true);
   }
-  closeViewer();
 });
 
-viewerImage.addEventListener("load", () => {
-  updateCanvasSize();
-
-  if (currentViewerImageId) {
-    socket.emit("request-drawing-history", { imageId: currentViewerImageId });
-    socket.emit("request-note-history", { imageId: currentViewerImageId });
-    saveViewerState();
+noteEditorTextarea.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+    e.preventDefault();
+    closeNoteEditor(true);
   }
-  updateViewerStats();
-  updateHistoryButtons();
+  if (e.key === "Escape") {
+    e.preventDefault();
+    closeNoteEditor(true);
+  }
 });
 
-window.addEventListener("resize", updateCanvasSize);
-
-penBtn.addEventListener("click", () => {
-  const nextIsDraw = drawMode !== "draw";
-  drawMode = "draw";
-  setActiveTools();
-  setColorPaletteOpen(nextIsDraw ? true : !isColorPaletteOpen);
+penBtn.addEventListener("click", () => setDrawMode("draw"));
+eraserBtn.addEventListener("click", () => setDrawMode("erase"));
+addTextBtn.addEventListener("click", () => {
+  setDrawMode("text");
+  addTextNote();
 });
-
-eraserBtn.addEventListener("click", () => {
-  drawMode = "erase";
-  setActiveTools();
-  setColorPaletteOpen(false);
-});
-
-addTextBtn.addEventListener("click", addTextNote);
-
 clearDrawingBtn.addEventListener("click", () => {
-  if (!currentViewerImageId) return;
+  if (!currentViewerImageId || !currentStrokes.length) return;
   if (!confirm("현재 이미지의 선을 모두 지울까요?")) return;
   pushHistory();
-  socket.emit("clear-drawing", { imageId: currentViewerImageId });
+  currentStrokes = [];
+  redrawAllStrokes();
+  socket.emit("clear-drawings", { imageId: currentViewerImageId });
 });
-
 clearNotesBtn.addEventListener("click", () => {
-  if (!currentViewerImageId) return;
+  if (!currentViewerImageId || !currentNotes.length) return;
   if (!confirm("현재 이미지의 메모를 모두 지울까요?")) return;
   pushHistory();
+  currentNotes = [];
+  renderNotes();
+  updateViewerStats();
   socket.emit("clear-notes", { imageId: currentViewerImageId });
 });
 
@@ -2876,125 +2976,86 @@ undoBtn.addEventListener("click", undoAction);
 redoBtn.addEventListener("click", redoAction);
 
 thicknessRange.addEventListener("input", () => {
-  currentSize = Number(thicknessRange.value || 3);
+  currentSize = Number(thicknessRange.value) || 3;
 });
 
-colorSwatches
-  .filter((btn) => btn !== customColorBtn)
-  .forEach((btn) => {
-    btn.addEventListener("click", () => {
-      currentColor = btn.dataset.color || "#ff3b30";
-      setActiveColor(currentColor);
-      setColorPaletteOpen(false);
-    });
+colorSwatches.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const color = btn.dataset.color;
+    if (!color) return;
+    currentColor = color;
+    setActiveColor(color);
+    setDrawMode("draw");
   });
+});
 
 customColorBtn.addEventListener("click", () => {
   customColorInput.click();
 });
 
 customColorInput.addEventListener("input", () => {
-  currentColor = customColorInput.value || "#2491ff";
+  currentColor = customColorInput.value;
   setActiveColor(currentColor);
-  setColorPaletteOpen(false);
-});
-
-document.addEventListener("click", (event) => {
-  if (!isColorPaletteOpen) return;
-  const target = event.target;
-  if (penBtn.contains(target) || colorRow.contains(target)) return;
-  setColorPaletteOpen(false);
+  setDrawMode("draw");
 });
 
 noteColorSwatches.forEach((btn) => {
   btn.addEventListener("click", () => {
-    currentNoteColor = btn.dataset.noteColor || "#fff7c2";
-    setActiveNoteColor(currentNoteColor);
+    const color = btn.dataset.noteColor;
+    if (!color) return;
+    currentNoteColor = color;
+    setActiveNoteColor(color);
   });
 });
 
-noteEditorDoneBtn.addEventListener("click", () => {
-  closeNoteEditor(true);
+toggleNoteColorsBtn.addEventListener("click", () => {
+  noteColorRow.classList.toggle("open");
 });
 
-noteEditorTextarea.addEventListener("input", () => {
-  const note = getNoteById(activeNoteEditorId);
-  if (!note) return;
-  noteEditorMeta.textContent = formatNoteTimestamp(Date.now());
-});
+drawCanvas.addEventListener("pointerdown", pointerDownOnCanvas);
+drawCanvas.addEventListener("pointermove", pointerMoveOnCanvas);
+drawCanvas.addEventListener("pointerup", pointerUpOnCanvas);
+drawCanvas.addEventListener("pointercancel", pointerUpOnCanvas);
+drawCanvas.addEventListener("pointerleave", pointerUpOnCanvas);
 
-drawCanvas.addEventListener("pointerdown", (evt) => {
-  if (!currentViewerImageId) return;
-  pushHistory();
-  isDrawing = true;
-  lastPoint = getNormalizedPoint(evt);
-  drawCanvas.setPointerCapture(evt.pointerId);
-});
+textLayer.addEventListener("pointermove", pointerMoveOnNoteLayer);
+window.addEventListener("pointerup", finishNoteInteraction);
+window.addEventListener("pointercancel", finishNoteInteraction);
 
-drawCanvas.addEventListener("pointermove", (evt) => {
-  if (!isDrawing || !currentViewerImageId || !lastPoint) return;
-
-  const current = getNormalizedPoint(evt);
-  const stroke = {
-    imageId: currentViewerImageId,
-    mode: drawMode,
-    color: currentColor,
-    size: currentSize,
-    last: lastPoint,
-    current
-  };
-
-  currentStrokes.push(stroke);
-  drawStroke(stroke);
-  updateViewerStats();
-  queueStrokeForSync(stroke);
-  lastPoint = current;
-});
-
-function stopDrawing() {
-  isDrawing = false;
-  lastPoint = null;
-}
-
-drawCanvas.addEventListener("pointerup", stopDrawing);
-drawCanvas.addEventListener("pointercancel", stopDrawing);
-drawCanvas.addEventListener("pointerleave", stopDrawing);
-
-downloadSketchBtn.addEventListener("click", buildDownload);
-
-document.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
-    e.preventDefault();
-    undoAction();
-    return;
+textLayer.addEventListener("click", (e) => {
+  const noteNode = e.target.closest(".text-note");
+  if (noteNode) {
+    selectNode(noteNode);
+  } else {
+    clearSelection();
   }
+});
 
-  if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") ||
-      ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "z")) {
-    e.preventDefault();
-    redoAction();
-    return;
+window.addEventListener("resize", updateCanvasSize);
+viewerImage.addEventListener("load", () => {
+  updateCanvasSize();
+  if (currentViewerImageId) {
+    syncViewerState(currentViewerImageId);
   }
+});
 
-  if (e.key === "Escape") {
-    if (isViewerMode) {
-      window.close();
-      return;
+window.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.source !== EMBED_MESSAGE_NAMESPACE) return;
+
+  if (data.type === "open-viewer") {
+    const payload = data.payload || {};
+    if (payload.imageId && payload.imageUrl) {
+      openViewerInline(payload.imageId, payload.imageUrl);
+      viewerImage.src = payload.imageUrl;
+      updateCanvasSize();
+      syncViewerState(payload.imageId);
     }
+  }
+
+  if (data.type === "close-viewer") {
     closeViewer();
   }
-});
-
-socket.on("history", (messages) => {
-  chatInner.innerHTML = "";
-  viewerChatInner.innerHTML = "";
-
-  (messages || []).forEach((item) => {
-    if (item.type === "text") renderTextMessage(item);
-    if (item.type === "image") renderImageMessage(item);
-  });
-
-  announceReadyToParent();
 });
 
 socket.on("message", (data) => {
@@ -3007,113 +3068,68 @@ socket.on("image", (data) => {
 
 socket.on("drawing-history", (payload) => {
   if (!payload || payload.imageId !== currentViewerImageId) return;
-  currentStrokes = Array.isArray(payload.strokes)
-    ? payload.strokes.slice(-MAX_CLIENT_STROKES)
-    : [];
+  currentStrokes = Array.isArray(payload.strokes) ? payload.strokes.slice(-MAX_CLIENT_STROKES) : [];
   redrawAllStrokes();
-  updateViewerStats();
-});
-
-socket.on("draw-stroke", (stroke) => {
-  if (!stroke || stroke.imageId !== currentViewerImageId) return;
-  currentStrokes.push(stroke);
-  if (currentStrokes.length > MAX_CLIENT_STROKES) {
-    currentStrokes.splice(0, currentStrokes.length - MAX_CLIENT_STROKES);
-  }
-  drawStroke(stroke);
-  updateViewerStats();
 });
 
 socket.on("draw-strokes", (payload) => {
   if (!payload || payload.imageId !== currentViewerImageId) return;
+  if (!Array.isArray(payload.strokes)) return;
 
-  const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-  strokes.forEach((stroke) => {
+  payload.strokes.forEach((stroke) => {
     currentStrokes.push(stroke);
+    if (currentStrokes.length > MAX_CLIENT_STROKES) {
+      currentStrokes = currentStrokes.slice(-MAX_CLIENT_STROKES);
+    }
+    drawStroke(stroke);
   });
-  if (currentStrokes.length > MAX_CLIENT_STROKES) {
-    currentStrokes.splice(0, currentStrokes.length - MAX_CLIENT_STROKES);
-    redrawAllStrokes();
-  } else {
-    strokes.forEach((stroke) => {
-      drawStroke(stroke);
-    });
-  }
+
   updateViewerStats();
 });
 
-socket.on("clear-drawing", (payload) => {
+socket.on("clear-drawings", (payload) => {
   if (!payload || payload.imageId !== currentViewerImageId) return;
   currentStrokes = [];
-  clearCanvas();
-  updateViewerStats();
+  redrawAllStrokes();
 });
 
 socket.on("note-history", (payload) => {
   if (!payload || payload.imageId !== currentViewerImageId) return;
-  currentNotes = Array.isArray(payload.notes)
-    ? payload.notes.slice(-MAX_CLIENT_NOTES).map((note) => ({
-        ...note,
-        expanded: false,
-        updatedAt: note.updatedAt || Date.now()
-      }))
-    : [];
+  currentNotes = Array.isArray(payload.notes) ? payload.notes.slice(-MAX_CLIENT_NOTES) : [];
   renderNotes();
-});
-
-socket.on("note-added", (payload) => {
-  if (!payload || payload.imageId !== currentViewerImageId || !payload.note) return;
-
-  const exists = currentNotes.some((n) => n.id === payload.note.id);
-  if (!exists) {
-    currentNotes.push({
-      ...payload.note,
-      expanded: false,
-      updatedAt: payload.note.updatedAt || Date.now()
-    });
-    if (currentNotes.length > MAX_CLIENT_NOTES) {
-      currentNotes.splice(0, currentNotes.length - MAX_CLIENT_NOTES);
-      renderNotes();
-      return;
-    }
-    upsertNoteNode(payload.note);
-    updateViewerStats();
-  }
-});
-
-socket.on("note-live-update", (payload) => {
-  if (!payload || payload.imageId !== currentViewerImageId || !payload.noteId) return;
-
-  const note = currentNotes.find((n) => n.id === payload.noteId);
-  if (!note) return;
-
-  Object.assign(note, payload.patch || {});
-  const node = textLayer.querySelector(`.text-note[data-id="${note.id}"]`);
-  if (node) {
-    applyNoteLayout(node, note);
-  }
-  if (activeNoteEditorId === note.id) {
-    noteEditorMeta.textContent = formatNoteTimestamp(note.updatedAt);
-  }
-});
-
-socket.on("note-updated", (payload) => {
-  if (!payload || payload.imageId !== currentViewerImageId || !payload.noteId) return;
-
-  const note = currentNotes.find((n) => n.id === payload.noteId);
-  if (!note) return;
-
-  Object.assign(note, payload.patch || {});
-  const node = textLayer.querySelector(`.text-note[data-id="${note.id}"]`);
-  if (node) {
-    applyNoteLayout(node, note);
-  }
   updateViewerStats();
 });
 
-socket.on("note-deleted", (payload) => {
-  if (!payload || payload.imageId !== currentViewerImageId || !payload.noteId) return;
+socket.on("add-note", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId || !payload.note) return;
+  if (currentNotes.some((n) => n.id === payload.note.id)) return;
+  currentNotes.push(payload.note);
+  if (currentNotes.length > MAX_CLIENT_NOTES) {
+    currentNotes = currentNotes.slice(-MAX_CLIENT_NOTES);
+  }
+  upsertNoteNode(payload.note);
+  updateViewerStats();
+});
 
+socket.on("update-note", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+  const note = getNoteById(payload.noteId);
+  if (!note) return;
+  Object.assign(note, payload.patch || {});
+  upsertNoteNode(note);
+  updateViewerStats();
+});
+
+socket.on("note-live-update", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
+  const note = getNoteById(payload.noteId);
+  if (!note) return;
+  Object.assign(note, payload.patch || {});
+  upsertNoteNode(note);
+});
+
+socket.on("delete-note", (payload) => {
+  if (!payload || payload.imageId !== currentViewerImageId) return;
   currentNotes = currentNotes.filter((n) => n.id !== payload.noteId);
   const node = textLayer.querySelector(`.text-note[data-id="${payload.noteId}"]`);
   if (node) node.remove();
