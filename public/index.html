@@ -28,10 +28,10 @@
   --radius-xl:30px;
   --radius-lg:22px;
   --radius-md:18px;
-  --radius-sm:14px;
 }
 
 *{ box-sizing:border-box; }
+
 html, body{
   margin:0;
   width:100%;
@@ -42,25 +42,29 @@ html, body{
     linear-gradient(180deg, #f9fbff 0%, #edf4fa 100%);
   color:var(--text);
 }
+
 body{
   overflow:hidden;
   -webkit-text-size-adjust:100%;
 }
-button, input, textarea, label{ font:inherit; }
-button{ cursor:pointer; border:none; }
-button:disabled{ cursor:not-allowed; opacity:0.5; }
-input, textarea{ border:none; outline:none; }
 
-.srOnly{
-  position:absolute;
-  width:1px;
-  height:1px;
-  padding:0;
-  margin:-1px;
-  overflow:hidden;
-  clip:rect(0,0,0,0);
-  white-space:nowrap;
-  border:0;
+button, input, textarea, label{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+  border:none;
+}
+
+button:disabled{
+  cursor:not-allowed;
+  opacity:0.5;
+}
+
+input, textarea{
+  border:none;
+  outline:none;
 }
 
 .btnIcon{
@@ -170,6 +174,7 @@ input, textarea{ border:none; outline:none; }
   flex-direction:column;
   gap:5px;
 }
+
 .messageRow.me{ align-items:flex-end; }
 .messageRow.other{ align-items:flex-start; }
 
@@ -182,18 +187,21 @@ input, textarea{ border:none; outline:none; }
   letter-spacing:-0.02em;
   word-break:break-word;
 }
+
 .messageRow.me .bubble{
   background:linear-gradient(135deg, var(--primary-soft), var(--primary));
   color:white;
   border-bottom-right-radius:8px;
   box-shadow:0 8px 20px rgba(36,145,255,0.16);
 }
+
 .messageRow.other .bubble{
   background:#ffffff;
   color:var(--text);
   border:1px solid var(--line);
   border-bottom-left-radius:8px;
 }
+
 .meta{
   font-size:10px;
   color:#95a3b1;
@@ -210,11 +218,13 @@ input, textarea{ border:none; outline:none; }
   box-shadow:0 8px 18px rgba(18,36,61,0.04);
   transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
 }
+
 .imageBubble:hover{
   transform:translateY(-1px);
   box-shadow:0 14px 26px rgba(18,36,61,0.08);
   border-color:#d5e4f3;
 }
+
 .messageRow.me .imageBubble{ border-bottom-right-radius:8px; }
 .messageRow.other .imageBubble{ border-bottom-left-radius:8px; }
 
@@ -276,8 +286,13 @@ input, textarea{ border:none; outline:none; }
   flex-shrink:0;
 }
 
-#utilityRow{ display:none; }
-#utilityRow.open{ display:block; }
+#utilityRow{
+  display:none;
+}
+
+#utilityRow.open{
+  display:block;
+}
 
 #phonePanel{
   display:flex;
@@ -288,11 +303,13 @@ input, textarea{ border:none; outline:none; }
   border-radius:18px;
   background:linear-gradient(180deg, #f8fbff, #f3f8fd);
 }
+
 #phonePanelHeader{
   display:flex;
   align-items:flex-start;
   gap:10px;
 }
+
 #phonePanelIcon{
   width:34px;
   height:34px;
@@ -306,34 +323,42 @@ input, textarea{ border:none; outline:none; }
   line-height:1;
   flex-shrink:0;
 }
+
 #phonePanelText{
   min-width:0;
   display:flex;
   flex-direction:column;
   gap:3px;
 }
+
 #phonePanelTitle{
   font-size:13px;
   font-weight:800;
   color:var(--text-soft);
   letter-spacing:-0.01em;
 }
+
 #phonePanelDesc{
   font-size:12px;
   color:#708092;
   line-height:1.45;
 }
+
 #phoneRow{
   display:flex;
   gap:8px;
 }
+
 #phoneStatus{
   display:none;
   font-size:12px;
   color:#5f7286;
   padding:0 2px;
 }
-#phoneStatus.show{ display:block; }
+
+#phoneStatus.show{
+  display:block;
+}
 
 #phoneInput{
   flex:1;
@@ -344,6 +369,7 @@ input, textarea{ border:none; outline:none; }
   padding:0 14px;
   font-size:16px;
 }
+
 #savePhoneBtn{
   height:42px;
   border-radius:16px;
@@ -363,6 +389,7 @@ input, textarea{ border:none; outline:none; }
   align-items:center;
   gap:8px;
 }
+
 #msgInput{
   flex:1;
   height:48px;
@@ -372,6 +399,7 @@ input, textarea{ border:none; outline:none; }
   padding:0 16px;
   font-size:16px;
 }
+
 #msgInput:focus,
 #phoneInput:focus,
 #viewerMsgInput:focus,
@@ -380,6 +408,7 @@ input, textarea{ border:none; outline:none; }
   border-color:rgba(36,145,255,0.45);
   box-shadow:0 0 0 4px rgba(36,145,255,0.08);
 }
+
 #sendBtn{
   width:48px;
   height:48px;
@@ -390,7 +419,11 @@ input, textarea{ border:none; outline:none; }
   font-weight:800;
   box-shadow:0 8px 20px rgba(36,145,255,0.16);
 }
-#fileInput{ display:none; }
+
+#fileInput{
+  display:none;
+}
+
 #fileLabel{
   width:48px;
   height:48px;
@@ -413,7 +446,10 @@ input, textarea{ border:none; outline:none; }
   flex-direction:column;
   background:rgba(245,248,252,0.98);
 }
-#viewerOverlay.open{ display:flex; }
+
+#viewerOverlay.open{
+  display:flex;
+}
 
 #viewerTopbar{
   height:76px;
@@ -433,10 +469,12 @@ input, textarea{ border:none; outline:none; }
   flex-direction:column;
   gap:4px;
 }
+
 #viewerTitle{
   font-size:18px;
   font-weight:800;
 }
+
 #viewerSubtitle{
   font-size:12px;
   color:var(--sub);
@@ -450,6 +488,7 @@ input, textarea{ border:none; outline:none; }
   gap:8px;
   flex-wrap:wrap;
 }
+
 .statBadge{
   height:30px;
   padding:0 10px;
@@ -461,18 +500,22 @@ input, textarea{ border:none; outline:none; }
   align-items:center;
   font-weight:700;
 }
+
 .statBadge.state-connected{
   background:#ecf9ef;
   color:#2f7b42;
 }
+
 .statBadge.state-pending{
   background:var(--warning-soft);
   color:#9a6500;
 }
+
 .statBadge.state-saved{
   background:#ecf9ef;
   color:#2f7b42;
 }
+
 .statBadge.state-offline{
   background:#fff3f3;
   color:#c74242;
@@ -483,6 +526,7 @@ input, textarea{ border:none; outline:none; }
   gap:8px;
   flex-shrink:0;
 }
+
 .viewerBtn{
   height:38px;
   border-radius:12px;
@@ -503,6 +547,7 @@ input, textarea{ border:none; outline:none; }
   display:grid;
   grid-template-columns:7fr 3fr;
 }
+
 #viewerLeft{
   min-width:0;
   display:flex;
@@ -510,6 +555,7 @@ input, textarea{ border:none; outline:none; }
   border-right:1px solid var(--line);
   background:#f8fbff;
 }
+
 #canvasWrap{
   flex:1;
   min-height:0;
@@ -519,6 +565,7 @@ input, textarea{ border:none; outline:none; }
   padding:14px;
   background:#f7fbff;
 }
+
 #imageStage{
   position:relative;
   width:min(100%, 1200px);
@@ -530,6 +577,7 @@ input, textarea{ border:none; outline:none; }
   box-shadow:0 18px 38px rgba(18,36,61,0.08);
   overflow:hidden;
 }
+
 #viewerImage{
   position:absolute;
   left:50%;
@@ -544,6 +592,7 @@ input, textarea{ border:none; outline:none; }
   -webkit-user-drag:none;
   z-index:1;
 }
+
 #drawCanvas{
   position:absolute;
   inset:0;
@@ -554,6 +603,7 @@ input, textarea{ border:none; outline:none; }
   pointer-events:auto;
   z-index:2;
 }
+
 #textLayer{
   position:absolute;
   inset:0;
@@ -580,13 +630,16 @@ input, textarea{ border:none; outline:none; }
   user-select:none;
   touch-action:none;
 }
+
 .noteMarker[data-author="admin"]{
   border-color:rgba(138,92,255,0.18);
 }
+
 .noteMarker.selected{
   border-color:rgba(255,139,61,0.55);
   box-shadow:0 0 0 3px rgba(255,139,61,0.14), 0 10px 18px rgba(18,36,61,0.10);
 }
+
 .noteMarkerText{
   max-width:132px;
   overflow:hidden;
@@ -595,6 +648,7 @@ input, textarea{ border:none; outline:none; }
   font-size:12px;
   font-weight:800;
 }
+
 .noteResize{
   position:absolute;
   right:-5px;
@@ -606,6 +660,7 @@ input, textarea{ border:none; outline:none; }
   box-shadow:0 4px 10px rgba(36,145,255,0.18);
   cursor:nwse-resize;
 }
+
 .noteMarker[data-author="admin"] .noteResize{
   background:#8a5cff;
 }
@@ -619,6 +674,7 @@ input, textarea{ border:none; outline:none; }
   gap:16px;
   flex-shrink:0;
 }
+
 #mobileToolHint{
   display:none;
   padding:8px 10px;
@@ -630,11 +686,13 @@ input, textarea{ border:none; outline:none; }
   font-weight:700;
   line-height:1.4;
 }
+
 .toolSection{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
+
 .toolSectionLabel{
   font-size:11px;
   font-weight:800;
@@ -643,12 +701,14 @@ input, textarea{ border:none; outline:none; }
   letter-spacing:0.02em;
   text-transform:uppercase;
 }
+
 .toolRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
 }
+
 .toolGroup{
   display:flex;
   align-items:center;
@@ -656,9 +716,11 @@ input, textarea{ border:none; outline:none; }
   flex-wrap:wrap;
   padding-bottom:8px;
 }
+
 .toolGroup.fill{
   flex:1;
 }
+
 .toolBtn{
   height:38px;
   border-radius:12px;
@@ -673,14 +735,17 @@ input, textarea{ border:none; outline:none; }
   gap:6px;
   line-height:1;
 }
+
 .toolBtn.active{
   background:linear-gradient(135deg, #79c7ff, var(--primary));
   color:white;
 }
+
 .toolBtn.danger{
   background:var(--danger-soft);
   color:#c74242;
 }
+
 #thicknessWrap{
   display:flex;
   align-items:center;
@@ -690,7 +755,10 @@ input, textarea{ border:none; outline:none; }
   font-weight:700;
   flex-shrink:0;
 }
-#thicknessRange{ width:120px; }
+
+#thicknessRange{
+  width:120px;
+}
 
 #colorRow,
 #noteColorRow{
@@ -700,6 +768,7 @@ input, textarea{ border:none; outline:none; }
   align-items:center;
   min-height:30px;
 }
+
 #colorRow{
   display:none;
   padding:10px 10px 12px;
@@ -708,7 +777,10 @@ input, textarea{ border:none; outline:none; }
   background:#f8fbff;
   box-shadow:0 10px 24px rgba(18,36,61,0.08);
 }
-#colorRow.open{ display:flex; }
+
+#colorRow.open{
+  display:flex;
+}
 
 #noteColorHeader{
   display:flex;
@@ -716,11 +788,13 @@ input, textarea{ border:none; outline:none; }
   justify-content:space-between;
   gap:8px;
 }
+
 #noteColorTitle{
   font-size:12px;
   font-weight:800;
   color:var(--sub);
 }
+
 #toggleNoteColorsBtn{
   height:30px;
   border-radius:999px;
@@ -730,6 +804,7 @@ input, textarea{ border:none; outline:none; }
   font-size:12px;
   font-weight:700;
 }
+
 .colorSwatch{
   width:26px;
   height:26px;
@@ -737,9 +812,11 @@ input, textarea{ border:none; outline:none; }
   box-shadow:0 0 0 1px rgba(0,0,0,0.10);
   flex:0 0 auto;
 }
+
 .colorSwatch.active{
   box-shadow:0 0 0 3px rgba(36,145,255,0.20);
 }
+
 #customColorBtn{
   position:relative;
   overflow:hidden;
@@ -747,6 +824,7 @@ input, textarea{ border:none; outline:none; }
     linear-gradient(135deg, rgba(255,255,255,0.95), rgba(228,236,245,0.95)),
     conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30);
 }
+
 #customColorBtn::before{
   content:"";
   position:absolute;
@@ -754,6 +832,7 @@ input, textarea{ border:none; outline:none; }
   border-radius:50%;
   background:var(--custom-color-preview, conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30));
 }
+
 #customColorBtn::after{
   content:"+";
   position:absolute;
@@ -766,20 +845,24 @@ input, textarea{ border:none; outline:none; }
   font-weight:900;
   text-shadow:0 1px 2px rgba(0,0,0,0.35);
 }
+
 #customColorInput{
   position:absolute;
   pointer-events:none;
   opacity:0;
 }
+
 .noteColorSwatch{
   width:22px;
   height:22px;
   border-radius:50%;
   box-shadow:0 0 0 1px rgba(0,0,0,0.10);
 }
+
 .noteColorSwatch.active{
   box-shadow:0 0 0 3px rgba(36,145,255,0.18);
 }
+
 #noteColorRow{
   padding-bottom:8px;
 }
@@ -790,6 +873,7 @@ input, textarea{ border:none; outline:none; }
   flex-direction:column;
   background:#ffffff;
 }
+
 #viewerChatHeader{
   height:52px;
   flex-shrink:0;
@@ -800,6 +884,7 @@ input, textarea{ border:none; outline:none; }
   font-size:16px;
   font-weight:800;
 }
+
 #viewerChatBox{
   flex:1;
   min-height:0;
@@ -807,11 +892,13 @@ input, textarea{ border:none; outline:none; }
   padding:12px;
   background:#fbfdff;
 }
+
 #viewerChatInner{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
+
 #viewerInputBar{
   flex-shrink:0;
   border-top:1px solid var(--line);
@@ -820,6 +907,7 @@ input, textarea{ border:none; outline:none; }
   display:flex;
   gap:8px;
 }
+
 #viewerMsgInput{
   flex:1;
   height:44px;
@@ -829,6 +917,7 @@ input, textarea{ border:none; outline:none; }
   padding:0 14px;
   font-size:16px;
 }
+
 #viewerSendBtn{
   width:44px;
   height:44px;
@@ -847,10 +936,13 @@ input, textarea{ border:none; outline:none; }
   flex-direction:column;
   background:rgba(245,248,252,0.98);
 }
-#noteEditorOverlay.open{ display:flex; }
+
+#noteEditorOverlay.open{
+  display:flex;
+}
 
 #noteEditorHeader{
-  height:68px;
+  height:70px;
   flex-shrink:0;
   display:flex;
   align-items:center;
@@ -860,26 +952,31 @@ input, textarea{ border:none; outline:none; }
   border-bottom:1px solid var(--line);
   background:#ffffff;
 }
+
 #noteEditorTitleWrap{
   min-width:0;
   display:flex;
   flex-direction:column;
   gap:4px;
 }
+
 #noteEditorTitle{
   font-size:17px;
   font-weight:800;
 }
+
 #noteEditorMeta{
   display:flex;
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
 }
+
 #noteEditorTimestamp{
   font-size:12px;
   color:var(--sub);
 }
+
 #noteEditorSaveBadge{
   height:24px;
   padding:0 8px;
@@ -891,18 +988,46 @@ input, textarea{ border:none; outline:none; }
   background:#eef4fa;
   color:#587085;
 }
+
 #noteEditorSaveBadge.pending{
   background:var(--warning-soft);
   color:#9a6500;
 }
+
 #noteEditorSaveBadge.saved{
   background:#ecf9ef;
   color:#2f7b42;
 }
+
 #noteEditorSaveBadge.offline{
   background:#fff3f3;
   color:#c74242;
 }
+
+#noteEditorActions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.noteEditorGhostBtn{
+  height:38px;
+  border-radius:12px;
+  padding:0 12px;
+  background:#edf4fa;
+  color:#425466;
+  font-weight:800;
+}
+
+.noteEditorDangerBtn{
+  height:38px;
+  border-radius:12px;
+  padding:0 12px;
+  background:var(--danger-soft);
+  color:#c74242;
+  font-weight:800;
+}
+
 #noteEditorDoneBtn{
   height:38px;
   border-radius:12px;
@@ -911,12 +1036,14 @@ input, textarea{ border:none; outline:none; }
   color:#fff;
   font-weight:800;
 }
+
 #noteEditorBody{
   flex:1;
   min-height:0;
   padding:14px;
   background:#f7fbff;
 }
+
 #noteEditorTextarea{
   width:100%;
   height:100%;
@@ -932,46 +1059,88 @@ input, textarea{ border:none; outline:none; }
 
 @media (max-width: 900px){
   #app{ padding:0; }
+
   #chatCard{
     width:100%;
     height:100dvh;
     border-radius:0;
   }
+
   #header{
     height:64px;
     min-height:64px;
   }
-  #title{ font-size:22px; }
+
+  #title{
+    font-size:22px;
+  }
+
   #roleBadge{
     left:10px;
     padding:6px 10px;
     font-size:11px;
   }
-  #chatBox{ padding:14px 12px 8px; }
+
+  #chatBox{
+    padding:14px 12px 8px;
+  }
+
   .bubble{
     max-width:84%;
     font-size:14px;
     padding:11px 14px;
   }
-  .chatImg{ max-width:200px; }
+
+  .chatImg{
+    max-width:200px;
+  }
 
   #inputArea{
     padding:8px 10px 10px;
     gap:6px;
   }
-  #msgInput, #sendBtn, #fileLabel{ height:44px; }
-  #sendBtn, #fileLabel{ width:44px; }
-  #msgInput, #viewerMsgInput, #phoneInput{ font-size:16px; }
 
-  #contactToggleBar{ padding:9px 10px; }
-  #contactToggleDesc{ font-size:10px; }
-
-  #phonePanel{ padding:11px; gap:9px; }
-  #phonePanelHeader{ gap:8px; }
-  #phonePanelIcon{
-    width:32px; height:32px; border-radius:10px;
+  #msgInput, #sendBtn, #fileLabel{
+    height:44px;
   }
-  #phoneRow{ flex-direction:column; }
+
+  #sendBtn, #fileLabel{
+    width:44px;
+  }
+
+  #msgInput,
+  #viewerMsgInput,
+  #phoneInput{
+    font-size:16px;
+  }
+
+  #contactToggleBar{
+    padding:9px 10px;
+  }
+
+  #contactToggleDesc{
+    font-size:10px;
+  }
+
+  #phonePanel{
+    padding:11px;
+    gap:9px;
+  }
+
+  #phonePanelHeader{
+    gap:8px;
+  }
+
+  #phonePanelIcon{
+    width:32px;
+    height:32px;
+    border-radius:10px;
+  }
+
+  #phoneRow{
+    flex-direction:column;
+  }
+
   #savePhoneBtn{
     width:100%;
     min-width:0;
@@ -987,17 +1156,22 @@ input, textarea{ border:none; outline:none; }
     gap:6px 10px;
     padding:8px 10px;
   }
+
   #viewerTopLeft{
     grid-area:title;
     width:100%;
     gap:0;
     justify-self:start;
   }
+
   #viewerTitle{
     font-size:15px;
     line-height:1.2;
   }
-  #viewerSubtitle{ display:none; }
+
+  #viewerSubtitle{
+    display:none;
+  }
 
   #viewerStats{
     grid-area:stats;
@@ -1007,7 +1181,10 @@ input, textarea{ border:none; outline:none; }
     overflow-x:auto;
     scrollbar-width:none;
   }
-  #viewerStats::-webkit-scrollbar{ display:none; }
+
+  #viewerStats::-webkit-scrollbar{
+    display:none;
+  }
 
   .statBadge{
     height:24px;
@@ -1016,11 +1193,13 @@ input, textarea{ border:none; outline:none; }
     gap:0;
     white-space:nowrap;
   }
+
   .statBadge::before{
     content:attr(data-icon);
     font-size:11px;
     line-height:1;
   }
+
   .statBadge::after{
     content:attr(data-count);
     margin-left:4px;
@@ -1041,12 +1220,17 @@ input, textarea{ border:none; outline:none; }
     flex-direction:column;
     min-height:0;
   }
-  #viewerLeft{ display:contents; }
+
+  #viewerLeft{
+    display:contents;
+  }
+
   #canvasWrap{
     flex:5 1 0;
     padding:8px;
     min-height:0;
   }
+
   #imageStage{
     min-height:0;
     height:100%;
@@ -1060,7 +1244,10 @@ input, textarea{ border:none; outline:none; }
     gap:8px;
     overflow:hidden;
   }
-  #mobileToolHint{ display:block; }
+
+  #mobileToolHint{
+    display:block;
+  }
 
   .toolGroup{
     flex-wrap:nowrap;
@@ -1070,7 +1257,10 @@ input, textarea{ border:none; outline:none; }
     scrollbar-width:none;
     -webkit-overflow-scrolling:touch;
   }
-  .toolGroup::-webkit-scrollbar{ display:none; }
+
+  .toolGroup::-webkit-scrollbar{
+    display:none;
+  }
 
   .toolBtn{
     min-width:44px;
@@ -1078,18 +1268,27 @@ input, textarea{ border:none; outline:none; }
     padding:0 10px;
     border-radius:12px;
   }
+
   .toolBtn .btnText,
   .viewerBtn .btnText,
-  #savePhoneBtn .btnText{ display:none; }
+  #savePhoneBtn .btnText{
+    display:none;
+  }
+
   .toolBtn .btnIcon,
   .viewerBtn .btnIcon,
-  #savePhoneBtn .btnIcon{ display:inline-flex; }
+  #savePhoneBtn .btnIcon{
+    display:inline-flex;
+  }
 
   #noteColorHeader{
     justify-content:flex-start;
     gap:8px;
   }
-  #noteColorTitle{ display:none; }
+
+  #noteColorTitle{
+    display:none;
+  }
 
   #toggleNoteColorsBtn{
     width:30px;
@@ -1099,6 +1298,7 @@ input, textarea{ border:none; outline:none; }
     border-radius:10px;
     font-size:0;
   }
+
   #toggleNoteColorsBtn::before{
     content:"◐";
     font-size:14px;
@@ -1110,22 +1310,42 @@ input, textarea{ border:none; outline:none; }
     gap:6px;
     padding-bottom:10px;
   }
-  #noteColorRow.open{ display:flex; }
-  #colorRow{ padding:10px 8px 12px; }
+
+  #noteColorRow.open{
+    display:flex;
+  }
+
+  #colorRow{
+    padding:10px 8px 12px;
+  }
 
   #viewerRight{
     flex:3 1 0;
     min-height:0;
     border-top:1px solid var(--line);
   }
-  #viewerChatHeader{ display:none; }
-  #viewerChatBox{ padding:10px 10px 6px; }
-  #viewerChatInner{ gap:8px; }
-  #viewerInputBar{ padding:8px 10px 10px; }
+
+  #viewerChatHeader{
+    display:none;
+  }
+
+  #viewerChatBox{
+    padding:10px 10px 6px;
+  }
+
+  #viewerChatInner{
+    gap:8px;
+  }
+
+  #viewerInputBar{
+    padding:8px 10px 10px;
+  }
+
   #viewerMsgInput{
     height:42px;
     font-size:16px;
   }
+
   #viewerSendBtn{
     width:42px;
     height:42px;
@@ -1136,6 +1356,7 @@ input, textarea{ border:none; outline:none; }
     height:38px;
     padding:0 10px;
   }
+
   .noteMarkerText{
     max-width:96px;
     font-size:11px;
@@ -1146,6 +1367,11 @@ input, textarea{ border:none; outline:none; }
     min-height:64px;
     align-items:flex-start;
     padding:10px 12px;
+  }
+
+  #noteEditorActions{
+    flex-wrap:wrap;
+    justify-content:flex-end;
   }
 }
 </style>
@@ -1158,7 +1384,7 @@ input, textarea{ border:none; outline:none; }
       <div id="roleBadge">고객 채팅</div>
       <div id="title">디자인 상담</div>
       <div id="headerActions">
-        <button id="openViewerBtn" class="iconBtn" type="button" aria-label="선택한 이미지를 뷰어로 열기">⛶</button>
+        <button id="openViewerBtn" class="iconBtn" type="button" aria-label="선택한 이미지를 뷰어로 열기" disabled>⛶</button>
       </div>
     </div>
 
@@ -1170,7 +1396,7 @@ input, textarea{ border:none; outline:none; }
       <div id="contactToggleBar">
         <div id="contactToggleText">
           <div id="contactToggleTitle">연락처 남기기</div>
-          <div id="contactToggleDesc">이미지 검토를 마친 뒤 필요할 때만 연락처를 남길 수 있어요.</div>
+          <div id="contactToggleDesc">검토 후 필요할 때만 연락처를 남길 수 있어요.</div>
         </div>
         <button id="toggleContactPanelBtn" type="button" aria-expanded="false">열기</button>
       </div>
@@ -1201,4 +1427,2094 @@ input, textarea{ border:none; outline:none; }
         <input id="msgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
         <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
         <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
-        <input id="fileInput" type="file" accept="image/*"
+        <input id="fileInput" type="file" accept="image/*" />
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="viewerOverlay" aria-hidden="true">
+  <div id="viewerTopbar">
+    <div id="viewerTopLeft">
+      <div id="viewerTitle">이미지 검토 중</div>
+      <div id="viewerSubtitle">현재 이미지 선택 대기 중</div>
+    </div>
+
+    <div id="viewerStats">
+      <div class="statBadge" id="drawingCountBadge" data-icon="〰" data-count="0">선 0</div>
+      <div class="statBadge" id="noteCountBadge" data-icon="✎" data-count="0">메모 0</div>
+      <div class="statBadge state-connected" id="syncStatusBadge" data-icon="●" data-count="on">실시간 연결됨</div>
+    </div>
+
+    <div id="viewerActions">
+      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="현재 스케치 다운로드" title="다운로드">
+        <span class="btnIcon">↓</span>
+        <span class="btnText">다운로드</span>
+      </button>
+      <button id="closeViewerBtn" class="viewerBtn" type="button" aria-label="뷰어 닫기" title="닫기">
+        <span class="btnIcon">✕</span>
+        <span class="btnText">닫기</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="viewerMain">
+    <section id="viewerLeft">
+      <div id="canvasWrap">
+        <div id="imageStage">
+          <img id="viewerImage" alt="상담 이미지" />
+          <canvas id="drawCanvas"></canvas>
+          <div id="textLayer"></div>
+        </div>
+      </div>
+
+      <div id="toolbar">
+        <div id="mobileToolHint">자주 쓰는 도구는 앞쪽, 전체 삭제는 마지막에 배치했습니다.</div>
+
+        <div class="toolSection">
+          <div class="toolSectionLabel">그리기</div>
+          <div class="toolRow">
+            <div class="toolGroup fill">
+              <button id="penBtn" class="toolBtn active" type="button" aria-label="펜 모드" title="펜">
+                <span class="btnIcon">✎</span>
+                <span class="btnText">펜</span>
+              </button>
+              <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개 모드" title="지우개">
+                <span class="btnIcon">⌫</span>
+                <span class="btnText">지우개</span>
+              </button>
+              <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가" title="메모 추가">
+                <span class="btnIcon">T</span>
+                <span class="btnText">메모 추가</span>
+              </button>
+            </div>
+
+            <div id="thicknessWrap">
+              <span>두께</span>
+              <input id="thicknessRange" type="range" min="1" max="48" value="3" />
+            </div>
+          </div>
+        </div>
+
+        <div id="colorRow">
+          <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
+          <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
+          <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
+          <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
+          <input id="customColorInput" type="color" value="#2491ff" aria-label="사용자 지정 색상" />
+        </div>
+
+        <div class="toolSection">
+          <div class="toolSectionLabel">이력</div>
+          <div class="toolGroup">
+            <button id="undoBtn" class="toolBtn" type="button" aria-label="실행 취소" title="실행 취소">
+              <span class="btnIcon">↶</span>
+              <span class="btnText">Undo</span>
+            </button>
+            <button id="redoBtn" class="toolBtn" type="button" aria-label="다시 실행" title="다시 실행">
+              <span class="btnIcon">↷</span>
+              <span class="btnText">Redo</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="toolSection">
+          <div class="toolSectionLabel">메모</div>
+          <div id="noteColorHeader">
+            <div id="noteColorTitle">메모 색상</div>
+            <button id="toggleNoteColorsBtn" type="button" title="메모 색상 펼치기">메모 색상</button>
+          </div>
+
+          <div id="noteColorRow">
+            <button class="noteColorSwatch active" type="button" data-note-color="#fff7c2" style="background:#fff7c2;" aria-label="연노랑"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#dff5ff" style="background:#dff5ff;" aria-label="연하늘"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#e8ffd9" style="background:#e8ffd9;" aria-label="연초록"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#ffe4ef" style="background:#ffe4ef;" aria-label="연핑크"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#efe7ff" style="background:#efe7ff;" aria-label="연보라"></button>
+          </div>
+        </div>
+
+        <div class="toolSection">
+          <div class="toolSectionLabel">정리</div>
+          <div class="toolGroup">
+            <button id="clearDrawingBtn" class="toolBtn danger" type="button" aria-label="현재 이미지의 선 모두 지우기" title="선 지우기">
+              <span class="btnIcon">⌧</span>
+              <span class="btnText">선지우기</span>
+            </button>
+            <button id="clearNotesBtn" class="toolBtn danger" type="button" aria-label="현재 이미지의 메모 모두 지우기" title="메모지우기">
+              <span class="btnIcon">⌦</span>
+              <span class="btnText">메모지우기</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewerRight">
+      <div id="viewerChatHeader">실시간 채팅</div>
+      <div id="viewerChatBox">
+        <div id="viewerChatInner"></div>
+      </div>
+      <div id="viewerInputBar">
+        <input id="viewerMsgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
+        <button id="viewerSendBtn" type="button" aria-label="메시지 전송">➤</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="noteEditorOverlay" aria-hidden="true">
+  <div id="noteEditorHeader">
+    <div id="noteEditorTitleWrap">
+      <div id="noteEditorTitle">메모 편집 중</div>
+      <div id="noteEditorMeta">
+        <span id="noteEditorTimestamp">최종 수정 없음</span>
+        <span id="noteEditorSaveBadge">준비됨</span>
+      </div>
+    </div>
+    <div id="noteEditorActions">
+      <button id="noteDeleteBtn" class="noteEditorDangerBtn" type="button">삭제</button>
+      <button id="noteEditorDoneBtn" type="button">완료</button>
+    </div>
+  </div>
+  <div id="noteEditorBody">
+    <textarea id="noteEditorTextarea" maxlength="500" placeholder="메모를 입력해 주세요."></textarea>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEYS = {
+    roomId: "chat_room_id",
+    viewerState: "chat_last_viewer_state",
+    userName: "chat_user_name"
+  };
+
+  const MAX_CLIENT_STROKES = 2000;
+  const MAX_CLIENT_NOTES = 100;
+  const MAX_NOTE_CHARS = 500;
+  const HISTORY_LIMIT = 50;
+
+  const params = new URLSearchParams(location.search);
+  const role = params.get("role") === "admin" || params.has("admin") ? "admin" : "user";
+  const userName = params.get("userName") || localStorage.getItem(STORAGE_KEYS.userName) || "상담자";
+
+  localStorage.setItem(STORAGE_KEYS.userName, userName);
+
+  const isViewerMode = params.get("viewer") === "1";
+  const isEmbeddedMode = params.get("embed") === "1" || window.parent !== window;
+  const initialImageId = params.get("imageId") || "";
+  const initialImageUrl = params.get("imageUrl") || "";
+
+  const state = {
+    roomId: params.get("room") || localStorage.getItem(STORAGE_KEYS.roomId) || crypto.randomUUID(),
+    currentViewerImageId: "",
+    currentViewerImageUrl: "",
+    lastSelectedImageId: "",
+    lastSelectedImageUrl: "",
+    drawMode: "draw",
+    currentColor: "#ff3b30",
+    currentSize: 3,
+    currentNoteColor: "#fff7c2",
+    currentStrokes: [],
+    currentNotes: [],
+    isDrawing: false,
+    lastPoint: null,
+    pendingStrokeBatch: [],
+    pendingStrokeImageId: "",
+    strokeBatchRaf: null,
+    isComposingMain: false,
+    isComposingViewer: false,
+    historyUndoStack: [],
+    historyRedoStack: [],
+    historyLock: false,
+    activeMarkerId: "",
+    activeNoteEditorId: "",
+    connectionState: "connected",
+    saveState: "idle",
+    saveStateTimer: null,
+    noteCommitTimers: new Map(),
+    noteLiveQueue: new Map(),
+    noteLiveRaf: null,
+    localEditingNoteVersion: 0,
+    noteInteraction: {
+      type: "",
+      noteId: "",
+      pointerId: null,
+      dragOffsetX: 0,
+      dragOffsetY: 0,
+      startWidth: 0,
+      startHeight: 0,
+      startClientX: 0,
+      startClientY: 0,
+      moved: false
+    }
+  };
+
+  localStorage.setItem(STORAGE_KEYS.roomId, state.roomId);
+
+  let socket = null;
+
+  function createSafeSocket() {
+    if (typeof window.io !== "function") {
+      console.error("Socket.IO client가 로드되지 않았습니다.");
+      return null;
+    }
+
+    try {
+      return window.io({
+        transports: ["websocket", "polling"]
+      });
+    } catch (error) {
+      console.error("Socket 초기화 실패:", error);
+      return null;
+    }
+  }
+
+  socket = createSafeSocket();
+
+  const el = {
+    app: document.getElementById("app"),
+    roleBadge: document.getElementById("roleBadge"),
+    chatInner: document.getElementById("chatInner"),
+    chatBox: document.getElementById("chatBox"),
+    msgInput: document.getElementById("msgInput"),
+    sendBtn: document.getElementById("sendBtn"),
+    fileInput: document.getElementById("fileInput"),
+    phoneInput: document.getElementById("phoneInput"),
+    phoneStatus: document.getElementById("phoneStatus"),
+    savePhoneBtn: document.getElementById("savePhoneBtn"),
+    openViewerBtn: document.getElementById("openViewerBtn"),
+
+    toggleContactPanelBtn: document.getElementById("toggleContactPanelBtn"),
+    utilityRow: document.getElementById("utilityRow"),
+
+    viewerOverlay: document.getElementById("viewerOverlay"),
+    closeViewerBtn: document.getElementById("closeViewerBtn"),
+    viewerImage: document.getElementById("viewerImage"),
+    viewerChatInner: document.getElementById("viewerChatInner"),
+    viewerChatBox: document.getElementById("viewerChatBox"),
+    viewerMsgInput: document.getElementById("viewerMsgInput"),
+    viewerSendBtn: document.getElementById("viewerSendBtn"),
+    downloadSketchBtn: document.getElementById("downloadSketchBtn"),
+    viewerTitle: document.getElementById("viewerTitle"),
+    viewerSubtitle: document.getElementById("viewerSubtitle"),
+    drawingCountBadge: document.getElementById("drawingCountBadge"),
+    noteCountBadge: document.getElementById("noteCountBadge"),
+    syncStatusBadge: document.getElementById("syncStatusBadge"),
+
+    imageStage: document.getElementById("imageStage"),
+    drawCanvas: document.getElementById("drawCanvas"),
+    textLayer: document.getElementById("textLayer"),
+
+    penBtn: document.getElementById("penBtn"),
+    eraserBtn: document.getElementById("eraserBtn"),
+    addTextBtn: document.getElementById("addTextBtn"),
+    clearDrawingBtn: document.getElementById("clearDrawingBtn"),
+    clearNotesBtn: document.getElementById("clearNotesBtn"),
+    undoBtn: document.getElementById("undoBtn"),
+    redoBtn: document.getElementById("redoBtn"),
+    thicknessRange: document.getElementById("thicknessRange"),
+    colorRow: document.getElementById("colorRow"),
+    colorSwatches: Array.from(document.querySelectorAll(".colorSwatch")),
+    customColorBtn: document.getElementById("customColorBtn"),
+    customColorInput: document.getElementById("customColorInput"),
+    noteColorSwatches: Array.from(document.querySelectorAll(".noteColorSwatch")),
+    noteColorRow: document.getElementById("noteColorRow"),
+    toggleNoteColorsBtn: document.getElementById("toggleNoteColorsBtn"),
+
+    noteEditorOverlay: document.getElementById("noteEditorOverlay"),
+    noteEditorTitle: document.getElementById("noteEditorTitle"),
+    noteEditorTimestamp: document.getElementById("noteEditorTimestamp"),
+    noteEditorSaveBadge: document.getElementById("noteEditorSaveBadge"),
+    noteEditorTextarea: document.getElementById("noteEditorTextarea"),
+    noteDeleteBtn: document.getElementById("noteDeleteBtn"),
+    noteEditorDoneBtn: document.getElementById("noteEditorDoneBtn")
+  };
+
+  const ctx = el.drawCanvas.getContext("2d");
+  el.roleBadge.textContent = role === "admin" ? "관리자 화면" : "고객 채팅";
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function deepClone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function isMobileViewport() {
+    return window.innerWidth <= 900;
+  }
+
+  function getDragThreshold() {
+    return isMobileViewport() ? 8 : 4;
+  }
+
+  function formatTime(ts) {
+    try {
+      return new Date(ts).toLocaleTimeString("ko-KR", {
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    } catch {
+      return "";
+    }
+  }
+
+  function formatNoteTimestamp(ts) {
+    if (!ts) return "최종 수정 없음";
+    try {
+      return "최종 수정 " + new Date(ts).toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch {
+      return "최종 수정 없음";
+    }
+  }
+
+  function formatFileDate(date = new Date()) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const hh = String(date.getHours()).padStart(2, "0");
+    const mi = String(date.getMinutes()).padStart(2, "0");
+    return `${yyyy}${mm}${dd}_${hh}${mi}`;
+  }
+
+  function sanitizeFileName(name) {
+    return String(name || "상담자")
+      .replace(/[\\/:*?"<>|]/g, "_")
+      .replace(/\s+/g, "_")
+      .slice(0, 40);
+  }
+
+  function getCurrentImageId() {
+    return state.currentViewerImageId;
+  }
+
+  function setPhoneStatus(message, isError = false) {
+    el.phoneStatus.textContent = message;
+    el.phoneStatus.style.color = isError ? "#d14343" : "#5f7286";
+    el.phoneStatus.classList.toggle("show", Boolean(message));
+  }
+
+  function scrollBottom(container) {
+    requestAnimationFrame(() => {
+      container.scrollTop = container.scrollHeight;
+    });
+  }
+
+  function restoreMobileViewport() {
+    if (!isMobileViewport()) return;
+    const active = document.activeElement;
+    if (active && typeof active.blur === "function") active.blur();
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    if (window.visualViewport) {
+      requestAnimationFrame(() => {
+        const offsetTop = window.visualViewport.offsetTop || 0;
+        if (offsetTop > 0) window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+  }
+
+  function toggleContactPanel(forceOpen = null) {
+    const next = forceOpen === null
+      ? !el.utilityRow.classList.contains("open")
+      : Boolean(forceOpen);
+
+    el.utilityRow.classList.toggle("open", next);
+    el.toggleContactPanelBtn.textContent = next ? "닫기" : "열기";
+    el.toggleContactPanelBtn.setAttribute("aria-expanded", String(next));
+  }
+
+  function updateViewerEntryButton() {
+    const enabled = Boolean(state.lastSelectedImageId && state.lastSelectedImageUrl);
+    el.openViewerBtn.disabled = !enabled;
+    el.openViewerBtn.style.opacity = enabled ? "1" : "0.45";
+  }
+
+  function setConnectionState(next) {
+    state.connectionState = next;
+    el.syncStatusBadge.className = "statBadge";
+
+    if (next === "connected") {
+      el.syncStatusBadge.classList.add("state-connected");
+      el.syncStatusBadge.textContent = "실시간 연결됨";
+      el.syncStatusBadge.dataset.count = "on";
+      return;
+    }
+
+    el.syncStatusBadge.classList.add("state-offline");
+    el.syncStatusBadge.textContent = "연결 끊김";
+    el.syncStatusBadge.dataset.count = "off";
+  }
+
+  function setSaveState(next) {
+    state.saveState = next;
+    if (state.saveStateTimer) {
+      clearTimeout(state.saveStateTimer);
+      state.saveStateTimer = null;
+    }
+
+    el.noteEditorSaveBadge.className = "";
+
+    if (next === "pending") {
+      el.noteEditorSaveBadge.className = "pending";
+      el.noteEditorSaveBadge.textContent = "자동 저장 중";
+      if (state.connectionState === "connected") {
+        el.syncStatusBadge.className = "statBadge state-pending";
+        el.syncStatusBadge.textContent = "자동 저장 중";
+        el.syncStatusBadge.dataset.count = "…";
+      }
+      return;
+    }
+
+    if (next === "saved") {
+      el.noteEditorSaveBadge.className = "saved";
+      el.noteEditorSaveBadge.textContent = "저장됨";
+      if (state.connectionState === "connected") {
+        el.syncStatusBadge.className = "statBadge state-saved";
+        el.syncStatusBadge.textContent = "저장됨";
+        el.syncStatusBadge.dataset.count = "ok";
+      }
+      state.saveStateTimer = setTimeout(() => {
+        el.noteEditorSaveBadge.className = "";
+        el.noteEditorSaveBadge.textContent = "준비됨";
+        if (state.connectionState === "connected") setConnectionState("connected");
+      }, 1000);
+      return;
+    }
+
+    if (next === "offline") {
+      el.noteEditorSaveBadge.className = "offline";
+      el.noteEditorSaveBadge.textContent = "오프라인";
+      setConnectionState("offline");
+      return;
+    }
+
+    el.noteEditorSaveBadge.textContent = "준비됨";
+    if (state.connectionState === "connected") setConnectionState("connected");
+  }
+
+  function updateModeLabels() {
+    const isEditingNote = el.noteEditorOverlay.classList.contains("open");
+
+    if (!state.currentViewerImageId) {
+      el.viewerTitle.textContent = "이미지 검토 중";
+      el.viewerSubtitle.textContent = "현재 이미지 선택 대기 중";
+      el.noteEditorTitle.textContent = "메모 편집 중";
+      return;
+    }
+
+    if (isEditingNote) {
+      el.viewerTitle.textContent = "메모 편집 중";
+      el.viewerSubtitle.textContent = "텍스트는 자동 저장됩니다";
+      el.noteEditorTitle.textContent = "메모 편집 중";
+      return;
+    }
+
+    if (state.drawMode === "draw") {
+      el.viewerTitle.textContent = "주석 작성 중";
+      el.viewerSubtitle.textContent = "펜으로 이미지 위에 직접 표시하고 있습니다";
+      return;
+    }
+
+    if (state.drawMode === "erase") {
+      el.viewerTitle.textContent = "주석 수정 중";
+      el.viewerSubtitle.textContent = "기존 주석을 지우는 중입니다";
+      return;
+    }
+
+    if (state.drawMode === "text") {
+      el.viewerTitle.textContent = "메모 추가 중";
+      el.viewerSubtitle.textContent = "리뷰 포인트를 추가하고 있습니다";
+      return;
+    }
+
+    el.viewerTitle.textContent = "이미지 검토 중";
+    el.viewerSubtitle.textContent = "실시간 협업 중";
+  }
+
+  function updateViewerStats() {
+    el.drawingCountBadge.textContent = `선 ${state.currentStrokes.length}`;
+    el.drawingCountBadge.dataset.count = String(state.currentStrokes.length);
+    el.noteCountBadge.textContent = `메모 ${state.currentNotes.length}`;
+    el.noteCountBadge.dataset.count = String(state.currentNotes.length);
+    updateModeLabels();
+  }
+
+  function setDrawMode(mode) {
+    state.drawMode = mode;
+    el.penBtn.classList.toggle("active", mode === "draw");
+    el.eraserBtn.classList.toggle("active", mode === "erase");
+    el.colorRow.classList.toggle("open", mode === "draw");
+    updateViewerStats();
+  }
+
+  function setActiveColor(color) {
+    state.currentColor = color;
+    let matchedPreset = false;
+
+    el.colorSwatches.forEach((button) => {
+      const isActive = button.dataset.color === color;
+      button.classList.toggle("active", isActive);
+      if (isActive) matchedPreset = true;
+    });
+
+    el.customColorBtn.classList.toggle("active", !matchedPreset);
+    el.customColorBtn.style.setProperty("--custom-color-preview", color);
+    el.customColorInput.value = color;
+  }
+
+  function setActiveNoteColor(color) {
+    state.currentNoteColor = color;
+    el.noteColorSwatches.forEach((button) => {
+      button.classList.toggle("active", button.dataset.noteColor === color);
+    });
+  }
+
+  function createTextRow(data) {
+    const row = document.createElement("div");
+    row.className = "messageRow " + (data.sender === role ? "me" : "other");
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = data.text || "";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = formatTime(data.time);
+
+    row.appendChild(bubble);
+    row.appendChild(meta);
+    return row;
+  }
+
+  function createImageRow(data) {
+    const row = document.createElement("div");
+    row.className = "messageRow " + (data.sender === role ? "me" : "other");
+
+    const wrap = document.createElement("div");
+    wrap.className = "imageBubble";
+
+    const img = document.createElement("img");
+    img.className = "chatImg";
+    img.src = data.imageUrl;
+    img.alt = "첨부 이미지";
+
+    wrap.appendChild(img);
+    wrap.addEventListener("click", () => {
+      state.lastSelectedImageId = data.imageId;
+      state.lastSelectedImageUrl = data.imageUrl;
+      updateViewerEntryButton();
+      openViewerPopup(data.imageId, data.imageUrl);
+    });
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = formatTime(data.time);
+
+    row.appendChild(wrap);
+    row.appendChild(meta);
+    return row;
+  }
+
+  function getNormalizedPoint(evt) {
+    const rect = el.drawCanvas.getBoundingClientRect();
+    return {
+      x: clamp((evt.clientX - rect.left) / rect.width, 0, 1),
+      y: clamp((evt.clientY - rect.top) / rect.height, 0, 1)
+    };
+  }
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, el.drawCanvas.width, el.drawCanvas.height);
+  }
+
+  function drawStroke(stroke) {
+    if (!el.drawCanvas.width || !el.drawCanvas.height) return;
+
+    const x1 = stroke.last.x * el.drawCanvas.width;
+    const y1 = stroke.last.y * el.drawCanvas.height;
+    const x2 = stroke.current.x * el.drawCanvas.width;
+    const y2 = stroke.current.y * el.drawCanvas.height;
+
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = stroke.size || 3;
+
+    if (stroke.mode === "erase") {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.strokeStyle = "rgba(0,0,0,1)";
+    } else {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.strokeStyle = stroke.color || "#ff3b30";
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function redrawAllStrokes() {
+    clearCanvas();
+    state.currentStrokes.forEach(drawStroke);
+    updateViewerStats();
+  }
+
+  function updateCanvasSize() {
+    const width = el.imageStage.clientWidth;
+    const height = el.imageStage.clientHeight;
+    if (!width || !height) return;
+
+    el.drawCanvas.width = width;
+    el.drawCanvas.height = height;
+    redrawAllStrokes();
+    renderNotes();
+  }
+
+  function pushHistory() {
+    if (state.historyLock || !state.currentViewerImageId) return;
+
+    state.historyUndoStack.push(deepClone({
+      strokes: state.currentStrokes,
+      notes: state.currentNotes
+    }));
+
+    if (state.historyUndoStack.length > HISTORY_LIMIT) {
+      state.historyUndoStack.shift();
+    }
+
+    state.historyRedoStack = [];
+    updateHistoryButtons();
+  }
+
+  function updateHistoryButtons() {
+    el.undoBtn.disabled = state.historyUndoStack.length === 0;
+    el.redoBtn.disabled = state.historyRedoStack.length === 0;
+  }
+
+  function applyFullState(snapshot, sync = true) {
+    if (!snapshot || !getCurrentImageId()) return;
+
+    state.historyLock = true;
+    state.currentStrokes = deepClone(snapshot.strokes || []).slice(-MAX_CLIENT_STROKES);
+    state.currentNotes = deepClone(snapshot.notes || []).slice(-MAX_CLIENT_NOTES);
+    redrawAllStrokes();
+    renderNotes();
+    state.historyLock = false;
+
+    if (sync && socket) {
+      socket.emit("replace-drawing-history", {
+        imageId: getCurrentImageId(),
+        strokes: state.currentStrokes
+      });
+      socket.emit("replace-note-history", {
+        imageId: getCurrentImageId(),
+        notes: state.currentNotes
+      });
+    }
+  }
+
+  function undoAction() {
+    if (!state.historyUndoStack.length) return;
+
+    state.historyRedoStack.push(deepClone({
+      strokes: state.currentStrokes,
+      notes: state.currentNotes
+    }));
+
+    const previous = state.historyUndoStack.pop();
+    applyFullState(previous, true);
+    updateHistoryButtons();
+  }
+
+  function redoAction() {
+    if (!state.historyRedoStack.length) return;
+
+    state.historyUndoStack.push(deepClone({
+      strokes: state.currentStrokes,
+      notes: state.currentNotes
+    }));
+
+    const next = state.historyRedoStack.pop();
+    applyFullState(next, true);
+    updateHistoryButtons();
+  }
+
+  function queueStrokeSync(stroke) {
+    if (!socket) return;
+    state.pendingStrokeImageId = stroke.imageId;
+    state.pendingStrokeBatch.push(stroke);
+
+    if (state.strokeBatchRaf) return;
+
+    state.strokeBatchRaf = requestAnimationFrame(() => {
+      socket.emit("draw-strokes", {
+        imageId: state.pendingStrokeImageId,
+        strokes: state.pendingStrokeBatch
+      });
+
+      state.pendingStrokeBatch = [];
+      state.pendingStrokeImageId = "";
+      state.strokeBatchRaf = null;
+    });
+  }
+
+  function estimateNoteSize(text) {
+    const normalized = String(text || "");
+    const lines = normalized.split("\n").length || 1;
+    const longest = Math.max(...normalized.split("\n").map((line) => line.length), 6);
+    const width = clamp(0.12 + longest * 0.008, 0.12, 0.30);
+    const height = clamp(0.09 + lines * 0.03, 0.09, 0.28);
+    return { width, height };
+  }
+
+  function estimateMarkerPosition(index = 0) {
+    return {
+      x: clamp(0.14 + (index % 3) * 0.12, 0.08, 0.90),
+      y: clamp(0.16 + Math.floor(index / 3) * 0.10, 0.10, 0.88)
+    };
+  }
+
+  function normalizeNote(note, index = 0) {
+    const base = estimateMarkerPosition(index);
+    const text = String(note?.text || "").slice(0, MAX_NOTE_CHARS);
+    const estimated = estimateNoteSize(text);
+
+    return {
+      id: note?.id || crypto.randomUUID(),
+      x: typeof note?.x === "number" ? clamp(note.x, 0.06, 0.94) : base.x,
+      y: typeof note?.y === "number" ? clamp(note.y, 0.08, 0.92) : base.y,
+      width: typeof note?.width === "number" ? clamp(note.width, 0.12, 0.30) : estimated.width,
+      height: typeof note?.height === "number" ? clamp(note.height, 0.09, 0.28) : estimated.height,
+      text,
+      color: note?.color || "#fff7c2",
+      author: note?.author === "admin" ? "admin" : "user",
+      updatedAt: typeof note?.updatedAt === "number" ? note.updatedAt : Date.now()
+    };
+  }
+
+  function getNoteById(noteId) {
+    return state.currentNotes.find((note) => note.id === noteId);
+  }
+
+  function getNotePreview(text) {
+    const normalized = String(text || "").replace(/\s+/g, " ").trim();
+    return normalized ? normalized.slice(0, 10) : "새 메모";
+  }
+
+  function selectMarker(noteId) {
+    state.activeMarkerId = noteId || "";
+    el.textLayer.querySelectorAll(".noteMarker").forEach((node) => {
+      node.classList.toggle("selected", node.dataset.id === state.activeMarkerId);
+    });
+  }
+
+  function getMarkerPosition(note) {
+    const width = el.imageStage.clientWidth || 1;
+    const height = el.imageStage.clientHeight || 1;
+    return {
+      left: note.x * width,
+      top: note.y * height
+    };
+  }
+
+  function applyMarkerLayout(marker, note) {
+    const pos = getMarkerPosition(note);
+    marker.style.left = `${pos.left}px`;
+    marker.style.top = `${pos.top}px`;
+    marker.style.background = note.color;
+
+    const text = marker.querySelector(".noteMarkerText");
+    if (text) text.textContent = getNotePreview(note.text);
+  }
+
+  function clearNoteTimers(noteId) {
+    const timer = state.noteCommitTimers.get(noteId);
+    if (timer) {
+      clearTimeout(timer);
+      state.noteCommitTimers.delete(noteId);
+    }
+    state.noteLiveQueue.delete(noteId);
+  }
+
+  function clearAllAsyncState() {
+    if (state.saveStateTimer) {
+      clearTimeout(state.saveStateTimer);
+      state.saveStateTimer = null;
+    }
+
+    state.noteCommitTimers.forEach((timer) => clearTimeout(timer));
+    state.noteCommitTimers.clear();
+    state.noteLiveQueue.clear();
+
+    if (state.noteLiveRaf) {
+      cancelAnimationFrame(state.noteLiveRaf);
+      state.noteLiveRaf = null;
+    }
+
+    if (state.strokeBatchRaf) {
+      cancelAnimationFrame(state.strokeBatchRaf);
+      state.strokeBatchRaf = null;
+    }
+
+    state.pendingStrokeBatch = [];
+    state.pendingStrokeImageId = "";
+    setSaveState(state.connectionState === "connected" ? "idle" : "offline");
+  }
+
+  function createNoteMarker(note) {
+    const marker = document.createElement("div");
+    marker.className = "noteMarker";
+    marker.dataset.id = note.id;
+    marker.dataset.author = note.author;
+    marker.style.background = note.color;
+
+    const text = document.createElement("span");
+    text.className = "noteMarkerText";
+    text.textContent = getNotePreview(note.text);
+
+    const resize = document.createElement("button");
+    resize.className = "noteResize";
+    resize.type = "button";
+    resize.setAttribute("aria-label", "메모 크기 조절");
+
+    marker.appendChild(text);
+    marker.appendChild(resize);
+
+    marker.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const interaction = state.noteInteraction;
+      if (interaction.noteId === note.id && interaction.moved) return;
+      selectMarker(note.id);
+      openNoteEditor(note.id);
+    });
+
+    marker.addEventListener("pointerdown", (event) => {
+      const current = getNoteById(note.id);
+      if (!current) return;
+
+      selectMarker(note.id);
+
+      if (event.target === resize) {
+        event.preventDefault();
+        pushHistory();
+
+        state.noteInteraction = {
+          type: "resize",
+          noteId: note.id,
+          pointerId: event.pointerId,
+          dragOffsetX: 0,
+          dragOffsetY: 0,
+          startWidth: current.width,
+          startHeight: current.height,
+          startClientX: event.clientX,
+          startClientY: event.clientY,
+          moved: false
+        };
+
+        marker.setPointerCapture?.(event.pointerId);
+        return;
+      }
+
+      event.preventDefault();
+      pushHistory();
+
+      const stageRect = el.imageStage.getBoundingClientRect();
+      const pos = getMarkerPosition(current);
+
+      state.noteInteraction = {
+        type: "drag",
+        noteId: note.id,
+        pointerId: event.pointerId,
+        dragOffsetX: event.clientX - (stageRect.left + pos.left),
+        dragOffsetY: event.clientY - (stageRect.top + pos.top),
+        startWidth: current.width,
+        startHeight: current.height,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        moved: false
+      };
+
+      marker.setPointerCapture?.(event.pointerId);
+    });
+
+    applyMarkerLayout(marker, note);
+    return marker;
+  }
+
+  function renderNotes() {
+    el.textLayer.innerHTML = "";
+
+    state.currentNotes = state.currentNotes
+      .slice(-MAX_CLIENT_NOTES)
+      .map((note, index) => normalizeNote(note, index));
+
+    state.currentNotes.forEach((note) => {
+      el.textLayer.appendChild(createNoteMarker(note));
+    });
+
+    selectMarker(state.activeMarkerId);
+    updateViewerStats();
+  }
+
+  function upsertMarker(note) {
+    const existing = el.textLayer.querySelector(`.noteMarker[data-id="${note.id}"]`);
+    if (!existing) {
+      el.textLayer.appendChild(createNoteMarker(note));
+      selectMarker(state.activeMarkerId);
+      return;
+    }
+
+    applyMarkerLayout(existing, note);
+    existing.classList.toggle("selected", existing.dataset.id === state.activeMarkerId);
+  }
+
+  function openNoteEditor(noteId) {
+    const note = getNoteById(noteId);
+    if (!note) return;
+
+    state.activeNoteEditorId = noteId;
+    state.localEditingNoteVersion += 1;
+    el.noteEditorTextarea.value = note.text || "";
+    el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+    el.noteEditorOverlay.classList.add("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "false");
+    setSaveState("idle");
+    updateModeLabels();
+
+    requestAnimationFrame(() => {
+      el.noteEditorTextarea.focus();
+      const length = el.noteEditorTextarea.value.length;
+      try {
+        el.noteEditorTextarea.setSelectionRange(length, length);
+      } catch {}
+    });
+  }
+
+  function closeNoteEditor(save = true) {
+    const note = getNoteById(state.activeNoteEditorId);
+
+    if (save && note && socket) {
+      const nextText = String(el.noteEditorTextarea.value || "").slice(0, MAX_NOTE_CHARS);
+      const size = estimateNoteSize(nextText);
+
+      note.text = nextText;
+      note.width = clamp(Math.max(note.width, size.width), 0.12, 0.30);
+      note.height = clamp(Math.max(note.height, size.height), 0.09, 0.28);
+      note.updatedAt = Date.now();
+
+      upsertMarker(note);
+
+      clearNoteTimers(note.id);
+      socket.emit("update-note", {
+        imageId: getCurrentImageId(),
+        noteId: note.id,
+        patch: {
+          text: note.text,
+          width: note.width,
+          height: note.height,
+          updatedAt: note.updatedAt
+        }
+      });
+
+      setSaveState(state.connectionState === "connected" ? "saved" : "offline");
+    }
+
+    state.activeNoteEditorId = "";
+    el.noteEditorOverlay.classList.remove("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "true");
+    el.noteEditorTextarea.blur();
+    renderNotes();
+    updateModeLabels();
+  }
+
+  function addTextNote() {
+    if (!getCurrentImageId() || !socket) return;
+
+    pushHistory();
+
+    const note = normalizeNote({
+      id: crypto.randomUUID(),
+      x: 0.14,
+      y: 0.16,
+      text: "",
+      color: state.currentNoteColor,
+      author: role,
+      updatedAt: Date.now()
+    }, state.currentNotes.length);
+
+    state.currentNotes.push(note);
+    renderNotes();
+    selectMarker(note.id);
+    openNoteEditor(note.id);
+
+    socket.emit("add-note", {
+      imageId: getCurrentImageId(),
+      note
+    });
+  }
+
+  function deleteActiveNote() {
+    if (!socket || !state.activeNoteEditorId || !getCurrentImageId()) return;
+    const noteId = state.activeNoteEditorId;
+    if (!confirm("이 메모를 삭제할까요?")) return;
+
+    clearNoteTimers(noteId);
+    state.currentNotes = state.currentNotes.filter((note) => note.id !== noteId);
+    socket.emit("delete-note", {
+      imageId: getCurrentImageId(),
+      noteId
+    });
+    closeNoteEditor(false);
+    renderNotes();
+  }
+
+  function scheduleNoteLiveUpdate(noteId, patch) {
+    if (!socket || !getCurrentImageId()) return;
+    state.noteLiveQueue.set(noteId, {
+      imageId: getCurrentImageId(),
+      noteId,
+      patch
+    });
+
+    if (state.noteLiveRaf) return;
+
+    state.noteLiveRaf = requestAnimationFrame(() => {
+      state.noteLiveQueue.forEach((payload) => {
+        socket.emit("note-live-update", payload);
+      });
+      state.noteLiveQueue.clear();
+      state.noteLiveRaf = null;
+    });
+  }
+
+  function debounceNoteCommit(noteId, patch, delay = 260) {
+    if (!socket) return;
+    const prev = state.noteCommitTimers.get(noteId);
+    if (prev) clearTimeout(prev);
+
+    const timer = setTimeout(() => {
+      socket.emit("update-note", {
+        imageId: getCurrentImageId(),
+        noteId,
+        patch
+      });
+      state.noteCommitTimers.delete(noteId);
+    }, delay);
+
+    state.noteCommitTimers.set(noteId, timer);
+  }
+
+  function handleNoteInteractionMove(event) {
+    const interaction = state.noteInteraction;
+    if (!interaction.type || !interaction.noteId || !getCurrentImageId()) return;
+
+    const note = getNoteById(interaction.noteId);
+    if (!note) return;
+
+    const marker = el.textLayer.querySelector(`.noteMarker[data-id="${interaction.noteId}"]`);
+    const stageRect = el.imageStage.getBoundingClientRect();
+    if (!marker || !stageRect.width || !stageRect.height) return;
+
+    const moveX = Math.abs(event.clientX - interaction.startClientX);
+    const moveY = Math.abs(event.clientY - interaction.startClientY);
+
+    if (moveX > getDragThreshold() || moveY > getDragThreshold()) {
+      interaction.moved = true;
+    }
+
+    if (interaction.type === "drag") {
+      note.x = clamp(
+        (event.clientX - stageRect.left - interaction.dragOffsetX) / stageRect.width,
+        0.06,
+        0.94
+      );
+      note.y = clamp(
+        (event.clientY - stageRect.top - interaction.dragOffsetY) / stageRect.height,
+        0.08,
+        0.92
+      );
+      note.updatedAt = Date.now();
+      applyMarkerLayout(marker, note);
+      scheduleNoteLiveUpdate(note.id, {
+        x: note.x,
+        y: note.y,
+        updatedAt: note.updatedAt
+      });
+      return;
+    }
+
+    if (interaction.type === "resize") {
+      const deltaX = event.clientX - interaction.startClientX;
+      const deltaY = event.clientY - interaction.startClientY;
+
+      note.width = clamp(interaction.startWidth + (deltaX / stageRect.width), 0.12, 0.30);
+      note.height = clamp(interaction.startHeight + (deltaY / stageRect.height), 0.09, 0.28);
+      note.updatedAt = Date.now();
+      interaction.moved = true;
+      applyMarkerLayout(marker, note);
+      scheduleNoteLiveUpdate(note.id, {
+        width: note.width,
+        height: note.height,
+        updatedAt: note.updatedAt
+      });
+    }
+  }
+
+  function finishNoteInteraction() {
+    const interaction = state.noteInteraction;
+
+    if (!interaction.type || !interaction.noteId) {
+      state.noteInteraction = {
+        type: "",
+        noteId: "",
+        pointerId: null,
+        dragOffsetX: 0,
+        dragOffsetY: 0,
+        startWidth: 0,
+        startHeight: 0,
+        startClientX: 0,
+        startClientY: 0,
+        moved: false
+      };
+      return;
+    }
+
+    const note = getNoteById(interaction.noteId);
+    if (note && interaction.moved && socket) {
+      setSaveState(state.connectionState === "connected" ? "pending" : "offline");
+      socket.emit("update-note", {
+        imageId: getCurrentImageId(),
+        noteId: note.id,
+        patch: {
+          x: note.x,
+          y: note.y,
+          width: note.width,
+          height: note.height,
+          updatedAt: note.updatedAt
+        }
+      });
+    }
+
+    state.noteInteraction = {
+      type: "",
+      noteId: "",
+      pointerId: null,
+      dragOffsetX: 0,
+      dragOffsetY: 0,
+      startWidth: 0,
+      startHeight: 0,
+      startClientX: 0,
+      startClientY: 0,
+      moved: false
+    };
+  }
+
+  function startDrawing(event) {
+    if (!getCurrentImageId() || !socket) return;
+    if (state.drawMode === "text") return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    state.isDrawing = true;
+    state.lastPoint = getNormalizedPoint(event);
+    pushHistory();
+    el.drawCanvas.setPointerCapture?.(event.pointerId);
+  }
+
+  function moveDrawing(event) {
+    if (!state.isDrawing || !state.lastPoint || !getCurrentImageId()) return;
+
+    const point = getNormalizedPoint(event);
+    const stroke = {
+      imageId: getCurrentImageId(),
+      mode: state.drawMode === "erase" ? "erase" : "draw",
+      color: state.currentColor,
+      size: state.currentSize,
+      last: state.lastPoint,
+      current: point
+    };
+
+    state.currentStrokes.push(stroke);
+    if (state.currentStrokes.length > MAX_CLIENT_STROKES) {
+      state.currentStrokes = state.currentStrokes.slice(-MAX_CLIENT_STROKES);
+    }
+
+    drawStroke(stroke);
+    queueStrokeSync(stroke);
+    state.lastPoint = point;
+    updateViewerStats();
+  }
+
+  function endDrawing(event) {
+    state.isDrawing = false;
+    state.lastPoint = null;
+    el.drawCanvas.releasePointerCapture?.(event?.pointerId);
+  }
+
+  function resetViewerState() {
+    state.currentStrokes = [];
+    state.currentNotes = [];
+    state.historyUndoStack = [];
+    state.historyRedoStack = [];
+    state.activeMarkerId = "";
+    state.activeNoteEditorId = "";
+    clearCanvas();
+    renderNotes();
+    updateHistoryButtons();
+  }
+
+  function saveViewerState() {
+    if (!state.currentViewerImageId || !state.currentViewerImageUrl) return;
+    localStorage.setItem(STORAGE_KEYS.viewerState, JSON.stringify({
+      roomId: state.roomId,
+      role,
+      imageId: state.currentViewerImageId,
+      imageUrl: state.currentViewerImageUrl,
+      isOpen: el.viewerOverlay.classList.contains("open"),
+      savedAt: Date.now()
+    }));
+  }
+
+  function clearViewerState() {
+    localStorage.removeItem(STORAGE_KEYS.viewerState);
+  }
+
+  function requestViewerHistory(imageId) {
+    if (!socket) return;
+    socket.emit("request-drawing-history", { imageId });
+    socket.emit("request-note-history", { imageId });
+  }
+
+  function prepareForImageContextChange() {
+    clearAllAsyncState();
+    if (state.activeNoteEditorId) closeNoteEditor(false);
+    state.activeMarkerId = "";
+    state.noteInteraction = {
+      type: "",
+      noteId: "",
+      pointerId: null,
+      dragOffsetX: 0,
+      dragOffsetY: 0,
+      startWidth: 0,
+      startHeight: 0,
+      startClientX: 0,
+      startClientY: 0,
+      moved: false
+    };
+  }
+
+  function openViewerInline(imageId, imageUrl) {
+    if (!imageId || !imageUrl) return;
+
+    prepareForImageContextChange();
+    resetViewerState();
+
+    state.currentViewerImageId = imageId;
+    state.currentViewerImageUrl = imageUrl;
+    state.lastSelectedImageId = imageId;
+    state.lastSelectedImageUrl = imageUrl;
+    updateViewerEntryButton();
+
+    document.body.classList.add("viewer-inline-open");
+    el.viewerOverlay.classList.add("open");
+    el.viewerOverlay.setAttribute("aria-hidden", "false");
+    el.viewerImage.src = imageUrl;
+
+    updateViewerStats();
+    saveViewerState();
+    requestViewerHistory(imageId);
+  }
+
+  function openViewerPopup(imageId, imageUrl) {
+    if (!imageId || !imageUrl) return;
+
+    if (window.innerWidth <= 900) {
+      openViewerInline(imageId, imageUrl);
+      return;
+    }
+
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set("viewer", "1");
+    url.searchParams.set("room", state.roomId);
+    url.searchParams.set("role", role);
+    url.searchParams.set("imageId", imageId);
+    url.searchParams.set("imageUrl", imageUrl);
+    url.searchParams.set("userName", userName);
+
+    const popup = window.open(
+      url.toString(),
+      "designImageViewer",
+      `width=${Math.max(window.screen.availWidth || 1400, 1200)},height=${Math.max(window.screen.availHeight || 900, 800)},left=0,top=0,resizable=yes,scrollbars=yes`
+    );
+
+    if (!popup) {
+      alert("브라우저에서 새 창이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
+    }
+  }
+
+  function closeViewer() {
+    prepareForImageContextChange();
+    document.body.classList.remove("viewer-inline-open");
+    el.viewerOverlay.classList.remove("open");
+    el.viewerOverlay.setAttribute("aria-hidden", "true");
+
+    state.currentViewerImageId = "";
+    state.currentViewerImageUrl = "";
+    resetViewerState();
+    clearViewerState();
+    updateViewerStats();
+  }
+
+  function restoreViewerState() {
+    if (params.get("viewer") === "1") return;
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.viewerState);
+      if (!raw) return;
+
+      const data = JSON.parse(raw);
+      if (!data?.isOpen) return;
+      if (data.roomId !== state.roomId) return;
+      if (!data.imageId || !data.imageUrl) return;
+
+      openViewerInline(data.imageId, data.imageUrl);
+    } catch (error) {
+      console.error("viewer 상태 복원 실패:", error);
+    }
+  }
+
+  async function savePhone() {
+    const phone = el.phoneInput.value.trim();
+    if (!phone) {
+      setPhoneStatus("전화번호를 입력해주세요.", true);
+      return;
+    }
+
+    el.savePhoneBtn.disabled = true;
+    setPhoneStatus("저장 중...");
+
+    try {
+      const response = await fetch("/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: state.roomId,
+          role,
+          phone
+        })
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "전화번호 저장에 실패했습니다.");
+      }
+
+      el.phoneInput.value = result.phone || phone;
+      setPhoneStatus("전화번호가 저장되었습니다.");
+      toggleContactPanel(false);
+    } catch (error) {
+      setPhoneStatus(error.message || "전화번호 저장에 실패했습니다.", true);
+    } finally {
+      el.savePhoneBtn.disabled = false;
+    }
+  }
+
+  async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch("/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "이미지 업로드 실패");
+    }
+
+    if (!result.url) {
+      throw new Error("업로드된 이미지 URL이 없습니다.");
+    }
+
+    if (!socket) {
+      throw new Error("실시간 연결이 없어 이미지를 전송할 수 없습니다.");
+    }
+
+    socket.emit("image", { url: result.url });
+  }
+
+  function sendMainMessage() {
+    const text = el.msgInput.value.trim();
+    if (!text || state.isComposingMain || !socket) return;
+
+    socket.emit("message", { text });
+    el.msgInput.value = "";
+    restoreMobileViewport();
+  }
+
+  function sendViewerMessage() {
+    const text = el.viewerMsgInput.value.trim();
+    if (!text || state.isComposingViewer || !socket) return;
+
+    socket.emit("message", { text });
+    el.viewerMsgInput.value = "";
+    restoreMobileViewport();
+  }
+
+  function roundRect(ctx2d, x, y, width, height, radius) {
+    ctx2d.beginPath();
+    ctx2d.moveTo(x + radius, y);
+    ctx2d.arcTo(x + width, y, x + width, y + height, radius);
+    ctx2d.arcTo(x + width, y + height, x, y + height, radius);
+    ctx2d.arcTo(x, y + height, x, y, radius);
+    ctx2d.arcTo(x, y, x + width, y, radius);
+    ctx2d.closePath();
+  }
+
+  function wrapTextLines(text, maxCharsPerLine) {
+    const result = [];
+    const source = String(text || "").split("\n");
+
+    source.forEach((part) => {
+      if (!part) {
+        result.push("");
+        return;
+      }
+      let current = "";
+      for (const ch of part) {
+        current += ch;
+        if (current.length >= maxCharsPerLine) {
+          result.push(current);
+          current = "";
+        }
+      }
+      if (current) result.push(current);
+    });
+
+    return result.slice(0, 10);
+  }
+
+  function buildDownload() {
+    if (!state.currentViewerImageUrl) return;
+
+    const stageWidth = el.imageStage.clientWidth || 1200;
+    const stageHeight = el.imageStage.clientHeight || 760;
+    const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
+    const img = new Image();
+
+    img.onload = () => {
+      const exportCanvas = document.createElement("canvas");
+      exportCanvas.width = Math.round(stageWidth * 2);
+      exportCanvas.height = Math.round(stageHeight * 2);
+
+      const exportCtx = exportCanvas.getContext("2d");
+      exportCtx.fillStyle = "#f7fbff";
+      exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+      exportCtx.fillStyle = "#ffffff";
+      roundRect(exportCtx, 8, 8, exportCanvas.width - 16, exportCanvas.height - 16, 24);
+      exportCtx.fill();
+
+      const stageRect = el.imageStage.getBoundingClientRect();
+      const imageRect = el.viewerImage.getBoundingClientRect();
+
+      const relX = Math.max(0, imageRect.left - stageRect.left);
+      const relY = Math.max(0, imageRect.top - stageRect.top);
+      const relW = imageRect.width;
+      const relH = imageRect.height;
+
+      const drawX = (relX / stageRect.width) * exportCanvas.width;
+      const drawY = (relY / stageRect.height) * exportCanvas.height;
+      const drawW = (relW / stageRect.width) * exportCanvas.width;
+      const drawH = (relH / stageRect.height) * exportCanvas.height;
+
+      exportCtx.save();
+      roundRect(exportCtx, drawX, drawY, drawW, drawH, 18);
+      exportCtx.clip();
+      exportCtx.drawImage(img, drawX, drawY, drawW, drawH);
+      exportCtx.restore();
+
+      state.currentStrokes.forEach((stroke) => {
+        const x1 = stroke.last.x * exportCanvas.width;
+        const y1 = stroke.last.y * exportCanvas.height;
+        const x2 = stroke.current.x * exportCanvas.width;
+        const y2 = stroke.current.y * exportCanvas.height;
+
+        exportCtx.save();
+        exportCtx.lineCap = "round";
+        exportCtx.lineJoin = "round";
+        exportCtx.lineWidth = (stroke.size || 3) * 2;
+
+        if (stroke.mode === "erase") {
+          exportCtx.globalCompositeOperation = "destination-out";
+          exportCtx.strokeStyle = "rgba(0,0,0,1)";
+        } else {
+          exportCtx.globalCompositeOperation = "source-over";
+          exportCtx.strokeStyle = stroke.color || "#ff3b30";
+        }
+
+        exportCtx.beginPath();
+        exportCtx.moveTo(x1, y1);
+        exportCtx.lineTo(x2, y2);
+        exportCtx.stroke();
+        exportCtx.restore();
+      });
+
+      state.currentNotes.forEach((note) => {
+        const x = note.x * exportCanvas.width;
+        const y = note.y * exportCanvas.height;
+        const width = note.width * exportCanvas.width;
+        const height = note.height * exportCanvas.height;
+
+        exportCtx.save();
+        exportCtx.fillStyle = note.color || "#fff7c2";
+        exportCtx.strokeStyle = note.author === "admin" ? "#8a5cff" : "#2491ff";
+        exportCtx.lineWidth = 2.5;
+
+        roundRect(exportCtx, x, y, width, height, 16);
+        exportCtx.fill();
+        exportCtx.stroke();
+
+        exportCtx.fillStyle = "#17212b";
+        exportCtx.font = "bold 24px sans-serif";
+        exportCtx.fillText(note.author === "admin" ? "관리자" : "고객", x + 18, y + 30);
+
+        exportCtx.font = "24px sans-serif";
+        const lines = wrapTextLines(note.text || "", 20);
+        const lineHeight = 30;
+        lines.forEach((line, idx) => {
+          exportCtx.fillText(line, x + 18, y + 64 + idx * lineHeight);
+        });
+
+        exportCtx.restore();
+      });
+
+      exportCtx.save();
+      exportCtx.fillStyle = "rgba(0,0,0,0.55)";
+      exportCtx.font = "20px sans-serif";
+      exportCtx.fillText(`${userName} · ${new Date().toLocaleString("ko-KR")}`, 20, exportCanvas.height - 20);
+      exportCtx.restore();
+
+      const link = document.createElement("a");
+      link.href = exportCanvas.toDataURL("image/png");
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    };
+
+    img.onerror = () => {
+      alert("이미지를 다운로드용으로 불러오지 못했습니다.");
+    };
+
+    img.src = state.currentViewerImageUrl;
+  }
+
+  function bindUIEvents() {
+    el.toggleContactPanelBtn.addEventListener("click", () => toggleContactPanel());
+
+    el.msgInput.addEventListener("compositionstart", () => { state.isComposingMain = true; });
+    el.msgInput.addEventListener("compositionend", () => { state.isComposingMain = false; });
+    el.viewerMsgInput.addEventListener("compositionstart", () => { state.isComposingViewer = true; });
+    el.viewerMsgInput.addEventListener("compositionend", () => { state.isComposingViewer = false; });
+
+    el.sendBtn.addEventListener("click", sendMainMessage);
+    el.viewerSendBtn.addEventListener("click", sendViewerMessage);
+
+    el.msgInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !state.isComposingMain) {
+        event.preventDefault();
+        sendMainMessage();
+      }
+    });
+
+    el.viewerMsgInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !state.isComposingViewer) {
+        event.preventDefault();
+        sendViewerMessage();
+      }
+    });
+
+    el.savePhoneBtn.addEventListener("click", savePhone);
+
+    el.phoneInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        savePhone();
+      }
+    });
+
+    el.fileInput.addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        await uploadImage(file);
+      } catch (error) {
+        alert(error.message || "이미지 업로드 중 오류가 발생했습니다.");
+      } finally {
+        el.fileInput.value = "";
+      }
+    });
+
+    el.openViewerBtn.addEventListener("click", () => {
+      const imageId = state.lastSelectedImageId;
+      const imageUrl = state.lastSelectedImageUrl;
+
+      if (!imageId || !imageUrl) {
+        alert("먼저 이미지를 선택해 주세요.");
+        return;
+      }
+
+      openViewerPopup(imageId, imageUrl);
+    });
+
+    el.closeViewerBtn.addEventListener("click", closeViewer);
+    el.downloadSketchBtn.addEventListener("click", buildDownload);
+
+    el.penBtn.addEventListener("click", () => setDrawMode("draw"));
+    el.eraserBtn.addEventListener("click", () => setDrawMode("erase"));
+    el.addTextBtn.addEventListener("click", () => {
+      setDrawMode("text");
+      addTextNote();
+    });
+
+    el.clearDrawingBtn.addEventListener("click", () => {
+      if (!getCurrentImageId() || !state.currentStrokes.length || !socket) return;
+      if (!confirm("현재 이미지의 선을 모두 지울까요?")) return;
+
+      pushHistory();
+      state.currentStrokes = [];
+      redrawAllStrokes();
+      socket.emit("clear-drawing", { imageId: getCurrentImageId() });
+    });
+
+    el.clearNotesBtn.addEventListener("click", () => {
+      if (!getCurrentImageId() || !state.currentNotes.length || !socket) return;
+      if (!confirm("현재 이미지의 메모를 모두 지울까요?")) return;
+
+      pushHistory();
+      state.currentNotes = [];
+      renderNotes();
+      socket.emit("clear-notes", { imageId: getCurrentImageId() });
+    });
+
+    el.undoBtn.addEventListener("click", undoAction);
+    el.redoBtn.addEventListener("click", redoAction);
+
+    el.thicknessRange.addEventListener("input", () => {
+      state.currentSize = Number(el.thicknessRange.value) || 3;
+    });
+
+    el.colorSwatches.forEach((button) => {
+      button.addEventListener("click", () => {
+        const color = button.dataset.color;
+        if (!color) return;
+        setActiveColor(color);
+        setDrawMode("draw");
+      });
+    });
+
+    el.customColorBtn.addEventListener("click", () => {
+      el.customColorInput.click();
+    });
+
+    el.customColorInput.addEventListener("input", () => {
+      setActiveColor(el.customColorInput.value);
+      setDrawMode("draw");
+    });
+
+    el.noteColorSwatches.forEach((button) => {
+      button.addEventListener("click", () => {
+        setActiveNoteColor(button.dataset.noteColor);
+      });
+    });
+
+    el.toggleNoteColorsBtn.addEventListener("click", () => {
+      el.noteColorRow.classList.toggle("open");
+    });
+
+    el.drawCanvas.addEventListener("pointerdown", startDrawing);
+    el.drawCanvas.addEventListener("pointermove", moveDrawing);
+    el.drawCanvas.addEventListener("pointerup", endDrawing);
+    el.drawCanvas.addEventListener("pointercancel", endDrawing);
+    el.drawCanvas.addEventListener("pointerleave", endDrawing);
+
+    window.addEventListener("pointermove", handleNoteInteractionMove);
+    window.addEventListener("pointerup", finishNoteInteraction);
+    window.addEventListener("pointercancel", finishNoteInteraction);
+    window.addEventListener("blur", () => {
+      finishNoteInteraction();
+      endDrawing();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        finishNoteInteraction();
+        endDrawing();
+      }
+    });
+
+    el.textLayer.addEventListener("click", (event) => {
+      const marker = event.target.closest(".noteMarker");
+      if (!marker) selectMarker("");
+    });
+
+    el.noteDeleteBtn.addEventListener("click", deleteActiveNote);
+    el.noteEditorDoneBtn.addEventListener("click", () => closeNoteEditor(true));
+
+    el.noteEditorOverlay.addEventListener("click", (event) => {
+      if (event.target === el.noteEditorOverlay) closeNoteEditor(true);
+    });
+
+    el.noteEditorTextarea.addEventListener("input", () => {
+      const note = getNoteById(state.activeNoteEditorId);
+      if (!note) return;
+
+      const nextText = String(el.noteEditorTextarea.value || "").slice(0, MAX_NOTE_CHARS);
+      const size = estimateNoteSize(nextText);
+      note.text = nextText;
+      note.width = clamp(Math.max(note.width, size.width), 0.12, 0.30);
+      note.height = clamp(Math.max(note.height, size.height), 0.09, 0.28);
+      note.updatedAt = Date.now();
+
+      el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+      upsertMarker(note);
+
+      if (state.connectionState !== "connected" || !socket) {
+        setSaveState("offline");
+        return;
+      }
+
+      setSaveState("pending");
+      scheduleNoteLiveUpdate(note.id, {
+        text: note.text,
+        width: note.width,
+        height: note.height,
+        updatedAt: note.updatedAt
+      });
+
+      debounceNoteCommit(note.id, {
+        text: note.text,
+        width: note.width,
+        height: note.height,
+        updatedAt: note.updatedAt
+      });
+    });
+
+    el.noteEditorTextarea.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        closeNoteEditor(true);
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeNoteEditor(true);
+      }
+    });
+
+    el.viewerImage.addEventListener("load", () => {
+      updateCanvasSize();
+      if (getCurrentImageId()) requestViewerHistory(getCurrentImageId());
+    });
+
+    window.addEventListener("resize", updateCanvasSize);
+
+    window.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !event.shiftKey) {
+        if (document.activeElement === el.noteEditorTextarea) return;
+        event.preventDefault();
+        undoAction();
+        return;
+      }
+
+      if (
+        ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") ||
+        ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "z")
+      ) {
+        if (document.activeElement === el.noteEditorTextarea) return;
+        event.preventDefault();
+        redoAction();
+        return;
+      }
+
+      if (event.key === "Escape") {
+        if (el.noteEditorOverlay.classList.contains("open")) {
+          closeNoteEditor(true);
+          return;
+        }
+
+        if (el.viewerOverlay.classList.contains("open")) {
+          closeViewer();
+        }
+      }
+    });
+  }
+
+  function bindSocketEvents() {
+    if (!socket) return;
+
+    socket.emit("join", {
+      roomId: state.roomId,
+      role
+    });
+
+    socket.on("connect", () => {
+      setConnectionState("connected");
+      if (state.saveState === "offline") setSaveState("idle");
+    });
+
+    socket.on("disconnect", () => {
+      setConnectionState("offline");
+      setSaveState("offline");
+    });
+
+    socket.on("history", (messages) => {
+      el.chatInner.innerHTML = "";
+      el.viewerChatInner.innerHTML = "";
+
+      (messages || []).forEach((item) => {
+        if (item.type === "text") {
+          el.chatInner.appendChild(createTextRow(item));
+          if (el.viewerOverlay.classList.contains("open")) {
+            el.viewerChatInner.appendChild(createTextRow(item));
+          }
+        }
+
+        if (item.type === "image") {
+          el.chatInner.appendChild(createImageRow(item));
+          if (el.viewerOverlay.classList.contains("open")) {
+            el.viewerChatInner.appendChild(createImageRow(item));
+          }
+
+          state.lastSelectedImageId = item.imageId;
+          state.lastSelectedImageUrl = item.imageUrl;
+        }
+      });
+
+      updateViewerEntryButton();
+      scrollBottom(el.chatBox);
+      scrollBottom(el.viewerChatBox);
+    });
+
+    socket.on("message", (data) => {
+      const node = createTextRow(data);
+      el.chatInner.appendChild(node);
+      scrollBottom(el.chatBox);
+
+      if (el.viewerOverlay.classList.contains("open")) {
+        el.viewerChatInner.appendChild(createTextRow(data));
+        scrollBottom(el.viewerChatBox);
+      }
+    });
+
+    socket.on("image", (data) => {
+      const node = createImageRow(data);
+      el.chatInner.appendChild(node);
+      scrollBottom(el.chatBox);
+
+      if (el.viewerOverlay.classList.contains("open")) {
+        el.viewerChatInner.appendChild(createImageRow(data));
+        scrollBottom(el.viewerChatBox);
+      }
+
+      state.lastSelectedImageId = data.imageId;
+      state.lastSelectedImageUrl = data.imageUrl;
+      updateViewerEntryButton();
+    });
+
+    socket.on("drawing-history", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      state.currentStrokes = Array.isArray(payload.strokes)
+        ? payload.strokes.slice(-MAX_CLIENT_STROKES)
+        : [];
+      redrawAllStrokes();
+    });
+
+    socket.on("draw-stroke", (stroke) => {
+      if (!stroke || stroke.imageId !== getCurrentImageId()) return;
+
+      state.currentStrokes.push(stroke);
+      if (state.currentStrokes.length > MAX_CLIENT_STROKES) {
+        state.currentStrokes = state.currentStrokes.slice(-MAX_CLIENT_STROKES);
+      }
+
+      drawStroke(stroke);
+      updateViewerStats();
+    });
+
+    socket.on("draw-strokes", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+
+      strokes.forEach((stroke) => {
+        state.currentStrokes.push(stroke);
+      });
+
+      if (state.currentStrokes.length > MAX_CLIENT_STROKES) {
+        state.currentStrokes = state.currentStrokes.slice(-MAX_CLIENT_STROKES);
+        redrawAllStrokes();
+      } else {
+        strokes.forEach(drawStroke);
+      }
+
+      updateViewerStats();
+    });
+
+    socket.on("clear-drawing", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      state.currentStrokes = [];
+      redrawAllStrokes();
+    });
+
+    socket.on("note-history", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      state.currentNotes = Array.isArray(payload.notes)
+        ? payload.notes.map((note, index) => normalizeNote(note, index)).slice(-MAX_CLIENT_NOTES)
+        : [];
+      renderNotes();
+    });
+
+    socket.on("note-added", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId() || !payload.note) return;
+
+      const exists = state.currentNotes.some((note) => note.id === payload.note.id);
+      if (exists) return;
+
+      state.currentNotes.push(normalizeNote(payload.note, state.currentNotes.length));
+      state.currentNotes = state.currentNotes.slice(-MAX_CLIENT_NOTES);
+      renderNotes();
+      setSaveState("saved");
+    });
+
+    socket.on("note-live-update", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId() || !payload.noteId) return;
+      const note = getNoteById(payload.noteId);
+      if (!note) return;
+
+      Object.assign(note, payload.patch || {});
+      upsertMarker(note);
+
+      if (state.activeNoteEditorId === note.id) {
+        if (note.updatedAt) {
+          el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+        }
+      }
+    });
+
+    socket.on("note-updated", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId() || !payload.noteId) return;
+      const note = getNoteById(payload.noteId);
+      if (!note) return;
+
+      Object.assign(note, payload.patch || {});
+      note.text = String(note.text || "").slice(0, MAX_NOTE_CHARS);
+      note.width = clamp(note.width || 0.12, 0.12, 0.30);
+      note.height = clamp(note.height || 0.09, 0.09, 0.28);
+      note.updatedAt = note.updatedAt || Date.now();
+
+      upsertMarker(note);
+
+      if (state.activeNoteEditorId === note.id) {
+        el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+      }
+
+      setSaveState("saved");
+      updateViewerStats();
+    });
+
+    socket.on("note-deleted", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId() || !payload.noteId) return;
+
+      clearNoteTimers(payload.noteId);
+      state.currentNotes = state.currentNotes.filter((note) => note.id !== payload.noteId);
+
+      if (state.activeMarkerId === payload.noteId) {
+        state.activeMarkerId = "";
+      }
+
+      if (state.activeNoteEditorId === payload.noteId) {
+        closeNoteEditor(false);
+      }
+
+      renderNotes();
+    });
+
+    socket.on("clear-notes", (payload) => {
+      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      state.currentNotes = [];
+      state.activeMarkerId = "";
+      if (state.activeNoteEditorId) closeNoteEditor(false);
+      renderNotes();
+      setSaveState("saved");
+    });
+  }
+
+  function init() {
+    bindUIEvents();
+
+    if (socket) {
+      bindSocketEvents();
+    } else {
+      setConnectionState("offline");
+      console.warn("Socket 연결 없이 UI만 초기화했습니다.");
+    }
+
+    setDrawMode("draw");
+    setActiveColor(state.currentColor);
+    setActiveNoteColor(state.currentNoteColor);
+    updateHistoryButtons();
+    toggleContactPanel(false);
+    updateViewerEntryButton();
+    setConnectionState(socket ? "connected" : "offline");
+    setSaveState(socket ? "idle" : "offline");
+
+    if (isViewerMode) {
+      el.app.style.display = "none";
+      el.viewerOverlay.classList.add("open");
+      el.viewerOverlay.setAttribute("aria-hidden", "false");
+
+      if (initialImageId && initialImageUrl) {
+        state.currentViewerImageId = initialImageId;
+        state.currentViewerImageUrl = initialImageUrl;
+        state.lastSelectedImageId = initialImageId;
+        state.lastSelectedImageUrl = initialImageUrl;
+        el.viewerImage.src = initialImageUrl;
+        updateViewerEntryButton();
+        updateViewerStats();
+        if (socket) requestViewerHistory(initialImageId);
+      }
+      return;
+    }
+
+    if (!isEmbeddedMode) {
+      restoreViewerState();
+    } else {
+      clearViewerState();
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
