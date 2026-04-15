@@ -54,6 +54,17 @@ button,input,textarea,label{font:inherit}
 button{border:none;cursor:pointer}
 button:disabled{opacity:.5;cursor:not-allowed}
 input,textarea{border:none;outline:none}
+.btnIcon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:1em;
+  height:1em;
+  line-height:1;
+  flex-shrink:0;
+  transform:translateY(-.02em);
+}
+.btnText{display:inline}
 
 #app{
   width:100%;
@@ -66,7 +77,7 @@ input,textarea{border:none;outline:none}
 
 #chatCard{
   width:min(960px,100%);
-  height:min(94dvh,920px);
+  height:calc(var(--vh) * 100 - 28px);
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(14px);
   border:1px solid rgba(255,255,255,.82);
@@ -148,7 +159,7 @@ input,textarea{border:none;outline:none}
   color:var(--text-soft);
 }
 #quickRequestDesc{
-  font-size:12px;
+  font-size:11px;
   color:var(--sub);
   line-height:1.45;
 }
@@ -368,7 +379,7 @@ input,textarea{border:none;outline:none}
   border-radius:12px;
   background:#f6fbff;
   color:#557086;
-  font-size:11px;
+  font-size:10px;
   font-weight:800;
 }
 
@@ -403,7 +414,7 @@ input,textarea{border:none;outline:none}
   color:var(--text-soft);
 }
 #contactToggleDesc{
-  font-size:11px;
+  font-size:10px;
   color:var(--sub);
 }
 #toggleContactPanelBtn{
@@ -1133,6 +1144,14 @@ input,textarea{border:none;outline:none}
     height:40px;
     padding:0 10px;
   }
+  .toolBtn .btnText,
+  .viewerBtn .btnText{
+    display:none;
+  }
+  .toolBtn .btnIcon,
+  .viewerBtn .btnIcon{
+    display:inline-flex;
+  }
   #thicknessWrap{justify-content:flex-start}
   #thicknessRange{width:92px}
   #noteColorTitle{display:none}
@@ -1295,8 +1314,8 @@ input,textarea{border:none;outline:none}
       <div class="statBadge state-connected" id="syncStatusBadge" data-icon="●" data-count="on">실시간 연결됨</div>
     </div>
     <div id="viewerActions">
-      <button id="downloadSketchBtn" class="viewerBtn" type="button">다운로드</button>
-      <button id="closeViewerBtn" class="viewerBtn" type="button">닫기</button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon">↓</span><span class="btnText">다운로드</span></button>
+      <button id="closeViewerBtn" class="viewerBtn" type="button"><span class="btnIcon">✕</span><span class="btnText">닫기</span></button>
     </div>
   </div>
 
@@ -1315,9 +1334,9 @@ input,textarea{border:none;outline:none}
           <div class="toolSectionLabel">그리기</div>
           <div class="toolRow">
             <div class="toolGroup fill">
-              <button id="penBtn" class="toolBtn active" type="button">펜</button>
-              <button id="eraserBtn" class="toolBtn" type="button">지우개</button>
-              <button id="addTextBtn" class="toolBtn" type="button">메모 추가</button>
+              <button id="penBtn" class="toolBtn active" type="button"><span class="btnIcon">✎</span><span class="btnText">펜</span></button>
+              <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon">⌫</span><span class="btnText">지우개</span></button>
+              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon">📝</span><span class="btnText">메모 추가</span></button>
             </div>
             <div id="thicknessWrap">
               <span>두께</span>
@@ -1337,8 +1356,8 @@ input,textarea{border:none;outline:none}
         <div class="toolSection">
           <div class="toolSectionLabel">이력</div>
           <div class="toolGroup">
-            <button id="undoBtn" class="toolBtn" type="button">Undo</button>
-            <button id="redoBtn" class="toolBtn" type="button">Redo</button>
+            <button id="undoBtn" class="toolBtn" type="button"><span class="btnIcon">↶</span><span class="btnText">Undo</span></button>
+            <button id="redoBtn" class="toolBtn" type="button"><span class="btnIcon">↷</span><span class="btnText">Redo</span></button>
           </div>
         </div>
 
@@ -1360,8 +1379,8 @@ input,textarea{border:none;outline:none}
         <div class="toolSection">
           <div class="toolSectionLabel">정리</div>
           <div class="toolGroup">
-            <button id="clearDrawingBtn" class="toolBtn danger" type="button">선지우기</button>
-            <button id="clearNotesBtn" class="toolBtn danger" type="button">메모지우기</button>
+            <button id="clearDrawingBtn" class="toolBtn danger" type="button"><span class="btnIcon">⌧</span><span class="btnText">선지우기</span></button>
+            <button id="clearNotesBtn" class="toolBtn danger" type="button"><span class="btnIcon">⌦</span><span class="btnText">메모지우기</span></button>
           </div>
         </div>
       </div>
@@ -1472,7 +1491,11 @@ input,textarea{border:none;outline:none}
       status: "상담 시작"
     },
     summaryCollapsed: false,
-    currentCursorMode: "default"
+    currentCursorMode: "default",
+    noteTap: {
+      noteId: "",
+      time: 0
+    }
   };
 
   localStorage.setItem(STORAGE_KEYS.roomId, state.roomId);
@@ -1867,19 +1890,29 @@ input,textarea{border:none;outline:none}
     updateViewerStats();
   }
 
-  function buildCursorSvg(emoji) {
-    return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><text x="8" y="28" font-size="24">${emoji}</text></svg>`)}`;
+  function buildCursorCircle(size, options = {}) {
+    const clamped = clamp(size, 8, 48);
+    const canvasSize = Math.max(40, clamped + 16);
+    const center = canvasSize / 2;
+    const radius = clamped / 2;
+    const stroke = options.stroke || "rgba(36,145,255,0.95)";
+    const fill = options.fill || "rgba(36,145,255,0.18)";
+    const dash = options.dash ? `stroke-dasharray="${options.dash}"` : "";
+    return `data:image/svg+xml;utf8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasSize}" height="${canvasSize}" viewBox="0 0 ${canvasSize} ${canvasSize}"><circle cx="${center}" cy="${center}" r="${radius}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" ${dash}/></svg>`
+    )}`;
   }
 
   function updateCursorMode(mode) {
     state.currentCursorMode = mode || "default";
+    const size = clamp((state.currentSize || 3) + 6, 8, 42);
     let cursor = "crosshair";
     if (mode === "draw") {
-      cursor = `url("${buildCursorSvg("✏️")}") 8 28, crosshair`;
+      cursor = `url("${buildCursorCircle(size, { stroke: "rgba(36,145,255,0.95)", fill: "rgba(36,145,255,0.20)" })}") ${Math.round((size + 16) / 2)} ${Math.round((size + 16) / 2)}, crosshair`;
     } else if (mode === "erase") {
-      cursor = `url("${buildCursorSvg("🩹")}") 8 28, cell`;
+      cursor = `url("${buildCursorCircle(size, { stroke: "rgba(92,107,120,0.95)", fill: "rgba(255,255,255,0.05)" })}") ${Math.round((size + 16) / 2)} ${Math.round((size + 16) / 2)}, cell`;
     } else if (mode === "text") {
-      cursor = `url("${buildCursorSvg("📝")}") 8 28, text`;
+      cursor = `url("${buildCursorCircle(size, { stroke: "rgba(138,92,255,0.95)", fill: "rgba(138,92,255,0.12)", dash: "2 2" })}") ${Math.round((size + 16) / 2)} ${Math.round((size + 16) / 2)}, text`;
     }
     el.drawCanvas.style.cursor = cursor;
     el.imageStage.style.cursor = cursor;
@@ -2165,6 +2198,16 @@ input,textarea{border:none;outline:none}
     state.noteLiveQueue.delete(noteId);
   }
 
+  function shouldOpenNoteEditorOnTap(noteId) {
+    if (!isMobileViewport()) return true;
+    const now = Date.now();
+    const sameTarget = state.noteTap.noteId === noteId;
+    const withinWindow = now - state.noteTap.time < 320;
+    state.noteTap.noteId = noteId;
+    state.noteTap.time = now;
+    return sameTarget && withinWindow;
+  }
+
   function clearAsyncState() {
     if (state.saveStateTimer) clearTimeout(state.saveStateTimer);
     state.saveStateTimer = null;
@@ -2251,6 +2294,7 @@ input,textarea{border:none;outline:none}
       event.stopPropagation();
       if (state.noteInteraction.noteId === note.id && state.noteInteraction.moved) return;
       selectMarker(note.id);
+      if (!shouldOpenNoteEditorOnTap(note.id)) return;
       openNoteEditor(note.id);
     });
 
@@ -2902,6 +2946,7 @@ input,textarea{border:none;outline:none}
 
     el.thicknessRange.addEventListener("input", () => {
       state.currentSize = Number(el.thicknessRange.value || 3);
+      updateCursorMode(state.drawMode);
     });
 
     el.colorSwatches.forEach((button) => {
