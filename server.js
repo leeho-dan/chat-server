@@ -28,7 +28,6 @@ app.use(cors());
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// 요청 로그 (디버깅용)
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.url);
   next();
@@ -45,7 +44,6 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// ================= 업로드 =================
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post("/upload", upload.single("image"), (req, res) => {
@@ -68,8 +66,21 @@ app.post("/upload", upload.single("image"), (req, res) => {
   }
 });
 
-// ================= 메모리 =================
 const rooms = {};
+
+function sanitizeRole(role) {
+  return role === "admin" ? "admin" : "user";
+}
+
+function sanitizeUserName(userName, role) {
+  const name = String(userName || "").trim().slice(0, 60);
+  if (role === "admin") return "관리자";
+  return name || "고객";
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
 
 function getRoom(roomId) {
   if (!rooms[roomId]) {
@@ -82,87 +93,434 @@ function getRoom(roomId) {
   return rooms[roomId];
 }
 
-// ================= 소켓 =================
+function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
+  const updatedByName =
+    updatedByRole === "admin"
+      ? "관리자"
+      : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
+
+  return {
+    id: String(note.id || uuidv4()),
+    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
+    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
+    width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.30) : 0.16,
+    height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.10,
+    text: String(note.text || "").slice(0, 500),
+    color: String(note.color || "#fff7c2"),
+    author: sanitizeRole(note.author || fallbackRole),
+    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
+    updatedByRole,
+    updatedByName
+  };
+}
+
+function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const next = {};
+
+  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
+  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
+  if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.30);
+  if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
+  if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
+  if (typeof patch.color === "string") next.color = patch.color;
+  next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
+
+  const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
+  next.updatedByRole = updatedByRole;
+  next.updatedByName =
+    updatedByRole === "admin"
+      ? "관리자"
+      : sanitizeUserName(patch.updatedByName || fallbackUserName, updatedByRole);
+
+  return next;
+}
+
 io.on("connection", (socket) => {
   console.log("connect:", socket.id);
 
   socket.on("join", (payload = {}, ack) => {
     try {
       const roomId = String(payload.roomId || "").trim();
-      if (!roomId) return;
+      if (!roomId) {
+        if (ack) ack({ ok: false, error: "roomId 없음" });
+        socket.emit("join-error", { ok: false, error: "roomId 없음" });
+        return;
+      }
+
+      const role = sanitizeRole(payload.role);
+      const userName = sanitizeUserName(payload.userName, role);
 
       socket.join(roomId);
       socket.data.roomId = roomId;
+      socket.data.role = role;
+      socket.data.userName = userName;
 
       const room = getRoom(roomId);
 
       socket.emit("history", room.messages);
 
-      if (ack) ack({ ok: true });
-      socket.emit("joined", { ok: true });
-
+      if (ack) ack({ ok: true, roomId, role, userName });
+      socket.emit("joined", { ok: true, roomId, role, userName });
     } catch (e) {
       console.error("join error", e);
+      if (ack) ack({ ok: false, error: "join 오류" });
+      socket.emit("join-error", { ok: false, error: "join 오류" });
     }
   });
 
   socket.on("message", (payload = {}, ack) => {
-    const roomId = socket.data.roomId;
-    if (!roomId) return;
+    try {
+      const roomId = socket.data.roomId;
+      if (!roomId) {
+        if (ack) ack({ ok: false, error: "join 필요" });
+        return;
+      }
 
-    const message = {
-      type: "text",
-      text: payload.text,
-      time: Date.now()
-    };
+      const text = String(payload.text || "").trim();
+      if (!text) {
+        if (ack) ack({ ok: false, error: "메시지 없음" });
+        return;
+      }
 
-    const room = getRoom(roomId);
-    room.messages.push(message);
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
 
-    io.to(roomId).emit("message", message);
+      const message = {
+        type: "text",
+        text,
+        sender: role,
+        senderName: userName,
+        time: Date.now()
+      };
 
-    if (ack) ack({ ok: true });
+      const room = getRoom(roomId);
+      room.messages.push(message);
+      if (room.messages.length > 300) {
+        room.messages = room.messages.slice(-300);
+      }
+
+      io.to(roomId).emit("message", message);
+
+      if (ack) ack({ ok: true });
+    } catch (e) {
+      console.error("message error", e);
+      if (ack) ack({ ok: false, error: "메시지 오류" });
+    }
   });
 
   socket.on("image", (payload = {}, ack) => {
-    const roomId = socket.data.roomId;
-    if (!roomId) return;
+    try {
+      const roomId = socket.data.roomId;
+      if (!roomId) {
+        if (ack) ack({ ok: false, error: "join 필요" });
+        return;
+      }
 
-    const imageId = uuidv4();
+      const imageUrl = String(payload.url || "").trim();
+      if (!imageUrl) {
+        if (ack) ack({ ok: false, error: "imageUrl 없음" });
+        return;
+      }
 
-    const message = {
-      type: "image",
-      imageId,
-      imageUrl: payload.url,
-      time: Date.now()
-    };
+      const imageId = uuidv4();
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
 
-    const room = getRoom(roomId);
-    room.messages.push(message);
+      const message = {
+        type: "image",
+        imageId,
+        imageUrl,
+        sender: role,
+        senderName: userName,
+        time: Date.now()
+      };
 
-    io.to(roomId).emit("image", message);
+      const room = getRoom(roomId);
+      room.messages.push(message);
+      if (room.messages.length > 300) {
+        room.messages = room.messages.slice(-300);
+      }
 
-    if (ack) ack({ ok: true, imageId });
+      room.drawings[imageId] = room.drawings[imageId] || [];
+      room.notes[imageId] = room.notes[imageId] || [];
+
+      io.to(roomId).emit("image", message);
+
+      if (ack) ack({ ok: true, imageId, imageUrl });
+    } catch (e) {
+      console.error("image error", e);
+      if (ack) ack({ ok: false, error: "이미지 오류" });
+    }
   });
 
-  socket.on("draw-stroke", (data) => {
-    const roomId = socket.data.roomId;
-    if (!roomId) return;
-    io.to(roomId).emit("draw-stroke", data);
+  socket.on("request-drawing-history", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return;
+
+      const room = getRoom(roomId);
+      const strokes = room.drawings[imageId] || [];
+      socket.emit("drawing-history", { imageId, strokes });
+    } catch (e) {
+      console.error("request-drawing-history error", e);
+    }
   });
 
-  socket.on("add-note", (data) => {
-    const roomId = socket.data.roomId;
-    if (!roomId) return;
-    io.to(roomId).emit("note-added", data);
+  socket.on("draw-stroke", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return;
+
+      const room = getRoom(roomId);
+      room.drawings[imageId] = room.drawings[imageId] || [];
+      room.drawings[imageId].push(payload);
+
+      if (room.drawings[imageId].length > 2000) {
+        room.drawings[imageId] = room.drawings[imageId].slice(-2000);
+      }
+
+      io.to(roomId).emit("draw-stroke", payload);
+    } catch (e) {
+      console.error("draw-stroke error", e);
+    }
   });
 
-  socket.on("disconnect", () => {
-    console.log("disconnect:", socket.id);
+  socket.on("draw-strokes", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+      if (!roomId || !imageId || !strokes.length) return;
+
+      const room = getRoom(roomId);
+      room.drawings[imageId] = room.drawings[imageId] || [];
+      room.drawings[imageId].push(...strokes);
+
+      if (room.drawings[imageId].length > 2000) {
+        room.drawings[imageId] = room.drawings[imageId].slice(-2000);
+      }
+
+      io.to(roomId).emit("draw-strokes", { imageId, strokes });
+    } catch (e) {
+      console.error("draw-strokes error", e);
+    }
+  });
+
+  socket.on("replace-drawing-history", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+      if (!roomId || !imageId) return;
+
+      const room = getRoom(roomId);
+      room.drawings[imageId] = strokes.slice(-2000);
+
+      io.to(roomId).emit("drawing-history", {
+        imageId,
+        strokes: room.drawings[imageId]
+      });
+    } catch (e) {
+      console.error("replace-drawing-history error", e);
+    }
+  });
+
+  socket.on("clear-drawing", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return;
+
+      const room = getRoom(roomId);
+      room.drawings[imageId] = [];
+
+      io.to(roomId).emit("clear-drawing", { imageId });
+    } catch (e) {
+      console.error("clear-drawing error", e);
+    }
+  });
+
+  socket.on("request-note-history", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return;
+
+      const room = getRoom(roomId);
+      const notes = room.notes[imageId] || [];
+      socket.emit("note-history", { imageId, notes });
+    } catch (e) {
+      console.error("request-note-history error", e);
+    }
+  });
+
+  socket.on("add-note", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const note = payload.note;
+      if (!roomId || !imageId || !note) return;
+
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
+
+      const room = getRoom(roomId);
+      room.notes[imageId] = room.notes[imageId] || [];
+
+      const normalized = normalizeNote(note, role, userName);
+
+      const exists = room.notes[imageId].some((item) => item.id === normalized.id);
+      if (!exists) {
+        room.notes[imageId].push(normalized);
+        if (room.notes[imageId].length > 100) {
+          room.notes[imageId] = room.notes[imageId].slice(-100);
+        }
+      }
+
+      io.to(roomId).emit("note-added", { imageId, note: normalized });
+    } catch (e) {
+      console.error("add-note error", e);
+    }
+  });
+
+  socket.on("note-live-update", (payload = {}) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const noteId = String(payload.noteId || "").trim();
+      if (!roomId || !imageId || !noteId) return;
+
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
+
+      const room = getRoom(roomId);
+      room.notes[imageId] = room.notes[imageId] || [];
+
+      const note = room.notes[imageId].find((item) => item.id === noteId);
+      if (!note) return;
+
+      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
+      Object.assign(note, patch);
+
+      io.to(roomId).emit("note-live-update", { imageId, noteId, patch });
+    } catch (e) {
+      console.error("note-live-update error", e);
+    }
+  });
+
+  socket.on("update-note", (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const noteId = String(payload.noteId || "").trim();
+      if (!roomId || !imageId || !noteId) {
+        if (ack) ack({ ok: false, error: "필수값 없음" });
+        return;
+      }
+
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
+
+      const room = getRoom(roomId);
+      room.notes[imageId] = room.notes[imageId] || [];
+
+      const note = room.notes[imageId].find((item) => item.id === noteId);
+      if (!note) {
+        if (ack) ack({ ok: false, error: "메모 없음" });
+        return;
+      }
+
+      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
+      Object.assign(note, patch);
+
+      io.to(roomId).emit("note-updated", { imageId, noteId, patch });
+      if (ack) ack({ ok: true });
+    } catch (e) {
+      console.error("update-note error", e);
+      if (ack) ack({ ok: false, error: "메모 수정 오류" });
+    }
+  });
+
+  socket.on("delete-note", (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const noteId = String(payload.noteId || "").trim();
+      if (!roomId || !imageId || !noteId) {
+        if (ack) ack({ ok: false, error: "필수값 없음" });
+        return;
+      }
+
+      const room = getRoom(roomId);
+      room.notes[imageId] = room.notes[imageId] || [];
+      room.notes[imageId] = room.notes[imageId].filter((item) => item.id !== noteId);
+
+      io.to(roomId).emit("note-deleted", { imageId, noteId });
+      if (ack) ack({ ok: true });
+    } catch (e) {
+      console.error("delete-note error", e);
+      if (ack) ack({ ok: false, error: "삭제 오류" });
+    }
+  });
+
+  socket.on("replace-note-history", (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const notes = Array.isArray(payload.notes) ? payload.notes : [];
+      if (!roomId || !imageId) {
+        if (ack) ack({ ok: false, error: "필수값 없음" });
+        return;
+      }
+
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
+
+      const room = getRoom(roomId);
+      room.notes[imageId] = notes
+        .map((note) => normalizeNote(note, role, userName))
+        .slice(-100);
+
+      io.to(roomId).emit("note-history", {
+        imageId,
+        notes: room.notes[imageId]
+      });
+
+      if (ack) ack({ ok: true });
+    } catch (e) {
+      console.error("replace-note-history error", e);
+      if (ack) ack({ ok: false, error: "노트 이력 교체 오류" });
+    }
+  });
+
+  socket.on("clear-notes", (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) {
+        if (ack) ack({ ok: false, error: "필수값 없음" });
+        return;
+      }
+
+      const room = getRoom(roomId);
+      room.notes[imageId] = [];
+
+      io.to(roomId).emit("clear-notes", { imageId });
+      if (ack) ack({ ok: true });
+    } catch (e) {
+      console.error("clear-notes error", e);
+      if (ack) ack({ ok: false, error: "메모 전체 삭제 오류" });
+    }
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("disconnect:", socket.id, reason);
   });
 });
 
-// ===== 502 방어 =====
 process.on("uncaughtException", (err) => {
   console.error("uncaught:", err);
 });
@@ -174,7 +532,6 @@ process.on("unhandledRejection", (err) => {
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 121000;
 
-// ===== 서버 시작 =====
 server.listen(PORT, HOST, () => {
   console.log("server running:", PORT);
 });
