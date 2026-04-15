@@ -543,6 +543,11 @@ label:focus-visible{
   cursor:pointer;
   border:1px solid #e5edf4;
 }
+#fileLabel.disabled{
+  opacity:.45;
+  cursor:not-allowed;
+  pointer-events:none;
+}
 
 #viewerOverlay{
   position:fixed;
@@ -1814,6 +1819,9 @@ body.popup-viewer-mode #viewerSendBtn{
       startY: 0,
       startHeightVh: 58
     },
+    pendingUploads: [],
+    socketConnected: false,
+    socketJoined: false,
     noteTap: {
       noteId: "",
       time: 0
@@ -2071,13 +2079,78 @@ body.popup-viewer-mode #viewerSendBtn{
     el.toggleContactPanelBtn.setAttribute("aria-expanded", String(next));
   }
 
+  function isSocketReady() {
+    return Boolean(socket && socket.connected);
+  }
+
+  function canUseRealtimeRoom() {
+    return isSocketReady() && state.socketJoined;
+  }
+
+  function updateRealtimeControls() {
+    const joinedReady = canUseRealtimeRoom();
+    if (el.sendBtn) el.sendBtn.disabled = !joinedReady;
+    if (el.viewerSendBtn) el.viewerSendBtn.disabled = !joinedReady;
+    if (el.fileInput) el.fileInput.disabled = !joinedReady;
+    if (el.fileLabel) el.fileLabel.classList.toggle("disabled", !joinedReady);
+
+    if (el.msgInput) {
+      el.msgInput.placeholder = joinedReady
+        ? "원하는 제품과 수정할 부분을 남겨주세요"
+        : "상담방 연결 준비 중입니다...";
+    }
+    if (el.viewerMsgInput) {
+      el.viewerMsgInput.placeholder = joinedReady
+        ? "수정 위치나 요청을 바로 남겨주세요"
+        : "협업방 입장 완료 후 입력할 수 있어요";
+    }
+  }
+
+  function requestJoinRoom() {
+    if (!isSocketReady()) {
+      state.socketJoined = false;
+      updateRealtimeControls();
+      return;
+    }
+
+    state.socketJoined = false;
+    updateRealtimeControls();
+
+    socket.emit("join", { roomId: state.roomId, role }, (ack) => {
+      if (ack && ack.ok) {
+        state.socketJoined = true;
+        updateRealtimeControls();
+        flushPendingUploads();
+        setSummaryStatus("상담 준비 완료", "상담방 입장이 완료되었습니다.");
+        return;
+      }
+
+      state.socketJoined = false;
+      updateRealtimeControls();
+      if (ack && ack.error) {
+        setSummaryStatus("연결 확인 필요", ack.error);
+      }
+    });
+  }
+
+  function flushPendingUploads() {
+    if (!canUseRealtimeRoom() || !state.pendingUploads.length) return;
+    const queue = state.pendingUploads.splice(0, state.pendingUploads.length);
+    queue.forEach((item) => {
+      socket.emit("image", { url: item.url });
+    });
+    setSummaryStatus("상담 진행 중", "보류 중이던 이미지가 자동 전송되었습니다.");
+  }
+
   function setConnectionState(next) {
     state.connectionState = next;
+    state.socketConnected = next === "connected";
     el.syncStatusBadge.className = "statBadge";
     if (next === "connected") {
       el.syncStatusBadge.classList.add("state-connected");
       el.syncStatusBadge.textContent = "실시간 연결됨";
       el.syncStatusBadge.dataset.count = "on";
+      flushPendingUploads();
       return;
     }
     el.syncStatusBadge.classList.add("state-offline");
@@ -3158,13 +3231,35 @@ body.popup-viewer-mode #viewerSendBtn{
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "이미지 업로드 실패");
     if (!result.url) throw new Error("업로드된 이미지 URL이 없습니다.");
-    if (!socket) throw new Error("실시간 연결이 없어 이미지를 전송할 수 없습니다.");
-    socket.emit("image", { url: result.url });
+
+    if (canUseRealtimeRoom()) {
+      socket.emit("image", { url: result.url });
+      setSummaryStatus("상담 진행 중", "이미지가 전송되었습니다.");
+      return;
+    }
+
+    if (socket) {
+      state.pendingUploads.push({ url: result.url, queuedAt: Date.now() });
+      const waitingMessage = isSocketReady()
+        ? "이미지는 업로드되었고, 상담방 입장이 끝나면 자동 전송됩니다."
+        : "이미지는 업로드되었고, 연결이 복구되면 자동 전송됩니다.";
+      setSummaryStatus("연결 복구 대기", waitingMessage);
+      alert(waitingMessage);
+      return;
+    }
+
+    throw new Error("실시간 서버 연결이 없어 이미지를 상담방에 보낼 수 없습니다. 서버와 socket.io 연결 상태를 확인해 주세요.");
   }
 
   function sendMainMessage() {
     const text = el.msgInput.value.trim();
-    if (!text || state.isComposingMain || !socket) return;
+    if (!text || state.isComposingMain) return;
+    if (!canUseRealtimeRoom()) {
+      alert(isSocketReady()
+        ? "상담방 입장이 아직 완료되지 않았습니다. 잠시 후 다시 시도해 주세요."
+        : "실시간 연결이 아직 준비되지 않았습니다. 서버 연결 상태를 확인해 주세요.");
+      return;
+    }
     applyConversationInsights(text);
     socket.emit("message", { text });
     el.msgInput.value = "";
@@ -3173,7 +3268,13 @@ body.popup-viewer-mode #viewerSendBtn{
 
   function sendViewerMessage() {
     const text = el.viewerMsgInput.value.trim();
-    if (!text || state.isComposingViewer || !socket) return;
+    if (!text || state.isComposingViewer) return;
+    if (!canUseRealtimeRoom()) {
+      alert(isSocketReady()
+        ? "협업방 입장이 아직 완료되지 않았습니다. 잠시 후 다시 시도해 주세요."
+        : "실시간 연결이 아직 준비되지 않았습니다. 서버 연결 상태를 확인해 주세요.");
+      return;
+    }
     applyConversationInsights(text);
     socket.emit("message", { text });
     el.viewerMsgInput.value = "";
@@ -3590,19 +3691,41 @@ body.popup-viewer-mode #viewerSendBtn{
   function bindSocket() {
     if (!socket) {
       setConnectionState("offline");
+      setSummaryStatus("연결 확인 필요", "socket.io 스크립트 또는 실시간 서버 연결을 확인해 주세요.");
       return;
     }
 
-    socket.emit("join", { roomId: state.roomId, role });
+    requestJoinRoom();
 
     socket.on("connect", () => {
       setConnectionState("connected");
+      state.socketJoined = false;
+      updateRealtimeControls();
+      requestJoinRoom();
       if (state.saveState === "offline") setSaveState("idle");
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", (reason) => {
+      state.socketJoined = false;
+      updateRealtimeControls();
       setConnectionState("offline");
       setSaveState("offline");
+      setSummaryStatus("연결 확인 필요", `실시간 연결이 끊겼습니다: ${reason || "unknown"}`);
+    });
+
+    socket.on("joined", (payload = {}) => {
+      if (!payload.ok) return;
+      state.socketJoined = true;
+      updateRealtimeControls();
+      flushPendingUploads();
+    });
+
+    socket.on("join-error", (payload = {}) => {
+      state.socketJoined = false;
+      updateRealtimeControls();
+      if (payload.error) {
+        setSummaryStatus("연결 확인 필요", payload.error);
+      }
     });
 
     socket.on("history", (messages) => {
