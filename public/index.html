@@ -1015,167 +1015,119 @@ body.popup-viewer-mode #viewerSendBtn{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
 }
 
+
 #viewerOverlay.inline-sheet{
-  inset:auto 12px calc(12px + var(--safe-bottom)) 12px;
-  width:auto;
-  height:min(78dvh, 860px);
-  border-radius:24px;
+  inset:0;
+  width:100vw;
+  height:calc(var(--vh) * 100);
+  border-radius:0;
   overflow:hidden;
-  background:#fff;
-  border:1px solid #dfe7f0;
-  box-shadow:0 28px 60px rgba(18,36,61,.18);
+  background:rgba(245,248,252,.985);
+  border:none;
+  box-shadow:none;
 }
 #viewerOverlay.inline-sheet.compact{
-  height:min(64dvh, 720px);
+  height:calc(var(--vh) * 100);
+}
+#viewerOverlay.inline-sheet.expanded{
+  height:calc(var(--vh) * 100);
 }
 #viewerOverlay.inline-sheet #viewerTopbar{
-  height:64px;
-  padding:0 12px;
+  height:74px;
+  padding:0 14px;
 }
 #viewerOverlay.inline-sheet #viewerTitle{
-  font-size:17px;
+  font-size:18px;
 }
 #viewerOverlay.inline-sheet #viewerSubtitle{
-  font-size:11px;
+  font-size:12px;
 }
 #viewerOverlay.inline-sheet #viewerMain{
-  grid-template-columns:minmax(0, 1.2fr) minmax(300px, .8fr);
+  grid-template-columns:7fr 3fr;
 }
 #viewerOverlay.inline-sheet #canvasWrap{
-  padding:10px;
+  padding:14px;
 }
 #viewerOverlay.inline-sheet #imageStage{
-  width:100%;
-  height:100%;
-  min-height:0;
+  width:min(100%, 1200px);
+  height:min(100%, 760px);
+  min-height:420px;
 }
 #viewerOverlay.inline-sheet #toolbar{
-  padding:10px 10px 12px;
-  gap:10px;
+  padding:14px 12px 16px;
+  gap:14px;
+  display:flex;
 }
 #viewerOverlay.inline-sheet #viewerChatHeader{
-  height:44px;
-  font-size:14px;
+  height:52px;
+  font-size:16px;
+  display:flex;
 }
 #viewerOverlay.inline-sheet #viewerChatBox{
-  padding:10px;
+  padding:12px;
 }
 #viewerOverlay.inline-sheet #viewerInputBar{
-  padding:8px 10px calc(10px + var(--safe-bottom));
+  padding:10px 12px calc(12px + var(--safe-bottom));
 }
 #viewerOverlay.inline-sheet #viewerMsgInput{
-  height:42px;
-  font-size:14px;
+  height:44px;
+  font-size:16px;
 }
 #viewerOverlay.inline-sheet #viewerSendBtn{
-  width:42px;
-  height:42px;
+  width:44px;
+  height:44px;
 }
-
-#viewerOverlay.inline-sheet.dragging{
-  transition:none !important;
-  user-select:none;
-}
-#viewerOverlay.inline-sheet #viewerTopbar{
-  position:relative;
-}
-#viewerDragHandle{
-  display:none;
-}
-#viewerDragHandleBtn{
-  display:none;
-}
-#viewerOverlay.inline-sheet .toolBtn .btnText,
-#viewerOverlay.inline-sheet .viewerBtn .btnText{
-  display:none;
-}
-#viewerOverlay.inline-sheet .toolBtn .btnIcon,
-#viewerOverlay.inline-sheet .viewerBtn .btnIcon{
-  display:inline-flex;
-}
-
 @media (max-width:900px){
   #viewerOverlay.inline-sheet{
-    left:8px;
-    right:8px;
-    bottom:8px;
-    height:var(--viewer-sheet-height, 58dvh);
-    min-height:44dvh;
-    max-height:88dvh;
-    border-radius:20px;
-    transition:height .22s ease, box-shadow .18s ease;
-  }
-  #viewerOverlay.inline-sheet.compact{
-    height:var(--viewer-sheet-height, 58dvh);
-  }
-  #viewerOverlay.inline-sheet.expanded{
-    height:var(--viewer-sheet-height, 84dvh);
-  }
-  #viewerDragHandle{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:absolute;
-    left:50%;
-    top:6px;
-    transform:translateX(-50%);
-    width:72px;
-    height:20px;
-    z-index:2;
-    touch-action:none;
-  }
-  #viewerDragHandle::before{
-    content:"";
-    width:38px;
-    height:5px;
-    border-radius:999px;
-    background:#c5d4e3;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
-  }
-  #viewerDragHandleBtn{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:absolute;
-    right:8px;
-    top:6px;
-    min-width:44px;
-    height:30px;
-    padding:0 10px;
-    border-radius:999px;
-    background:#edf4fa;
-    color:#425466;
-    font-size:11px;
-    font-weight:800;
+    inset:0;
+    width:100vw;
+    height:calc(var(--vh) * 100);
+    border-radius:0;
   }
   #viewerOverlay.inline-sheet #viewerMain{
-    display:grid;
-    grid-template-columns:1fr;
-    grid-template-rows:minmax(0, 1fr) 220px;
-  }
-  #viewerOverlay.inline-sheet #viewerLeft{
     display:flex;
     flex-direction:column;
     min-height:0;
   }
+  #viewerOverlay.inline-sheet #viewerLeft{
+    display:contents;
+  }
+  #viewerOverlay.inline-sheet #canvasWrap{
+    flex:5 1 0;
+    min-height:0;
+    padding:8px;
+  }
+  #viewerOverlay.inline-sheet #imageStage{
+    width:100%;
+    height:100%;
+    min-height:0;
+    border-radius:18px;
+  }
+  #viewerOverlay.inline-sheet #toolbar{
+    flex:2 1 0;
+    min-height:0;
+    padding:8px 10px 10px;
+    gap:10px;
+    overflow:hidden;
+    display:flex;
+  }
   #viewerOverlay.inline-sheet #viewerRight{
+    flex:3 1 0;
     min-height:0;
     border-top:1px solid var(--line);
     border-left:none;
   }
   #viewerOverlay.inline-sheet #viewerChatHeader{
-    display:flex;
-  }
-  #viewerOverlay.inline-sheet #toolbar{
     display:none;
   }
-  #viewerOverlay.inline-sheet.expanded #toolbar{
-    display:flex;
+  #viewerOverlay.inline-sheet #viewerChatBox{
+    padding:10px 10px 6px;
   }
-  #viewerOverlay.inline-sheet #canvasWrap{
-    padding:8px;
+  #viewerOverlay.inline-sheet #viewerInputBar{
+    padding:8px 10px calc(10px + var(--safe-bottom));
   }
 }
+
 
 #noteEditorOverlay{
   position:fixed;
@@ -1941,23 +1893,11 @@ body.popup-viewer-mode #viewerSendBtn{
   }
 
   function shouldOpenInlineViewerByDefault() {
-    if (isViewerMode) return false;
-    if (isEmbeddedMode) return true;
-    if (shouldUseInlineViewer()) return true;
-    return window.innerWidth < 1480;
+    return true;
   }
 
   function syncViewerSizeButton() {
-    if (!el.toggleViewerSizeBtn) return;
-    const isExpanded = Boolean(state.inlineViewerExpanded);
-    el.toggleViewerSizeBtn.innerHTML = isExpanded
-      ? '<span class="btnIcon">▣</span><span class="btnText">축소</span>'
-      : '<span class="btnIcon">↕</span><span class="btnText">확장</span>';
-    el.toggleViewerSizeBtn.setAttribute("aria-label", isExpanded ? "협업창 축소" : "협업창 확장");
-    if (el.viewerDragHandleBtn) {
-      el.viewerDragHandleBtn.textContent = isExpanded ? "축소" : "확장";
-      el.viewerDragHandleBtn.setAttribute("aria-label", isExpanded ? "협업창 축소" : "협업창 확장");
-    }
+    state.inlineViewerExpanded = true;
   }
 
   function getBottomSheetRange() {
@@ -2009,23 +1949,21 @@ body.popup-viewer-mode #viewerSendBtn{
     setInlineViewerExpanded((state.bottomSheetHeightVh || range.compact) >= mid);
   }
 
-  function applyInlineViewerMode(compact = true) {
+  function applyInlineViewerMode(_compact = true) {
     if (isViewerMode) return;
     el.viewerOverlay.classList.add("inline-sheet");
-    setInlineViewerExpanded(!compact);
-    if (el.popoutViewerBtn) el.popoutViewerBtn.hidden = false;
+    el.viewerOverlay.classList.remove("compact");
+    el.viewerOverlay.classList.add("expanded");
+    state.inlineViewerExpanded = true;
   }
 
   function clearInlineViewerMode() {
     el.viewerOverlay.classList.remove("inline-sheet", "compact", "expanded", "dragging");
     state.inlineViewerExpanded = false;
-    applyBottomSheetHeight(getBottomSheetRange().compact);
-    syncViewerSizeButton();
   }
 
   function toggleInlineViewerSize() {
-    if (!el.viewerOverlay.classList.contains("inline-sheet")) return;
-    setInlineViewerExpanded(el.viewerOverlay.classList.contains("compact"));
+    return;
   }
 
   function getDragThreshold() {
@@ -2486,7 +2424,7 @@ body.popup-viewer-mode #viewerSendBtn{
       state.summary.productName = inferProductNameFromImage(data.imageUrl);
       setSummaryStatus("이미지 선택됨", "협업창이 가볍게 열렸어요. 필요하면 상단에서 더 크게 볼 수 있어요.");
       updateViewerEntryButton();
-      openViewerPopup(data.imageId, data.imageUrl, { forcePopup: false });
+      openViewerInline(data.imageId, data.imageUrl, { expanded: true });
     });
 
     const meta = document.createElement("div");
@@ -3112,8 +3050,7 @@ body.popup-viewer-mode #viewerSendBtn{
     lockViewerBackground();
     clearInlineViewerMode();
     if (!isViewerMode) {
-      const preferCompact = isMobileViewport() ? true : options.expanded === true ? false : true;
-      applyInlineViewerMode(preferCompact);
+      applyInlineViewerMode(false);
     }
     el.viewerOverlay.classList.add("open");
     el.viewerOverlay.setAttribute("aria-hidden", "false");
@@ -3489,7 +3426,7 @@ body.popup-viewer-mode #viewerSendBtn{
         alert("먼저 이미지를 선택해 주세요.");
         return;
       }
-      openViewerPopup(state.lastSelectedImageId, state.lastSelectedImageUrl, { forcePopup: false });
+      openViewerInline(state.lastSelectedImageId, state.lastSelectedImageUrl, { expanded: true });
     });
 
     el.toggleViewerSizeBtn.addEventListener("click", () => {
@@ -3504,29 +3441,17 @@ body.popup-viewer-mode #viewerSendBtn{
     });
 
     el.popoutViewerBtn.addEventListener("click", () => {
-      if (!state.currentViewerImageId || !state.currentViewerImageUrl) return;
-      openViewerPopup(state.currentViewerImageId, state.currentViewerImageUrl, { forcePopup: true });
+      return;
     });
 
     if (el.viewerDragHandleBtn) {
       el.viewerDragHandleBtn.addEventListener("click", () => {
-        if (!el.viewerOverlay.classList.contains("inline-sheet")) return;
-        toggleInlineViewerSize();
-        saveViewerState();
+        return;
       });
     }
 
     if (el.viewerDragHandle) {
-      el.viewerDragHandle.addEventListener("pointerdown", (event) => {
-        beginBottomSheetDrag(event);
-        el.viewerDragHandle.setPointerCapture?.(event.pointerId);
-      });
-      el.viewerDragHandle.addEventListener("pointermove", moveBottomSheetDrag);
-      el.viewerDragHandle.addEventListener("pointerup", () => {
-        endBottomSheetDrag();
-        saveViewerState();
-      });
-      el.viewerDragHandle.addEventListener("pointercancel", endBottomSheetDrag);
+      el.viewerDragHandle.addEventListener("pointerdown", () => {});
     }
 
     el.closeViewerBtn.addEventListener("click", closeViewer);
