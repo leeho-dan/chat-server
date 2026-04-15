@@ -2311,14 +2311,14 @@ body.popup-viewer-mode #viewerSendBtn{
     }
 
     if (state.drawMode === "draw") {
-      el.viewerTitle.textContent = "주석 작성 중";
-      el.viewerSubtitle.textContent = "이미지 위에 수정 위치를 표시하고 있습니다";
+      el.viewerTitle.textContent = "";
+      el.viewerSubtitle.textContent = "";
       return;
     }
 
     if (state.drawMode === "erase") {
-      el.viewerTitle.textContent = "주석 수정 중";
-      el.viewerSubtitle.textContent = "기존 표시를 지우는 중입니다";
+      el.viewerTitle.textContent = "";
+      el.viewerSubtitle.textContent = "";
       return;
     }
 
