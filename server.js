@@ -11,21 +11,28 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] }
+  cors: { origin: "*", methods: ["GET", "POST"] },
+  transports: ["websocket", "polling"]
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
+const HOST = "0.0.0.0";
 
 const PUBLIC_DIR = path.join(__dirname, "public");
 const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
 
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 app.use(cors());
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// 요청 로그 (디버깅용)
+app.use((req, res, next) => {
+  console.log("[REQ]", req.method, req.url);
+  next();
+});
 
 app.use(express.static(PUBLIC_DIR));
 app.use("/uploads", express.static(UPLOAD_DIR));
@@ -38,17 +45,12 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-
-// ==========================
-// 이미지 업로드
-// ==========================
+// ================= 업로드 =================
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post("/upload", upload.single("image"), (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "파일 없음" });
-    }
+    if (!req.file) return res.status(400).json({ error: "파일 없음" });
 
     const ext = path.extname(req.file.originalname) || ".png";
     const filename = `${Date.now()}-${uuidv4()}${ext}`;
@@ -56,89 +58,61 @@ app.post("/upload", upload.single("image"), (req, res) => {
 
     fs.writeFileSync(filepath, req.file.buffer);
 
-    return res.json({
+    res.json({
       success: true,
       url: `/uploads/${filename}`
     });
-
   } catch (e) {
     console.error("upload error", e);
     res.status(500).json({ error: "업로드 실패" });
   }
 });
 
-
-// ==========================
-// 메모리 저장소 (간단 안정형)
-// ==========================
+// ================= 메모리 =================
 const rooms = {};
 
 function getRoom(roomId) {
   if (!rooms[roomId]) {
     rooms[roomId] = {
-      messages: []
+      messages: [],
+      drawings: {},
+      notes: {}
     };
   }
   return rooms[roomId];
 }
 
-
-// ==========================
-// 소켓 처리
-// ==========================
+// ================= 소켓 =================
 io.on("connection", (socket) => {
   console.log("connect:", socket.id);
 
-  // ===== JOIN =====
   socket.on("join", (payload = {}, ack) => {
-    const roomId = String(payload.roomId || "").trim();
-    const role = payload.role === "admin" ? "admin" : "user";
+    try {
+      const roomId = String(payload.roomId || "").trim();
+      if (!roomId) return;
 
-    if (!roomId) {
-      const result = { ok: false, error: "roomId 없음" };
-      if (ack) ack(result);
-      socket.emit("join-error", result);
-      return;
+      socket.join(roomId);
+      socket.data.roomId = roomId;
+
+      const room = getRoom(roomId);
+
+      socket.emit("history", room.messages);
+
+      if (ack) ack({ ok: true });
+      socket.emit("joined", { ok: true });
+
+    } catch (e) {
+      console.error("join error", e);
     }
-
-    socket.join(roomId);
-    socket.data.roomId = roomId;
-    socket.data.role = role;
-
-    const room = getRoom(roomId);
-
-    // 기존 메시지 전달
-    socket.emit("history", room.messages);
-
-    const result = { ok: true, roomId };
-
-    // 핵심: 프론트에서 기다리는 ack
-    if (ack) ack(result);
-
-    // 핵심: joined 이벤트
-    socket.emit("joined", result);
-
-    console.log("join success:", roomId);
   });
 
-
-  // ===== TEXT MESSAGE =====
   socket.on("message", (payload = {}, ack) => {
     const roomId = socket.data.roomId;
-
-    if (!roomId) {
-      const result = { ok: false };
-      if (ack) ack(result);
-      return;
-    }
-
-    const text = String(payload.text || "").trim();
-    if (!text) return;
+    if (!roomId) return;
 
     const message = {
       type: "text",
-      text,
-      sender: socket.data.role || "user",
+      text: payload.text,
       time: Date.now()
     };
 
@@ -150,27 +124,16 @@ io.on("connection", (socket) => {
     if (ack) ack({ ok: true });
   });
 
-
-  // ===== IMAGE MESSAGE =====
   socket.on("image", (payload = {}, ack) => {
     const roomId = socket.data.roomId;
-
-    if (!roomId) {
-      const result = { ok: false };
-      if (ack) ack(result);
-      return;
-    }
-
-    const imageUrl = String(payload.url || "").trim();
-    if (!imageUrl) return;
+    if (!roomId) return;
 
     const imageId = uuidv4();
 
     const message = {
       type: "image",
       imageId,
-      imageUrl,
-      sender: socket.data.role || "user",
+      imageUrl: payload.url,
       time: Date.now()
     };
 
@@ -179,59 +142,39 @@ io.on("connection", (socket) => {
 
     io.to(roomId).emit("image", message);
 
-    if (ack) {
-      ack({
-        ok: true,
-        imageId,
-        imageUrl
-      });
-    }
+    if (ack) ack({ ok: true, imageId });
   });
 
-
-  // ===== DRAW =====
-  socket.on("draw-stroke", (payload = {}) => {
+  socket.on("draw-stroke", (data) => {
     const roomId = socket.data.roomId;
     if (!roomId) return;
-
-    io.to(roomId).emit("draw-stroke", payload);
+    io.to(roomId).emit("draw-stroke", data);
   });
 
-
-  // ===== NOTE =====
-  socket.on("add-note", (payload = {}) => {
+  socket.on("add-note", (data) => {
     const roomId = socket.data.roomId;
     if (!roomId) return;
-
-    io.to(roomId).emit("note-added", payload);
+    io.to(roomId).emit("note-added", data);
   });
 
-
-  socket.on("update-note", (payload = {}) => {
-    const roomId = socket.data.roomId;
-    if (!roomId) return;
-
-    io.to(roomId).emit("note-updated", payload);
-  });
-
-
-  socket.on("delete-note", (payload = {}) => {
-    const roomId = socket.data.roomId;
-    if (!roomId) return;
-
-    io.to(roomId).emit("note-deleted", payload);
-  });
-
-
-  socket.on("disconnect", (reason) => {
-    console.log("disconnect:", socket.id, reason);
+  socket.on("disconnect", () => {
+    console.log("disconnect:", socket.id);
   });
 });
 
+// ===== 502 방어 =====
+process.on("uncaughtException", (err) => {
+  console.error("uncaught:", err);
+});
 
-// ==========================
-// 서버 시작
-// ==========================
-server.listen(PORT, () => {
+process.on("unhandledRejection", (err) => {
+  console.error("unhandled:", err);
+});
+
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 121000;
+
+// ===== 서버 시작 =====
+server.listen(PORT, HOST, () => {
   console.log("server running:", PORT);
 });
