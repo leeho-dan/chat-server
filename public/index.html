@@ -1713,7 +1713,7 @@ body.popup-viewer-mode #viewerSendBtn{
   </div>
 </div>
 
-<script defer src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script>
 (() => {
   "use strict";
@@ -1833,6 +1833,10 @@ body.popup-viewer-mode #viewerSendBtn{
   const socket = typeof window.io === "function"
     ? window.io({ transports: ["websocket", "polling"] })
     : null;
+
+  if (!socket) {
+    console.error("[socket:init] window.io가 아직 로드되지 않았습니다. /socket.io/socket.io.js 로딩 상태를 확인하세요.");
+  }
 
   const el = {
     app: document.getElementById("app"),
