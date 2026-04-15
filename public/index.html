@@ -69,7 +69,7 @@ input,textarea{border:none;outline:none}
 #app{
   width:100%;
   height:100%;
-  padding:14px;
+  padding:8px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -77,7 +77,7 @@ input,textarea{border:none;outline:none}
 
 #chatCard{
   width:min(960px,100%);
-  height:calc(var(--vh) * 100 - 28px);
+  height:calc(var(--vh) * 100 - 16px);
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(14px);
   border:1px solid rgba(255,255,255,.82);
@@ -1587,6 +1587,12 @@ input,textarea{border:none;outline:none}
     return window.innerWidth <= 900;
   }
 
+  function shouldUseInlineViewer() {
+    const coarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    const mobileAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+    return isMobileViewport() && (coarsePointer || mobileAgent);
+  }
+
   function getDragThreshold() {
     return isMobileViewport() ? 8 : 4;
   }
@@ -2608,7 +2614,7 @@ input,textarea{border:none;outline:none}
 
   function openViewerPopup(imageId, imageUrl) {
     if (!imageId || !imageUrl) return;
-    if (isMobileViewport()) {
+    if (shouldUseInlineViewer()) {
       openViewerInline(imageId, imageUrl);
       return;
     }
