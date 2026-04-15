@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>협업</title>
+<title>디자인 상담 중</title>
 <style>
 :root{
   --vh:1vh;
@@ -927,7 +927,33 @@ body.popup-viewer-mode #viewerSubtitle{
   font-size:11px;
 }
 body.popup-viewer-mode #viewerMain{
-  grid-template-columns:minmax(0,1fr) 320px;
+  display:grid;
+  grid-template-columns:minmax(0, 1.35fr) minmax(280px, .65fr);
+  grid-template-areas:"work chat";
+  column-gap:0;
+}
+body.popup-viewer-mode #viewerLeft{
+  grid-area:work;
+  min-width:0;
+  border-right:1px solid var(--line);
+}
+body.popup-viewer-mode #viewerRight{
+  grid-area:chat;
+  min-width:280px;
+  max-width:420px;
+  width:100%;
+  border-left:1px solid var(--line);
+  background:#fff;
+}
+body.popup-viewer-mode #viewerChatHeader{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+body.popup-viewer-mode #viewerChatBox{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
 }
 body.popup-viewer-mode #canvasWrap{
   padding:10px;
@@ -1600,7 +1626,7 @@ html,body,button,input,textarea,label,
   <section id="chatCard">
     <div id="header">
       <div id="roleBadge">고객 채팅</div>
-      <div id="title">협업</div>
+      <div id="title">디자인 상담 중</div>
       <div id="headerActions">
         <button id="openViewerBtn" class="iconBtn" type="button" aria-label="선택한 이미지를 뷰어로 열기" disabled>⛶</button>
       </div>
@@ -3225,8 +3251,8 @@ html,body,button,input,textarea,label,
     url.searchParams.set("imageId", imageId);
     url.searchParams.set("imageUrl", imageUrl);
     url.searchParams.set("userName", userName);
-    const popupWidth = Math.min(Math.max(760, Math.round((window.screen.availWidth || 1440) * 0.58)), Math.max((window.screen.availWidth || 1440) - 220, 760));
-    const popupHeight = Math.min(Math.max(560, Math.round((window.screen.availHeight || 960) * 0.66)), Math.max((window.screen.availHeight || 960) - 180, 560));
+    const popupWidth = Math.min(Math.max(980, Math.round((window.screen.availWidth || 1440) * 0.74)), Math.max((window.screen.availWidth || 1440) - 160, 980));
+    const popupHeight = Math.min(Math.max(700, Math.round((window.screen.availHeight || 960) * 0.78)), Math.max((window.screen.availHeight || 960) - 120, 700));
     const left = Math.max(0, Math.round(((window.screen.availWidth || popupWidth) - popupWidth) / 2));
     const top = Math.max(0, Math.round(((window.screen.availHeight || popupHeight) - popupHeight) / 2));
     const popup = window.open(
