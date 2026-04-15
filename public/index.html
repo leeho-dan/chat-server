@@ -734,6 +734,13 @@ input,textarea{border:none;outline:none}
   justify-content:space-between;
   gap:10px;
 }
+#drawControlSide{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
 .toolGroup{
   display:flex;
   align-items:center;
@@ -778,14 +785,12 @@ input,textarea{border:none;outline:none}
   align-items:center;
 }
 #colorRow{
-  display:none;
-  padding:10px;
+  padding:6px 8px;
   border:1px solid #dce7f1;
-  border-radius:14px;
+  border-radius:999px;
   background:#f8fbff;
   box-shadow:0 10px 24px rgba(18,36,61,.08);
 }
-#colorRow.open{display:flex}
 #noteColorHeader{
   display:flex;
   align-items:center;
@@ -810,7 +815,7 @@ input,textarea{border:none;outline:none}
   border-radius:50%;
   box-shadow:0 0 0 1px rgba(0,0,0,.10);
 }
-.colorSwatch{width:26px;height:26px}
+.colorSwatch{width:24px;height:24px}
 .noteColorSwatch{width:22px;height:22px}
 .colorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.20)}
 .noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
@@ -818,26 +823,22 @@ input,textarea{border:none;outline:none}
   position:relative;
   overflow:hidden;
   background:
-    linear-gradient(135deg, rgba(255,255,255,.95), rgba(228,236,245,.95)),
-    conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30);
+    linear-gradient(135deg, rgba(255,255,255,.98), rgba(235,241,247,.98)),
+    conic-gradient(from 180deg, #ff3b30, #2491ff, #22c55e, #facc15, #111827, #ffffff, #ff3b30);
 }
 #customColorBtn::before{
   content:"";
   position:absolute;
-  inset:4px;
+  inset:3px;
   border-radius:50%;
-  background:var(--custom-color-preview, conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30));
+  background:var(--custom-color-preview, linear-gradient(135deg, #ffffff, #dde8f3));
 }
 #customColorBtn::after{
-  content:"+";
+  content:"";
   position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-size:14px;
-  font-weight:900;
+  inset:7px;
+  border-radius:50%;
+  border:1.5px dashed rgba(79,101,121,.55);
 }
 #customColorInput{
   position:absolute;
@@ -1130,6 +1131,10 @@ input,textarea{border:none;outline:none}
     align-items:stretch;
     gap:8px;
   }
+  #drawControlSide{
+    width:100%;
+    justify-content:space-between;
+  }
   .toolGroup{
     flex-wrap:nowrap;
     overflow-x:auto;
@@ -1153,7 +1158,15 @@ input,textarea{border:none;outline:none}
     display:inline-flex;
   }
   #thicknessWrap{justify-content:flex-start}
-  #thicknessRange{width:92px}
+  #thicknessRange{width:82px}
+  #colorRow{
+    padding:5px 7px;
+    gap:6px;
+  }
+  .colorSwatch{
+    width:22px;
+    height:22px;
+  }
   #noteColorTitle{display:none}
   #toggleNoteColorsBtn{
     width:30px;
@@ -1338,19 +1351,22 @@ input,textarea{border:none;outline:none}
               <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon">⌫</span><span class="btnText">지우개</span></button>
               <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon">📝</span><span class="btnText">메모 추가</span></button>
             </div>
-            <div id="thicknessWrap">
-              <span>두께</span>
-              <input id="thicknessRange" type="range" min="1" max="48" value="3" />
+            <div id="drawControlSide">
+              <div id="thicknessWrap">
+                <span>두께</span>
+                <input id="thicknessRange" type="range" min="1" max="48" value="3" />
+              </div>
+              <div id="colorRow">
+                <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
+                <button class="colorSwatch" type="button" data-color="#2491ff" style="background:#2491ff;" aria-label="파랑"></button>
+                <button class="colorSwatch" type="button" data-color="#22c55e" style="background:#22c55e;" aria-label="초록"></button>
+                <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
+                <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
+                <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
+                <input id="customColorInput" type="color" value="#ffffff" aria-label="사용자 지정 색상" />
+              </div>
             </div>
           </div>
-        </div>
-
-        <div id="colorRow">
-          <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
-          <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
-          <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
-          <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
-          <input id="customColorInput" type="color" value="#2491ff" aria-label="사용자 지정 색상" />
         </div>
 
         <div class="toolSection">
