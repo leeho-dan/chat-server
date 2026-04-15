@@ -182,11 +182,20 @@ input,textarea{border:none;outline:none}
   flex-direction:column;
   gap:10px;
 }
+#summaryCard.collapsed{
+  gap:8px;
+}
 #summaryHeader{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
+}
+#summaryHeaderLeft{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 #summaryTitle{
   font-size:13px;
@@ -203,6 +212,40 @@ input,textarea{border:none;outline:none}
   align-items:center;
   font-size:11px;
   font-weight:800;
+}
+#summaryToggleBtn{
+  width:30px;
+  min-width:30px;
+  height:30px;
+  border-radius:999px;
+  background:#edf4fa;
+  color:#4f6579;
+  font-size:13px;
+  font-weight:900;
+}
+#summaryToggleBtn::before{
+  content:"⌃";
+}
+#summaryCard.collapsed #summaryToggleBtn::before{
+  content:"⌄";
+}
+#summaryPreview{
+  display:none;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid #e9eff5;
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-soft);
+  line-height:1.5;
+}
+#summaryCard.collapsed #summaryPreview{
+  display:block;
+}
+#summaryCard.collapsed #summaryRows,
+#summaryCard.collapsed #summaryActions{
+  display:none;
 }
 #summaryRows{
   display:grid;
@@ -976,6 +1019,12 @@ input,textarea{border:none;outline:none}
     grid-template-columns:1fr;
     gap:8px;
   }
+  #summaryCard{
+    margin:0 10px 8px;
+  }
+  #summaryCard.collapsed{
+    margin-bottom:6px;
+  }
   #summaryActions{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -1168,9 +1217,13 @@ input,textarea{border:none;outline:none}
 
     <div id="summaryCard">
       <div id="summaryHeader">
-        <div id="summaryTitle">현재 요청 요약</div>
+        <div id="summaryHeaderLeft">
+          <div id="summaryTitle">현재 요청 요약</div>
+          <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 펼치기"></button>
+        </div>
         <div id="summaryStatus">상담 시작</div>
       </div>
+      <div id="summaryPreview">요약이 아직 없습니다.</div>
       <div id="summaryRows">
         <div class="summaryItem">
           <div class="summaryLabel">제품</div>
@@ -1417,7 +1470,9 @@ input,textarea{border:none;outline:none}
       requestTypes: [],
       detailNotes: [],
       status: "상담 시작"
-    }
+    },
+    summaryCollapsed: false,
+    currentCursorMode: "default"
   };
 
   localStorage.setItem(STORAGE_KEYS.roomId, state.roomId);
@@ -1442,6 +1497,9 @@ input,textarea{border:none;outline:none}
     utilityRow: document.getElementById("utilityRow"),
     quickChips: Array.from(document.querySelectorAll(".quickChip")),
     summaryStatus: document.getElementById("summaryStatus"),
+    summaryCard: document.getElementById("summaryCard"),
+    summaryPreview: document.getElementById("summaryPreview"),
+    summaryToggleBtn: document.getElementById("summaryToggleBtn"),
     summaryProductValue: document.getElementById("summaryProductValue"),
     summaryRequestsValue: document.getElementById("summaryRequestsValue"),
     summaryDetailValue: document.getElementById("summaryDetailValue"),
@@ -1627,6 +1685,8 @@ input,textarea{border:none;outline:none}
   }
 
   function updateSummaryUI() {
+    el.summaryCard.classList.toggle("collapsed", state.summaryCollapsed);
+    el.summaryToggleBtn.setAttribute("aria-label", state.summaryCollapsed ? "현재 요청 요약 펼치기" : "현재 요청 요약 접기");
     el.summaryProductValue.textContent = state.summary.productName || "선택 대기";
     el.summaryRequestsValue.textContent = state.summary.requestTypes.length
       ? state.summary.requestTypes.join(", ")
@@ -1643,6 +1703,14 @@ input,textarea{border:none;outline:none}
     const hasActionableSummary = Boolean(state.summary.productName || state.summary.requestTypes.length || state.summary.detailNotes.length);
     el.summaryComposeBtn.disabled = !hasActionableSummary;
     el.summaryQuoteBtn.disabled = !hasActionableSummary;
+    const previewRequests = state.summary.requestTypes.length ? state.summary.requestTypes.join(", ") : "요청 없음";
+    const previewDetail = state.summary.detailNotes.length ? state.summary.detailNotes[state.summary.detailNotes.length - 1] : state.summary.status;
+    el.summaryPreview.textContent = `${state.summary.productName || "선택 대기"} · ${previewRequests} · ${previewDetail}`;
+  }
+
+  function toggleSummaryCard(forceCollapsed = null) {
+    state.summaryCollapsed = forceCollapsed === null ? !state.summaryCollapsed : Boolean(forceCollapsed);
+    updateSummaryUI();
   }
 
   function setSummaryStatus(nextStatus, detail = "") {
@@ -1795,7 +1863,26 @@ input,textarea{border:none;outline:none}
     el.penBtn.classList.toggle("active", mode === "draw");
     el.eraserBtn.classList.toggle("active", mode === "erase");
     el.colorRow.classList.toggle("open", mode === "draw");
+    updateCursorMode(mode);
     updateViewerStats();
+  }
+
+  function buildCursorSvg(emoji) {
+    return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><text x="8" y="28" font-size="24">${emoji}</text></svg>`)}`;
+  }
+
+  function updateCursorMode(mode) {
+    state.currentCursorMode = mode || "default";
+    let cursor = "crosshair";
+    if (mode === "draw") {
+      cursor = `url("${buildCursorSvg("✏️")}") 8 28, crosshair`;
+    } else if (mode === "erase") {
+      cursor = `url("${buildCursorSvg("🩹")}") 8 28, cell`;
+    } else if (mode === "text") {
+      cursor = `url("${buildCursorSvg("📝")}") 8 28, text`;
+    }
+    el.drawCanvas.style.cursor = cursor;
+    el.imageStage.style.cursor = cursor;
   }
 
   function setActiveColor(color) {
@@ -2505,6 +2592,7 @@ input,textarea{border:none;outline:none}
     state.currentViewerImageUrl = "";
     resetViewerState();
     clearViewerState();
+    updateCursorMode("default");
     updateViewerStats();
   }
 
@@ -2707,23 +2795,27 @@ input,textarea{border:none;outline:none}
 
   function bindUI() {
     el.toggleContactPanelBtn.addEventListener("click", () => toggleContactPanel());
+    el.summaryToggleBtn.addEventListener("click", () => toggleSummaryCard());
 
     el.quickChips.forEach((button) => {
       button.addEventListener("click", () => {
         addRequestType(button.dataset.request, button.dataset.draft || "");
         setSummaryStatus("요청 정리 중", `${button.dataset.request} 요청이 추가되었습니다.`);
+        if (isMobileViewport()) toggleSummaryCard(true);
       });
     });
 
     el.summaryComposeBtn.addEventListener("click", () => {
       fillActiveInput(buildSummaryMessage("summary"));
       setSummaryStatus("최종 확인 대기", "요청 정리 문장을 확인하고 전송해 주세요.");
+      if (isMobileViewport()) toggleSummaryCard(true);
     });
 
     el.summaryQuoteBtn.addEventListener("click", () => {
       fillActiveInput(buildSummaryMessage("quote"));
       toggleContactPanel(true);
       setSummaryStatus("견적 요청 준비", "연락처와 함께 견적 요청을 보내면 전환율이 높아집니다.");
+      if (isMobileViewport()) toggleSummaryCard(true);
     });
 
     el.msgInput.addEventListener("compositionstart", () => { state.isComposingMain = true; });
@@ -2783,7 +2875,10 @@ input,textarea{border:none;outline:none}
     el.downloadSketchBtn.addEventListener("click", buildDownload);
     el.penBtn.addEventListener("click", () => setDrawMode("draw"));
     el.eraserBtn.addEventListener("click", () => setDrawMode("erase"));
-    el.addTextBtn.addEventListener("click", addTextNote);
+    el.addTextBtn.addEventListener("click", () => {
+      setDrawMode("text");
+      addTextNote();
+    });
     el.undoBtn.addEventListener("click", undoAction);
     el.redoBtn.addEventListener("click", redoAction);
 
@@ -2894,6 +2989,9 @@ input,textarea{border:none;outline:none}
 
     window.addEventListener("resize", () => {
       setViewportUnit();
+      if (isMobileViewport() && !state.summaryCollapsed && window.innerWidth <= 900) {
+        updateSummaryUI();
+      }
       updateCanvasSize();
     });
 
@@ -3073,6 +3171,7 @@ input,textarea{border:none;outline:none}
 
   function init() {
     setViewportUnit();
+    state.summaryCollapsed = isMobileViewport();
     bindUI();
     bindSocket();
     setDrawMode("draw");
