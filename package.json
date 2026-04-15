@@ -1,7 +1,7 @@
 {
   "name": "realtime-design-chat",
-  "version": "1.5.0",
-  "description": "Realtime design consultation chat with collaborative image sketching, notes, undo redo, and MongoDB persistence",
+  "version": "2.0.0",
+  "description": "Realtime ecommerce design consultation chat with collaborative image markup, request summary UX, mobile-first viewer, Cloudinary uploads, MongoDB persistence, and optional Twilio contact alerts",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
