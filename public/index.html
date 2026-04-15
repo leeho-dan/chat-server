@@ -50,6 +50,9 @@ body{
 body.viewer-inline-open{
   touch-action:none;
 }
+body.popup-viewer-mode{
+  background:#f5f8fc;
+}
 button,input,textarea,label{font:inherit}
 button{border:none;cursor:pointer}
 button:disabled{opacity:.5;cursor:not-allowed}
@@ -69,15 +72,15 @@ input,textarea{border:none;outline:none}
 #app{
   width:100%;
   height:100%;
-  padding:8px;
+  padding:0;
   display:flex;
-  align-items:center;
+  align-items:stretch;
   justify-content:center;
 }
 
 #chatCard{
   width:min(960px,100%);
-  height:calc(var(--vh) * 100 - 16px);
+  height:calc(var(--vh) * 100);
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(14px);
   border:1px solid rgba(255,255,255,.82);
@@ -900,6 +903,84 @@ input,textarea{border:none;outline:none}
   font-weight:800;
 }
 
+body.popup-viewer-mode #viewerTopbar{
+  height:64px;
+  padding:0 12px;
+}
+body.popup-viewer-mode #viewerTitle{
+  font-size:16px;
+}
+body.popup-viewer-mode #viewerSubtitle{
+  font-size:11px;
+}
+body.popup-viewer-mode #viewerMain{
+  grid-template-columns:minmax(0,1fr) 320px;
+}
+body.popup-viewer-mode #canvasWrap{
+  padding:10px;
+}
+body.popup-viewer-mode #imageStage{
+  width:100%;
+  height:100%;
+  min-height:0;
+}
+body.popup-viewer-mode #toolbar{
+  padding:10px 10px 12px;
+  gap:10px;
+}
+body.popup-viewer-mode .toolSection{
+  gap:8px;
+}
+body.popup-viewer-mode .toolSectionLabel{
+  font-size:10px;
+}
+body.popup-viewer-mode .toolBtn,
+body.popup-viewer-mode .viewerBtn{
+  min-width:40px;
+  height:36px;
+  padding:0 10px;
+}
+body.popup-viewer-mode .toolBtn .btnText,
+body.popup-viewer-mode .viewerBtn .btnText{
+  display:none;
+}
+body.popup-viewer-mode .toolBtn .btnIcon,
+body.popup-viewer-mode .viewerBtn .btnIcon{
+  display:inline-flex;
+}
+body.popup-viewer-mode #drawControlSide{
+  justify-content:space-between;
+}
+body.popup-viewer-mode #thicknessRange{
+  width:96px;
+}
+body.popup-viewer-mode #colorRow{
+  padding:5px 7px;
+  gap:6px;
+}
+body.popup-viewer-mode .colorSwatch{
+  width:22px;
+  height:22px;
+}
+body.popup-viewer-mode #viewerChatHeader{
+  height:44px;
+  font-size:14px;
+}
+body.popup-viewer-mode #viewerChatBox{
+  padding:10px;
+}
+body.popup-viewer-mode #viewerInputBar{
+  padding:8px 10px 10px;
+}
+body.popup-viewer-mode #viewerMsgInput{
+  height:40px;
+  font-size:14px;
+}
+body.popup-viewer-mode #viewerSendBtn{
+  width:40px;
+  height:40px;
+}
+
 #noteEditorOverlay{
   position:fixed;
   inset:0;
@@ -1589,6 +1670,10 @@ input,textarea{border:none;outline:none}
   function setViewportUnit() {
     const next = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     document.documentElement.style.setProperty("--vh", `${next * 0.01}px`);
+  }
+
+  function syncBodyMode() {
+    document.body.classList.toggle("popup-viewer-mode", Boolean(isViewerMode && !shouldUseInlineViewer()));
   }
 
   function clamp(value, min, max) {
@@ -2641,15 +2726,37 @@ input,textarea{border:none;outline:none}
     url.searchParams.set("imageId", imageId);
     url.searchParams.set("imageUrl", imageUrl);
     url.searchParams.set("userName", userName);
+    const popupWidth = Math.min(
+      Math.max(1160, Math.round((window.screen.availWidth || 1440) * 0.82)),
+      Math.max((window.screen.availWidth || 1440) - 80, 900)
+    );
+    const popupHeight = Math.min(
+      Math.max(820, Math.round((window.screen.availHeight || 960) * 0.84)),
+      Math.max((window.screen.availHeight || 960) - 80, 720)
+    );
+    const left = Math.max(0, Math.round(((window.screen.availWidth || popupWidth) - popupWidth) / 2));
+    const top = Math.max(0, Math.round(((window.screen.availHeight || popupHeight) - popupHeight) / 2));
     const popup = window.open(
       url.toString(),
       "designImageViewer",
-      `width=${Math.max(window.screen.availWidth || 1400, 1200)},height=${Math.max(window.screen.availHeight || 900, 800)},left=0,top=0,resizable=yes,scrollbars=yes`
+      `width=${popupWidth},height=${popupHeight},left=${left},top=${top},resizable=yes,scrollbars=yes`
     );
     if (!popup) alert("브라우저에서 새 창이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
   }
 
+  function closeViewerWindow() {
+    if (!isViewerMode) return false;
+    window.close();
+    setTimeout(() => {
+      if (!window.closed) {
+        window.location.replace("about:blank");
+      }
+    }, 120);
+    return true;
+  }
+
   function closeViewer() {
+    if (closeViewerWindow()) return;
     prepareForImageChange();
     unlockViewerBackground();
     el.viewerOverlay.classList.remove("open");
@@ -3056,6 +3163,7 @@ input,textarea{border:none;outline:none}
 
     window.addEventListener("resize", () => {
       setViewportUnit();
+      syncBodyMode();
       if (isMobileViewport() && !state.summaryCollapsed && window.innerWidth <= 900) {
         updateSummaryUI();
       }
@@ -3065,6 +3173,7 @@ input,textarea{border:none;outline:none}
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", () => {
         setViewportUnit();
+        syncBodyMode();
         focusStableScroll();
       });
       window.visualViewport.addEventListener("scroll", focusStableScroll);
@@ -3238,6 +3347,7 @@ input,textarea{border:none;outline:none}
 
   function init() {
     setViewportUnit();
+    syncBodyMode();
     state.summaryCollapsed = isMobileViewport();
     bindUI();
     bindSocket();
