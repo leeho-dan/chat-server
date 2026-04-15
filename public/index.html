@@ -76,14 +76,6 @@ label:focus-visible{
   transform:translateY(-.02em);
 }
 .btnText{display:inline}
-.eraserGlyph{
-  width:18px;
-  height:18px;
-  display:inline-block;
-  background:currentColor;
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16.24 3.56a2 2 0 0 1 2.83 0l1.37 1.37a2 2 0 0 1 0 2.83L10.2 18H6l-2.44-2.44a2 2 0 0 1 0-2.83L16.24 3.56Zm-10 11.3L8.39 17h1.06l9.57-9.57-1.38-1.37-11.4 8.8Z'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16.24 3.56a2 2 0 0 1 2.83 0l1.37 1.37a2 2 0 0 1 0 2.83L10.2 18H6l-2.44-2.44a2 2 0 0 1 0-2.83L16.24 3.56Zm-10 11.3L8.39 17h1.06l9.57-9.57-1.38-1.37-11.4 8.8Z'/%3E%3C/svg%3E") center / contain no-repeat;
-}
 
 #app{
   width:100%;
@@ -1042,47 +1034,96 @@ body.popup-viewer-mode #viewerSendBtn{
   height:74px;
   padding:0 14px;
 }
-#viewerOverlay.inline-sheet #viewerMain{
-  display:flex;
-  flex-direction:column;
-  min-height:0;
+#viewerOverlay.inline-sheet #viewerTitle{
+  font-size:18px;
 }
-#viewerOverlay.inline-sheet #viewerLeft{
-  display:contents;
+#viewerOverlay.inline-sheet #viewerSubtitle{
+  font-size:12px;
+}
+#viewerOverlay.inline-sheet #viewerMain{
+  grid-template-columns:7fr 3fr;
 }
 #viewerOverlay.inline-sheet #canvasWrap{
-  flex:5 1 0;
-  min-height:0;
-  padding:8px;
+  padding:14px;
 }
 #viewerOverlay.inline-sheet #imageStage{
-  width:100%;
-  height:100%;
-  min-height:0;
-  border-radius:18px;
+  width:min(100%, 1200px);
+  height:min(100%, 760px);
+  min-height:420px;
 }
 #viewerOverlay.inline-sheet #toolbar{
-  flex:2 1 0;
-  min-height:0;
-  padding:8px 10px 10px;
-  gap:10px;
-  overflow:hidden;
+  padding:14px 12px 16px;
+  gap:14px;
   display:flex;
 }
-#viewerOverlay.inline-sheet #viewerRight{
-  flex:3 1 0;
-  min-height:0;
-  border-top:1px solid var(--line);
-  border-left:none;
-}
 #viewerOverlay.inline-sheet #viewerChatHeader{
-  display:none;
+  height:52px;
+  font-size:16px;
+  display:flex;
 }
 #viewerOverlay.inline-sheet #viewerChatBox{
-  padding:10px 10px 6px;
+  padding:12px;
 }
 #viewerOverlay.inline-sheet #viewerInputBar{
-  padding:8px 10px calc(10px + var(--safe-bottom));
+  padding:10px 12px calc(12px + var(--safe-bottom));
+}
+#viewerOverlay.inline-sheet #viewerMsgInput{
+  height:44px;
+  font-size:16px;
+}
+#viewerOverlay.inline-sheet #viewerSendBtn{
+  width:44px;
+  height:44px;
+}
+@media (max-width:900px){
+  #viewerOverlay.inline-sheet{
+    inset:0;
+    width:100vw;
+    height:calc(var(--vh) * 100);
+    border-radius:0;
+  }
+  #viewerOverlay.inline-sheet #viewerMain{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  #viewerOverlay.inline-sheet #viewerLeft{
+    display:contents;
+  }
+  #viewerOverlay.inline-sheet #canvasWrap{
+    flex:5 1 0;
+    min-height:0;
+    padding:8px;
+  }
+  #viewerOverlay.inline-sheet #imageStage{
+    width:100%;
+    height:100%;
+    min-height:0;
+    border-radius:18px;
+  }
+  #viewerOverlay.inline-sheet #toolbar{
+    flex:2 1 0;
+    min-height:0;
+    padding:8px 10px 10px;
+    gap:10px;
+    overflow:hidden;
+    display:flex;
+  }
+  #viewerOverlay.inline-sheet #viewerRight{
+    flex:3 1 0;
+    min-height:0;
+    border-top:1px solid var(--line);
+    border-left:none;
+  }
+  #viewerOverlay.inline-sheet #viewerChatHeader{
+    display:none;
+  }
+  #viewerOverlay.inline-sheet #viewerChatBox{
+    padding:10px 10px 6px;
+  }
+  #viewerOverlay.inline-sheet #viewerInputBar{
+    padding:8px 10px calc(10px + var(--safe-bottom));
+  }
 }
 
 
@@ -1537,9 +1578,9 @@ body.popup-viewer-mode #viewerSendBtn{
           <div class="toolSectionLabel">그리기</div>
           <div class="toolRow">
             <div class="toolGroup fill">
-              <button id="penBtn" class="toolBtn active" type="button"><span class="btnIcon">✎</span><span class="btnText">펜</span></button>
-              <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon eraserGlyph" aria-hidden="true"></span><span class="btnText">지우개</span></button>
-              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon">📝</span><span class="btnText">메모 추가</span></button>
+              <button id="penBtn" class="toolBtn active" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span><span class="btnText">펜</span></button>
+              <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7"/><path d="M14.5 4.5 20 10l-8.5 8.5a2 2 0 0 1-2.8 0L4 13.8a2 2 0 0 1 0-2.8L10.7 4.3a2 2 0 0 1 2.8 0z"/></svg></span><span class="btnText">지우개</span></button>
+              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V16l10.5-10.5a2.1 2.1 0 0 1 3 3L7 19l-3 0.5z"/><path d="M13.5 6.5 17 10"/><path d="M12 20h8"/></svg></span><span class="btnText">메모 추가</span></button>
             </div>
             <div id="drawControlSide">
               <div id="thicknessWrap">
@@ -1743,6 +1784,10 @@ body.popup-viewer-mode #viewerSendBtn{
     ? window.io({ transports: ["websocket", "polling"] })
     : null;
 
+  if (!socket) {
+    console.error("[socket:init] window.io가 아직 로드되지 않았습니다. /socket.io/socket.io.js 로딩 상태를 확인하세요.");
+  }
+
   const el = {
     app: document.getElementById("app"),
     roleBadge: document.getElementById("roleBadge"),
@@ -1852,16 +1897,7 @@ body.popup-viewer-mode #viewerSendBtn{
   }
 
   function syncViewerSizeButton() {
-    if (!el.toggleViewerSizeBtn) return;
-    const isExpanded = Boolean(state.inlineViewerExpanded);
-    el.toggleViewerSizeBtn.innerHTML = isExpanded
-      ? '<span class="btnIcon">▣</span><span class="btnText">축소</span>'
-      : '<span class="btnIcon">↕</span><span class="btnText">확장</span>';
-    el.toggleViewerSizeBtn.setAttribute("aria-label", isExpanded ? "협업창 축소" : "협업창 확장");
-    if (el.viewerDragHandleBtn) {
-      el.viewerDragHandleBtn.textContent = isExpanded ? "축소" : "확장";
-      el.viewerDragHandleBtn.setAttribute("aria-label", isExpanded ? "협업창 축소" : "협업창 확장");
-    }
+    state.inlineViewerExpanded = true;
   }
 
   function getBottomSheetRange() {
@@ -1919,7 +1955,6 @@ body.popup-viewer-mode #viewerSendBtn{
     el.viewerOverlay.classList.remove("compact");
     el.viewerOverlay.classList.add("expanded");
     state.inlineViewerExpanded = true;
-    if (el.popoutViewerBtn) el.popoutViewerBtn.hidden = true;
   }
 
   function clearInlineViewerMode() {
@@ -2389,7 +2424,11 @@ body.popup-viewer-mode #viewerSendBtn{
       state.summary.productName = inferProductNameFromImage(data.imageUrl);
       setSummaryStatus("이미지 선택됨", "협업창이 가볍게 열렸어요. 필요하면 상단에서 더 크게 볼 수 있어요.");
       updateViewerEntryButton();
-      openViewerPopup(data.imageId, data.imageUrl, { forcePopup: false });
+      if (shouldOpenInlineViewerByDefault()) {
+        openViewerInline(data.imageId, data.imageUrl, { expanded: true });
+      } else {
+        openViewerPopup(data.imageId, data.imageUrl, { forcePopup: true });
+      }
     });
 
     const meta = document.createElement("div");
@@ -3086,7 +3125,7 @@ body.popup-viewer-mode #viewerSendBtn{
   }
 
   function restoreViewerState() {
-    if (params.get("viewer") === "1") return;
+    if (params.get("viewer") === "1" || !shouldOpenInlineViewerByDefault()) return;
     try {
       const raw = safeStorageGet(STORAGE_KEYS.viewerState);
       if (!raw) return;
@@ -3392,7 +3431,11 @@ body.popup-viewer-mode #viewerSendBtn{
         alert("먼저 이미지를 선택해 주세요.");
         return;
       }
-      openViewerPopup(state.lastSelectedImageId, state.lastSelectedImageUrl, { forcePopup: false });
+      if (shouldOpenInlineViewerByDefault()) {
+        openViewerInline(state.lastSelectedImageId, state.lastSelectedImageUrl, { expanded: true });
+      } else {
+        openViewerPopup(state.lastSelectedImageId, state.lastSelectedImageUrl, { forcePopup: true });
+      }
     });
 
     el.toggleViewerSizeBtn.addEventListener("click", () => {
@@ -3407,12 +3450,13 @@ body.popup-viewer-mode #viewerSendBtn{
     });
 
     el.popoutViewerBtn.addEventListener("click", () => {
-      if (!state.currentViewerImageId || !state.currentViewerImageUrl) return;
-      openViewerPopup(state.currentViewerImageId, state.currentViewerImageUrl, { forcePopup: true });
+      return;
     });
 
     if (el.viewerDragHandleBtn) {
-      el.viewerDragHandleBtn.addEventListener("click", () => {});
+      el.viewerDragHandleBtn.addEventListener("click", () => {
+        return;
+      });
     }
 
     if (el.viewerDragHandle) {
