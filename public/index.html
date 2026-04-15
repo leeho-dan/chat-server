@@ -4,79 +4,56 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>디자인 상담</title>
-
 <style>
 :root{
+  --vh:1vh;
   --bg:#f4f8fc;
   --bg-soft:#f8fbff;
   --card:#ffffff;
-  --card-soft:rgba(255,255,255,0.92);
-  --line:#e4ebf3;
-  --line-strong:#d8e2ec;
+  --line:#e3ebf3;
+  --line-strong:#d6e0ea;
   --text:#17212b;
   --text-soft:#24313f;
-  --sub:#758394;
-  --sub-soft:#8e9baa;
+  --sub:#728292;
   --primary:#2491ff;
-  --primary-soft:#6fc3ff;
-  --success:#2f9e44;
+  --primary-soft:#79c7ff;
   --danger:#ff5b5b;
-  --danger-soft:#fff3f3;
-  --warning:#f59e0b;
+  --danger-soft:#fff1f1;
+  --success:#2f9e44;
+  --success-soft:#ebf9ee;
+  --warning:#9a6500;
   --warning-soft:#fff7ea;
-  --shadow:0 18px 50px rgba(18,36,61,0.10);
+  --purple:#8a5cff;
+  --shadow:0 18px 50px rgba(18,36,61,.10);
   --radius-xl:30px;
   --radius-lg:22px;
   --radius-md:18px;
+  --safe-bottom:max(env(safe-area-inset-bottom), 0px);
 }
 
-*{ box-sizing:border-box; }
-
-html, body{
+*{box-sizing:border-box}
+html,body{
   margin:0;
   width:100%;
   height:100%;
-  font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(36,145,255,0.08), transparent 24%),
+    radial-gradient(circle at top left, rgba(36,145,255,.08), transparent 24%),
     linear-gradient(180deg, #f9fbff 0%, #edf4fa 100%);
   color:var(--text);
 }
-
 body{
   overflow:hidden;
   -webkit-text-size-adjust:100%;
+  overscroll-behavior:none;
 }
-
-button, input, textarea, label{
-  font:inherit;
+body.viewer-inline-open{
+  touch-action:none;
 }
-
-button{
-  cursor:pointer;
-  border:none;
-}
-
-button:disabled{
-  cursor:not-allowed;
-  opacity:0.5;
-}
-
-input, textarea{
-  border:none;
-  outline:none;
-}
-
-.btnIcon{
-  display:none;
-  align-items:center;
-  justify-content:center;
-  width:1em;
-  height:1em;
-  line-height:1;
-  flex-shrink:0;
-  transform:translateY(-0.02em);
-}
+button,input,textarea,label{font:inherit}
+button{border:none;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,textarea{border:none;outline:none}
 
 #app{
   width:100%;
@@ -88,11 +65,11 @@ input, textarea{
 }
 
 #chatCard{
-  width:min(940px, 100%);
-  height:min(94dvh, 900px);
-  background:var(--card-soft);
+  width:min(960px,100%);
+  height:min(94dvh,920px);
+  background:rgba(255,255,255,.94);
   backdrop-filter:blur(14px);
-  border:1px solid rgba(255,255,255,0.84);
+  border:1px solid rgba(255,255,255,.82);
   border-radius:var(--radius-xl);
   box-shadow:var(--shadow);
   overflow:hidden;
@@ -104,33 +81,33 @@ input, textarea{
   height:76px;
   flex-shrink:0;
   border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.96);
   display:flex;
   align-items:center;
   justify-content:center;
   position:relative;
-  background:rgba(255,255,255,0.94);
 }
-
 #title{
   font-size:26px;
   font-weight:800;
-  letter-spacing:-0.03em;
+  letter-spacing:-.03em;
 }
-
 #roleBadge{
   position:absolute;
   left:16px;
   top:50%;
   transform:translateY(-50%);
-  padding:8px 12px;
+  height:34px;
+  padding:0 12px;
   border-radius:999px;
-  background:#f7faff;
   border:1px solid var(--line);
+  background:#f7faff;
+  display:flex;
+  align-items:center;
   color:var(--sub);
   font-size:12px;
-  font-weight:700;
+  font-weight:800;
 }
-
 #headerActions{
   position:absolute;
   right:14px;
@@ -139,112 +116,228 @@ input, textarea{
   display:flex;
   gap:8px;
 }
-
 .iconBtn{
   width:42px;
   height:42px;
   border-radius:50%;
-  background:#edf4fa;
-  color:#557086;
+  background:#eef4fa;
+  color:#556f84;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:18px;
-  line-height:1;
-  box-shadow:0 1px 0 rgba(255,255,255,0.6) inset;
+}
+
+#quickRequestBar{
+  flex-shrink:0;
+  padding:12px 14px 10px;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+#quickRequestHeader{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+#quickRequestTitle{
+  font-size:14px;
+  font-weight:800;
+  color:var(--text-soft);
+}
+#quickRequestDesc{
+  font-size:12px;
+  color:var(--sub);
+  line-height:1.45;
+}
+#quickRequestButtons{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.quickChip{
+  height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  background:#edf4fa;
+  color:#425466;
+  font-size:12px;
+  font-weight:800;
+}
+.quickChip.active{
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
+  color:#fff;
+}
+
+#summaryCard{
+  flex-shrink:0;
+  margin:0 14px 12px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:linear-gradient(180deg, #fbfdff, #f5f9fd);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+#summaryHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+#summaryTitle{
+  font-size:13px;
+  font-weight:800;
+  color:var(--text-soft);
+}
+#summaryStatus{
+  height:24px;
+  padding:0 8px;
+  border-radius:999px;
+  background:#eef4fa;
+  color:#5e7286;
+  display:flex;
+  align-items:center;
+  font-size:11px;
+  font-weight:800;
+}
+#summaryRows{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.summaryItem{
+  min-width:0;
+  padding:10px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid #e9eff5;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.summaryLabel{
+  font-size:10px;
+  font-weight:800;
+  color:#91a0af;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.summaryValue{
+  min-height:18px;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.45;
+  color:var(--text);
+  word-break:break-word;
+}
+#summaryActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.summaryActionBtn{
+  height:36px;
+  padding:0 12px;
+  border-radius:12px;
+  background:#edf4fa;
+  color:#425466;
+  font-size:12px;
+  font-weight:800;
+}
+.summaryActionBtn.primary{
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
+  color:#fff;
+}
+.summaryActionBtn:disabled{
+  opacity:.45;
 }
 
 #chatBox{
   flex:1;
   min-height:0;
   overflow-y:auto;
-  padding:18px 16px 10px;
+  padding:0 16px 12px;
   background:var(--bg-soft);
 }
-
 #chatInner{
   display:flex;
   flex-direction:column;
   gap:14px;
   min-height:100%;
 }
-
 .messageRow{
   display:flex;
   flex-direction:column;
   gap:5px;
 }
-
-.messageRow.me{ align-items:flex-end; }
-.messageRow.other{ align-items:flex-start; }
-
+.messageRow.me{align-items:flex-end}
+.messageRow.other{align-items:flex-start}
 .bubble{
-  max-width:min(74%, 560px);
+  max-width:min(76%,560px);
   padding:12px 16px;
   border-radius:22px;
   font-size:15px;
   line-height:1.52;
-  letter-spacing:-0.02em;
+  letter-spacing:-.02em;
   word-break:break-word;
 }
-
 .messageRow.me .bubble{
   background:linear-gradient(135deg, var(--primary-soft), var(--primary));
-  color:white;
+  color:#fff;
   border-bottom-right-radius:8px;
-  box-shadow:0 8px 20px rgba(36,145,255,0.16);
+  box-shadow:0 8px 20px rgba(36,145,255,.16);
 }
-
 .messageRow.other .bubble{
-  background:#ffffff;
-  color:var(--text);
+  background:#fff;
   border:1px solid var(--line);
+  color:var(--text);
   border-bottom-left-radius:8px;
 }
-
 .meta{
   font-size:10px;
   color:#95a3b1;
   padding:0 8px;
 }
-
 .imageBubble{
-  max-width:min(72%, 520px);
-  background:#ffffff;
+  max-width:min(72%,520px);
+  background:#fff;
   border:1px solid var(--line);
   border-radius:22px;
   padding:8px;
   cursor:pointer;
-  box-shadow:0 8px 18px rgba(18,36,61,0.04);
-  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  box-shadow:0 8px 18px rgba(18,36,61,.04);
 }
-
-.imageBubble:hover{
-  transform:translateY(-1px);
-  box-shadow:0 14px 26px rgba(18,36,61,0.08);
-  border-color:#d5e4f3;
-}
-
-.messageRow.me .imageBubble{ border-bottom-right-radius:8px; }
-.messageRow.other .imageBubble{ border-bottom-left-radius:8px; }
-
+.messageRow.me .imageBubble{border-bottom-right-radius:8px}
+.messageRow.other .imageBubble{border-bottom-left-radius:8px}
 .chatImg{
   display:block;
   width:100%;
   max-width:240px;
   border-radius:14px;
 }
+.imageHint{
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:#f6fbff;
+  color:#557086;
+  font-size:11px;
+  font-weight:800;
+}
 
 #inputArea{
   flex-shrink:0;
   border-top:1px solid var(--line);
-  background:rgba(255,255,255,0.96);
-  padding:10px 14px 12px;
+  background:rgba(255,255,255,.97);
+  padding:10px 14px calc(12px + var(--safe-bottom));
   display:flex;
   flex-direction:column;
   gap:8px;
 }
-
 #contactToggleBar{
   display:flex;
   align-items:center;
@@ -255,45 +348,32 @@ input, textarea{
   border-radius:16px;
   background:#fbfdff;
 }
-
 #contactToggleText{
-  min-width:0;
   display:flex;
   flex-direction:column;
   gap:2px;
+  min-width:0;
 }
-
 #contactToggleTitle{
   font-size:13px;
   font-weight:800;
   color:var(--text-soft);
 }
-
 #contactToggleDesc{
   font-size:11px;
   color:var(--sub);
-  line-height:1.4;
 }
-
 #toggleContactPanelBtn{
   height:34px;
-  border-radius:999px;
   padding:0 12px;
+  border-radius:999px;
   background:#edf4fa;
   color:#425466;
   font-size:12px;
   font-weight:800;
-  flex-shrink:0;
 }
-
-#utilityRow{
-  display:none;
-}
-
-#utilityRow.open{
-  display:block;
-}
-
+#utilityRow{display:none}
+#utilityRow.open{display:block}
 #phonePanel{
   display:flex;
   flex-direction:column;
@@ -303,13 +383,11 @@ input, textarea{
   border-radius:18px;
   background:linear-gradient(180deg, #f8fbff, #f3f8fd);
 }
-
 #phonePanelHeader{
   display:flex;
   align-items:flex-start;
   gap:10px;
 }
-
 #phonePanelIcon{
   width:34px;
   height:34px;
@@ -320,110 +398,73 @@ input, textarea{
   align-items:center;
   justify-content:center;
   font-size:16px;
-  line-height:1;
-  flex-shrink:0;
 }
-
-#phonePanelText{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:3px;
-}
-
 #phonePanelTitle{
   font-size:13px;
   font-weight:800;
   color:var(--text-soft);
-  letter-spacing:-0.01em;
 }
-
 #phonePanelDesc{
   font-size:12px;
   color:#708092;
   line-height:1.45;
 }
-
 #phoneRow{
   display:flex;
   gap:8px;
 }
-
 #phoneStatus{
   display:none;
   font-size:12px;
   color:#5f7286;
   padding:0 2px;
 }
-
-#phoneStatus.show{
-  display:block;
+#phoneStatus.show{display:block}
+#phoneInput,
+#msgInput,
+#viewerMsgInput,
+#noteEditorTextarea{
+  border:1px solid var(--line-strong);
+  background:#f8fbff;
 }
-
 #phoneInput{
   flex:1;
   height:42px;
-  border:1px solid var(--line-strong);
-  background:#f8fbff;
   border-radius:16px;
   padding:0 14px;
   font-size:16px;
 }
-
 #savePhoneBtn{
   height:42px;
-  border-radius:16px;
   min-width:64px;
   padding:0 16px;
+  border-radius:16px;
   background:#607082;
-  color:white;
+  color:#fff;
   font-weight:800;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
 }
-
 #messageRow{
   display:flex;
   align-items:center;
   gap:8px;
 }
-
 #msgInput{
   flex:1;
   height:48px;
-  border:1px solid var(--line-strong);
-  background:#f8fbff;
   border-radius:18px;
   padding:0 16px;
   font-size:16px;
 }
-
-#msgInput:focus,
-#phoneInput:focus,
-#viewerMsgInput:focus,
-#noteEditorTextarea:focus{
-  background:#ffffff;
-  border-color:rgba(36,145,255,0.45);
-  box-shadow:0 0 0 4px rgba(36,145,255,0.08);
-}
-
 #sendBtn{
   width:48px;
   height:48px;
   border-radius:50%;
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
-  color:white;
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
+  color:#fff;
   font-size:20px;
   font-weight:800;
-  box-shadow:0 8px 20px rgba(36,145,255,0.16);
 }
-
-#fileInput{
-  display:none;
-}
-
+#fileInput{display:none}
 #fileLabel{
   width:48px;
   height:48px;
@@ -441,40 +482,33 @@ input, textarea{
 #viewerOverlay{
   position:fixed;
   inset:0;
-  z-index:100;
+  z-index:120;
   display:none;
   flex-direction:column;
-  background:rgba(245,248,252,0.98);
+  width:100vw;
+  height:calc(var(--vh) * 100);
+  background:rgba(245,248,252,.985);
+  overscroll-behavior:none;
 }
-
-#viewerOverlay.open{
-  display:flex;
-}
-
+#viewerOverlay.open{display:flex}
 #viewerTopbar{
-  height:76px;
+  height:74px;
   flex-shrink:0;
   border-bottom:1px solid var(--line);
-  background:rgba(255,255,255,0.96);
+  background:rgba(255,255,255,.96);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 14px;
   gap:12px;
+  padding:0 14px;
 }
-
 #viewerTopLeft{
   min-width:0;
   display:flex;
   flex-direction:column;
   gap:4px;
 }
-
-#viewerTitle{
-  font-size:18px;
-  font-weight:800;
-}
-
+#viewerTitle{font-size:18px;font-weight:800}
 #viewerSubtitle{
   font-size:12px;
   color:var(--sub);
@@ -482,72 +516,45 @@ input, textarea{
   overflow:hidden;
   text-overflow:ellipsis;
 }
-
 #viewerStats{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
 }
-
 .statBadge{
   height:30px;
   padding:0 10px;
   border-radius:999px;
+  display:flex;
+  align-items:center;
   background:#eef4fa;
   color:#587085;
   font-size:12px;
-  display:flex;
-  align-items:center;
   font-weight:700;
 }
-
-.statBadge.state-connected{
-  background:#ecf9ef;
-  color:#2f7b42;
-}
-
-.statBadge.state-pending{
-  background:var(--warning-soft);
-  color:#9a6500;
-}
-
-.statBadge.state-saved{
-  background:#ecf9ef;
-  color:#2f7b42;
-}
-
-.statBadge.state-offline{
-  background:#fff3f3;
-  color:#c74242;
-}
-
-#viewerActions{
-  display:flex;
-  gap:8px;
-  flex-shrink:0;
-}
-
+.state-connected{background:var(--success-soft);color:#2f7b42}
+.state-pending{background:var(--warning-soft);color:var(--warning)}
+.state-saved{background:var(--success-soft);color:#2f7b42}
+.state-offline{background:#fff3f3;color:#c74242}
+#viewerActions{display:flex;gap:8px;flex-shrink:0}
 .viewerBtn{
   height:38px;
-  border-radius:12px;
   padding:0 14px;
+  border-radius:12px;
   background:#edf4fa;
   color:#425466;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:6px;
-  font-weight:700;
-  line-height:1;
+  font-weight:800;
 }
-
 #viewerMain{
   flex:1;
   min-height:0;
   display:grid;
   grid-template-columns:7fr 3fr;
 }
-
 #viewerLeft{
   min-width:0;
   display:flex;
@@ -555,44 +562,39 @@ input, textarea{
   border-right:1px solid var(--line);
   background:#f8fbff;
 }
-
 #canvasWrap{
   flex:1;
   min-height:0;
+  padding:14px;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:14px;
-  background:#f7fbff;
 }
-
 #imageStage{
   position:relative;
   width:min(100%, 1200px);
   height:min(100%, 760px);
   min-height:420px;
   border-radius:22px;
-  background:linear-gradient(180deg, rgba(255,255,255,0.92), rgba(247,251,255,0.96));
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(247,251,255,.96));
   border:1px solid #dfe9f3;
-  box-shadow:0 18px 38px rgba(18,36,61,0.08);
+  box-shadow:0 18px 38px rgba(18,36,61,.08);
   overflow:hidden;
 }
-
 #viewerImage{
   position:absolute;
   left:50%;
   top:50%;
-  transform:translate(-50%, -50%);
+  transform:translate(-50%,-50%);
   max-width:84%;
   max-height:84%;
   border-radius:18px;
-  box-shadow:0 14px 32px rgba(18,36,61,0.12);
+  box-shadow:0 14px 32px rgba(18,36,61,.12);
   pointer-events:none;
   user-select:none;
   -webkit-user-drag:none;
   z-index:1;
 }
-
 #drawCanvas{
   position:absolute;
   inset:0;
@@ -600,17 +602,14 @@ input, textarea{
   height:100%;
   border-radius:22px;
   touch-action:none;
-  pointer-events:auto;
   z-index:2;
 }
-
 #textLayer{
   position:absolute;
   inset:0;
   z-index:3;
   pointer-events:none;
 }
-
 .noteMarker{
   position:absolute;
   min-width:56px;
@@ -620,26 +619,19 @@ input, textarea{
   display:flex;
   align-items:center;
   gap:6px;
-  background:rgba(255,255,255,0.70);
+  background:rgba(255,255,255,.74);
   backdrop-filter:blur(8px);
-  color:#24313f;
-  border:1px solid rgba(36,145,255,0.16);
-  box-shadow:0 10px 18px rgba(18,36,61,0.08);
-  transform:translate(-50%, -50%);
+  border:1px solid rgba(36,145,255,.18);
+  box-shadow:0 10px 18px rgba(18,36,61,.08);
+  transform:translate(-50%,-50%);
   pointer-events:auto;
   user-select:none;
-  touch-action:none;
 }
-
-.noteMarker[data-author="admin"]{
-  border-color:rgba(138,92,255,0.18);
-}
-
+.noteMarker[data-author="admin"]{border-color:rgba(138,92,255,.22)}
 .noteMarker.selected{
-  border-color:rgba(255,139,61,0.55);
-  box-shadow:0 0 0 3px rgba(255,139,61,0.14), 0 10px 18px rgba(18,36,61,0.10);
+  border-color:rgba(255,139,61,.55);
+  box-shadow:0 0 0 3px rgba(255,139,61,.14), 0 10px 18px rgba(18,36,61,.10);
 }
-
 .noteMarkerText{
   max-width:132px;
   overflow:hidden;
@@ -647,8 +639,8 @@ input, textarea{
   white-space:nowrap;
   font-size:12px;
   font-weight:800;
+  color:var(--text);
 }
-
 .noteResize{
   position:absolute;
   right:-5px;
@@ -657,95 +649,65 @@ input, textarea{
   height:14px;
   border-radius:5px;
   background:#2491ff;
-  box-shadow:0 4px 10px rgba(36,145,255,0.18);
-  cursor:nwse-resize;
+  box-shadow:0 4px 10px rgba(36,145,255,.18);
 }
-
-.noteMarker[data-author="admin"] .noteResize{
-  background:#8a5cff;
-}
+.noteMarker[data-author="admin"] .noteResize{background:var(--purple)}
 
 #toolbar{
+  flex-shrink:0;
   border-top:1px solid var(--line);
-  background:#ffffff;
+  background:#fff;
   padding:14px 12px 16px;
   display:flex;
   flex-direction:column;
-  gap:16px;
-  flex-shrink:0;
+  gap:14px;
 }
-
-#mobileToolHint{
-  display:none;
-  padding:8px 10px;
-  border-radius:12px;
-  background:#f6fbff;
-  border:1px solid #dceaf8;
-  color:#5b7085;
-  font-size:11px;
-  font-weight:700;
-  line-height:1.4;
-}
-
 .toolSection{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
-
 .toolSectionLabel{
   font-size:11px;
   font-weight:800;
-  color:var(--sub-soft);
-  padding:0 2px;
-  letter-spacing:0.02em;
+  color:#8e9baa;
   text-transform:uppercase;
+  letter-spacing:.04em;
 }
-
 .toolRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
 }
-
 .toolGroup{
   display:flex;
   align-items:center;
   gap:6px;
   flex-wrap:wrap;
-  padding-bottom:8px;
 }
-
-.toolGroup.fill{
-  flex:1;
-}
-
+.toolGroup.fill{flex:1}
 .toolBtn{
   height:38px;
-  border-radius:12px;
   padding:0 12px;
+  border-radius:12px;
   background:#edf4fa;
   color:#425466;
-  font-weight:700;
-  white-space:nowrap;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:6px;
-  line-height:1;
+  font-weight:800;
+  white-space:nowrap;
 }
-
 .toolBtn.active{
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
-  color:white;
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
+  color:#fff;
 }
-
 .toolBtn.danger{
   background:var(--danger-soft);
   color:#c74242;
 }
-
 #thicknessWrap{
   display:flex;
   align-items:center;
@@ -753,78 +715,58 @@ input, textarea{
   color:var(--sub);
   font-size:12px;
   font-weight:700;
-  flex-shrink:0;
 }
-
-#thicknessRange{
-  width:120px;
-}
-
-#colorRow,
-#noteColorRow{
+#thicknessRange{width:120px}
+#colorRow,#noteColorRow{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
   align-items:center;
-  min-height:30px;
 }
-
 #colorRow{
   display:none;
-  padding:10px 10px 12px;
+  padding:10px;
   border:1px solid #dce7f1;
   border-radius:14px;
   background:#f8fbff;
-  box-shadow:0 10px 24px rgba(18,36,61,0.08);
+  box-shadow:0 10px 24px rgba(18,36,61,.08);
 }
-
-#colorRow.open{
-  display:flex;
-}
-
+#colorRow.open{display:flex}
 #noteColorHeader{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:8px;
 }
-
 #noteColorTitle{
   font-size:12px;
   font-weight:800;
   color:var(--sub);
 }
-
 #toggleNoteColorsBtn{
   height:30px;
-  border-radius:999px;
   padding:0 12px;
+  border-radius:999px;
   background:#edf4fa;
   color:#425466;
   font-size:12px;
   font-weight:700;
 }
-
-.colorSwatch{
-  width:26px;
-  height:26px;
+.colorSwatch,.noteColorSwatch{
   border-radius:50%;
-  box-shadow:0 0 0 1px rgba(0,0,0,0.10);
-  flex:0 0 auto;
+  box-shadow:0 0 0 1px rgba(0,0,0,.10);
 }
-
-.colorSwatch.active{
-  box-shadow:0 0 0 3px rgba(36,145,255,0.20);
-}
-
+.colorSwatch{width:26px;height:26px}
+.noteColorSwatch{width:22px;height:22px}
+.colorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.20)}
+.noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
 #customColorBtn{
   position:relative;
   overflow:hidden;
   background:
-    linear-gradient(135deg, rgba(255,255,255,0.95), rgba(228,236,245,0.95)),
+    linear-gradient(135deg, rgba(255,255,255,.95), rgba(228,236,245,.95)),
     conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30);
 }
-
 #customColorBtn::before{
   content:"";
   position:absolute;
@@ -832,7 +774,6 @@ input, textarea{
   border-radius:50%;
   background:var(--custom-color-preview, conic-gradient(from 180deg, #ff3b30, #f59e0b, #22c55e, #2491ff, #a855f7, #ff3b30));
 }
-
 #customColorBtn::after{
   content:"+";
   position:absolute;
@@ -840,40 +781,22 @@ input, textarea{
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#ffffff;
+  color:#fff;
   font-size:14px;
   font-weight:900;
-  text-shadow:0 1px 2px rgba(0,0,0,0.35);
 }
-
 #customColorInput{
   position:absolute;
   pointer-events:none;
   opacity:0;
 }
 
-.noteColorSwatch{
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  box-shadow:0 0 0 1px rgba(0,0,0,0.10);
-}
-
-.noteColorSwatch.active{
-  box-shadow:0 0 0 3px rgba(36,145,255,0.18);
-}
-
-#noteColorRow{
-  padding-bottom:8px;
-}
-
 #viewerRight{
   min-width:0;
   display:flex;
   flex-direction:column;
-  background:#ffffff;
+  background:#fff;
 }
-
 #viewerChatHeader{
   height:52px;
   flex-shrink:0;
@@ -884,46 +807,40 @@ input, textarea{
   font-size:16px;
   font-weight:800;
 }
-
 #viewerChatBox{
   flex:1;
   min-height:0;
   overflow-y:auto;
   padding:12px;
   background:#fbfdff;
+  -webkit-overflow-scrolling:touch;
 }
-
 #viewerChatInner{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
-
 #viewerInputBar{
   flex-shrink:0;
   border-top:1px solid var(--line);
-  padding:10px 12px 12px;
-  background:#ffffff;
+  padding:10px 12px calc(12px + var(--safe-bottom));
+  background:#fff;
   display:flex;
   gap:8px;
 }
-
 #viewerMsgInput{
   flex:1;
   height:44px;
-  border:1px solid var(--line-strong);
-  background:#f8fbff;
   border-radius:16px;
   padding:0 14px;
   font-size:16px;
 }
-
 #viewerSendBtn{
   width:44px;
   height:44px;
   border-radius:50%;
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
-  color:white;
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
+  color:#fff;
   font-size:18px;
   font-weight:800;
 }
@@ -934,122 +851,80 @@ input, textarea{
   z-index:220;
   display:none;
   flex-direction:column;
-  background:rgba(245,248,252,0.98);
+  width:100vw;
+  height:calc(var(--vh) * 100);
+  background:rgba(245,248,252,.99);
 }
-
-#noteEditorOverlay.open{
-  display:flex;
-}
-
+#noteEditorOverlay.open{display:flex}
 #noteEditorHeader{
-  height:70px;
+  min-height:70px;
   flex-shrink:0;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  padding:0 14px;
+  padding:12px 14px;
   border-bottom:1px solid var(--line);
-  background:#ffffff;
+  background:#fff;
 }
-
 #noteEditorTitleWrap{
   min-width:0;
   display:flex;
   flex-direction:column;
   gap:4px;
 }
-
-#noteEditorTitle{
-  font-size:17px;
-  font-weight:800;
-}
-
+#noteEditorTitle{font-size:17px;font-weight:800}
 #noteEditorMeta{
   display:flex;
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
 }
-
 #noteEditorTimestamp{
   font-size:12px;
   color:var(--sub);
 }
-
 #noteEditorSaveBadge{
   height:24px;
   padding:0 8px;
   border-radius:999px;
-  font-size:11px;
-  font-weight:800;
   display:inline-flex;
   align-items:center;
   background:#eef4fa;
   color:#587085;
+  font-size:11px;
+  font-weight:800;
 }
-
-#noteEditorSaveBadge.pending{
-  background:var(--warning-soft);
-  color:#9a6500;
-}
-
-#noteEditorSaveBadge.saved{
-  background:#ecf9ef;
-  color:#2f7b42;
-}
-
-#noteEditorSaveBadge.offline{
-  background:#fff3f3;
-  color:#c74242;
-}
-
+#noteEditorSaveBadge.pending{background:var(--warning-soft);color:var(--warning)}
+#noteEditorSaveBadge.saved{background:var(--success-soft);color:#2f7b42}
+#noteEditorSaveBadge.offline{background:#fff3f3;color:#c74242}
 #noteEditorActions{
   display:flex;
-  gap:8px;
   align-items:center;
+  gap:8px;
 }
-
-.noteEditorGhostBtn{
+.noteEditorDangerBtn,.noteEditorGhostBtn,#noteEditorDoneBtn{
   height:38px;
-  border-radius:12px;
   padding:0 12px;
-  background:#edf4fa;
-  color:#425466;
+  border-radius:12px;
   font-weight:800;
 }
-
-.noteEditorDangerBtn{
-  height:38px;
-  border-radius:12px;
-  padding:0 12px;
-  background:var(--danger-soft);
-  color:#c74242;
-  font-weight:800;
-}
-
+.noteEditorDangerBtn{background:var(--danger-soft);color:#c74242}
+.noteEditorGhostBtn{background:#edf4fa;color:#425466}
 #noteEditorDoneBtn{
-  height:38px;
-  border-radius:12px;
-  padding:0 14px;
-  background:linear-gradient(135deg, #79c7ff, var(--primary));
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
   color:#fff;
-  font-weight:800;
 }
-
 #noteEditorBody{
   flex:1;
   min-height:0;
   padding:14px;
   background:#f7fbff;
 }
-
 #noteEditorTextarea{
   width:100%;
   height:100%;
-  border:1px solid var(--line-strong);
   border-radius:20px;
-  background:#fffef8;
   resize:none;
   padding:16px;
   font-size:16px;
@@ -1057,149 +932,106 @@ input, textarea{
   color:var(--text);
 }
 
-@media (max-width: 900px){
-  #app{ padding:0; }
+#msgInput:focus,#phoneInput:focus,#viewerMsgInput:focus,#noteEditorTextarea:focus{
+  background:#fff;
+  border-color:rgba(36,145,255,.45);
+  box-shadow:0 0 0 4px rgba(36,145,255,.08);
+}
 
+@media (max-width:900px){
+  #app{padding:0}
   #chatCard{
     width:100%;
-    height:100dvh;
+    height:calc(var(--vh) * 100);
     border-radius:0;
   }
-
   #header{
     height:64px;
     min-height:64px;
   }
-
-  #title{
-    font-size:22px;
-  }
-
+  #title{font-size:22px}
   #roleBadge{
     left:10px;
-    padding:6px 10px;
+    height:30px;
+    padding:0 10px;
     font-size:11px;
   }
-
-  #chatBox{
-    padding:14px 12px 8px;
+  #quickRequestBar{
+    padding:10px 10px 8px;
+    gap:8px;
   }
-
+  #quickRequestButtons{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  #quickRequestButtons::-webkit-scrollbar{display:none}
+  .quickChip{flex:0 0 auto}
+  #summaryCard{
+    margin:0 10px 10px;
+    gap:8px;
+  }
+  #summaryRows{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  #summaryActions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  #chatBox{padding:0 12px 8px}
   .bubble{
-    max-width:84%;
+    max-width:86%;
     font-size:14px;
     padding:11px 14px;
   }
-
-  .chatImg{
-    max-width:200px;
-  }
-
+  .chatImg{max-width:200px}
   #inputArea{
-    padding:8px 10px 10px;
+    padding:8px 10px calc(10px + var(--safe-bottom));
     gap:6px;
   }
-
-  #msgInput, #sendBtn, #fileLabel{
-    height:44px;
-  }
-
-  #sendBtn, #fileLabel{
-    width:44px;
-  }
-
-  #msgInput,
-  #viewerMsgInput,
-  #phoneInput{
-    font-size:16px;
-  }
-
-  #contactToggleBar{
-    padding:9px 10px;
-  }
-
-  #contactToggleDesc{
-    font-size:10px;
-  }
-
-  #phonePanel{
-    padding:11px;
-    gap:9px;
-  }
-
-  #phonePanelHeader{
-    gap:8px;
-  }
-
-  #phonePanelIcon{
-    width:32px;
-    height:32px;
-    border-radius:10px;
-  }
-
-  #phoneRow{
-    flex-direction:column;
-  }
-
-  #savePhoneBtn{
-    width:100%;
-    min-width:0;
-  }
-
+  #contactToggleBar{padding:9px 10px}
+  #contactToggleDesc{font-size:10px}
+  #phoneRow{flex-direction:column}
+  #savePhoneBtn{width:100%}
+  #msgInput,#sendBtn,#fileLabel{height:44px}
+  #sendBtn,#fileLabel{width:44px}
   #viewerTopbar{
-    height:auto;
     min-height:0;
+    height:auto;
     display:grid;
-    grid-template-columns:auto minmax(0, 1fr) auto;
+    grid-template-columns:auto minmax(0,1fr) auto;
     grid-template-areas:"stats title actions";
-    align-items:center;
     gap:6px 10px;
+    align-items:center;
     padding:8px 10px;
   }
-
   #viewerTopLeft{
     grid-area:title;
-    width:100%;
     gap:0;
-    justify-self:start;
   }
-
-  #viewerTitle{
-    font-size:15px;
-    line-height:1.2;
-  }
-
-  #viewerSubtitle{
-    display:none;
-  }
-
+  #viewerTitle{font-size:15px;line-height:1.2}
+  #viewerSubtitle{display:none}
   #viewerStats{
     grid-area:stats;
-    width:auto;
-    gap:6px;
     flex-wrap:nowrap;
     overflow-x:auto;
     scrollbar-width:none;
   }
-
-  #viewerStats::-webkit-scrollbar{
-    display:none;
-  }
-
+  #viewerStats::-webkit-scrollbar{display:none}
   .statBadge{
     height:24px;
     padding:0 7px;
-    font-size:0;
     gap:0;
+    font-size:0;
     white-space:nowrap;
   }
-
   .statBadge::before{
     content:attr(data-icon);
     font-size:11px;
     line-height:1;
   }
-
   .statBadge::after{
     content:attr(data-count);
     margin-left:4px;
@@ -1207,168 +1039,101 @@ input, textarea{
     line-height:1;
     font-weight:800;
   }
-
-  #viewerActions{
-    grid-area:actions;
-    width:auto;
-    justify-content:flex-end;
-    align-self:center;
-  }
-
+  #viewerActions{grid-area:actions}
   #viewerMain{
     display:flex;
     flex-direction:column;
     min-height:0;
   }
-
   #viewerLeft{
     display:contents;
   }
-
   #canvasWrap{
     flex:5 1 0;
-    padding:8px;
     min-height:0;
+    padding:8px;
   }
-
   #imageStage{
     min-height:0;
     height:100%;
     border-radius:18px;
   }
-
   #toolbar{
     flex:2 1 0;
     min-height:0;
     padding:8px 10px 10px;
-    gap:8px;
+    gap:10px;
     overflow:hidden;
   }
-
-  #mobileToolHint{
-    display:block;
+  .toolRow{
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
   }
-
   .toolGroup{
     flex-wrap:nowrap;
     overflow-x:auto;
     overflow-y:hidden;
-    padding-bottom:10px;
+    padding-bottom:6px;
     scrollbar-width:none;
     -webkit-overflow-scrolling:touch;
   }
-
-  .toolGroup::-webkit-scrollbar{
-    display:none;
-  }
-
-  .toolBtn{
-    min-width:44px;
+  .toolGroup::-webkit-scrollbar{display:none}
+  .toolBtn,.viewerBtn{
+    min-width:42px;
     height:40px;
     padding:0 10px;
-    border-radius:12px;
   }
-
-  .toolBtn .btnText,
-  .viewerBtn .btnText,
-  #savePhoneBtn .btnText{
-    display:none;
-  }
-
-  .toolBtn .btnIcon,
-  .viewerBtn .btnIcon,
-  #savePhoneBtn .btnIcon{
-    display:inline-flex;
-  }
-
-  #noteColorHeader{
-    justify-content:flex-start;
-    gap:8px;
-  }
-
-  #noteColorTitle{
-    display:none;
-  }
-
+  #thicknessWrap{justify-content:flex-start}
+  #thicknessRange{width:92px}
+  #noteColorTitle{display:none}
   #toggleNoteColorsBtn{
     width:30px;
     min-width:30px;
-    height:30px;
     padding:0;
-    border-radius:10px;
     font-size:0;
+    border-radius:10px;
   }
-
   #toggleNoteColorsBtn::before{
     content:"◐";
     font-size:14px;
-    line-height:1;
   }
-
   #noteColorRow{
     display:none;
     gap:6px;
-    padding-bottom:10px;
   }
-
-  #noteColorRow.open{
-    display:flex;
-  }
-
-  #colorRow{
-    padding:10px 8px 12px;
-  }
-
+  #noteColorRow.open{display:flex}
   #viewerRight{
     flex:3 1 0;
     min-height:0;
     border-top:1px solid var(--line);
   }
-
-  #viewerChatHeader{
-    display:none;
-  }
-
-  #viewerChatBox{
-    padding:10px 10px 6px;
-  }
-
-  #viewerChatInner{
-    gap:8px;
-  }
-
+  #viewerChatHeader{display:none}
+  #viewerChatBox{padding:10px 10px 6px}
   #viewerInputBar{
-    padding:8px 10px 10px;
+    padding:8px 10px calc(10px + var(--safe-bottom));
   }
-
   #viewerMsgInput{
     height:42px;
     font-size:16px;
   }
-
   #viewerSendBtn{
     width:42px;
     height:42px;
   }
-
   .noteMarker{
     min-width:50px;
     height:38px;
     padding:0 10px;
   }
-
   .noteMarkerText{
     max-width:96px;
     font-size:11px;
   }
-
   #noteEditorHeader{
-    height:auto;
-    min-height:64px;
     align-items:flex-start;
     padding:10px 12px;
   }
-
   #noteEditorActions{
     flex-wrap:wrap;
     justify-content:flex-end;
@@ -1377,7 +1142,6 @@ input, textarea{
 </style>
 </head>
 <body>
-
 <div id="app">
   <section id="chatCard">
     <div id="header">
@@ -1388,15 +1152,52 @@ input, textarea{
       </div>
     </div>
 
-    <div id="chatBox">
-      <div id="chatInner"></div>
+    <div id="quickRequestBar">
+      <div id="quickRequestHeader">
+        <div id="quickRequestTitle">원하는 제품과 수정할 내용을 빠르게 시작하세요</div>
+        <div id="quickRequestDesc">이미지를 누르면 수정 위치를 표시하면서 상담할 수 있어요.</div>
+      </div>
+      <div id="quickRequestButtons">
+        <button class="quickChip" type="button" data-request="색상 변경" data-draft="색상을 변경하고 싶어요.">색상 변경</button>
+        <button class="quickChip" type="button" data-request="문구 추가" data-draft="문구를 추가하고 싶어요.">문구 추가</button>
+        <button class="quickChip" type="button" data-request="사이즈 조정" data-draft="사이즈를 조정하고 싶어요.">사이즈 조정</button>
+        <button class="quickChip" type="button" data-request="디자인 수정" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정</button>
+        <button class="quickChip" type="button" data-request="추천 요청" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 요청</button>
+      </div>
     </div>
+
+    <div id="summaryCard">
+      <div id="summaryHeader">
+        <div id="summaryTitle">현재 요청 요약</div>
+        <div id="summaryStatus">상담 시작</div>
+      </div>
+      <div id="summaryRows">
+        <div class="summaryItem">
+          <div class="summaryLabel">제품</div>
+          <div class="summaryValue" id="summaryProductValue">선택 대기</div>
+        </div>
+        <div class="summaryItem">
+          <div class="summaryLabel">요청</div>
+          <div class="summaryValue" id="summaryRequestsValue">없음</div>
+        </div>
+        <div class="summaryItem">
+          <div class="summaryLabel">상태</div>
+          <div class="summaryValue" id="summaryDetailValue">상담 시작</div>
+        </div>
+      </div>
+      <div id="summaryActions">
+        <button id="summaryComposeBtn" class="summaryActionBtn" type="button">요청 정리하기</button>
+        <button id="summaryQuoteBtn" class="summaryActionBtn primary" type="button">견적 요청 문구 만들기</button>
+      </div>
+    </div>
+
+    <div id="chatBox"><div id="chatInner"></div></div>
 
     <div id="inputArea">
       <div id="contactToggleBar">
         <div id="contactToggleText">
           <div id="contactToggleTitle">연락처 남기기</div>
-          <div id="contactToggleDesc">검토 후 필요할 때만 연락처를 남길 수 있어요.</div>
+          <div id="contactToggleDesc">견적이나 상담 정리가 필요할 때만 연락드려요.</div>
         </div>
         <button id="toggleContactPanelBtn" type="button" aria-expanded="false">열기</button>
       </div>
@@ -1405,18 +1206,14 @@ input, textarea{
         <div id="phonePanel">
           <div id="phonePanelHeader">
             <div id="phonePanelIcon" aria-hidden="true">☎</div>
-            <div id="phonePanelText">
+            <div>
               <div id="phonePanelTitle">연락받으실 전화번호</div>
               <div id="phonePanelDesc">상담 진행상 필요할 때만 연락드려요.</div>
             </div>
           </div>
-
           <div id="phoneRow">
             <input id="phoneInput" type="tel" placeholder="연락받으실 전화번호를 입력해 주세요." />
-            <button id="savePhoneBtn" type="button" aria-label="전화번호 등록">
-              <span class="btnIcon">✓</span>
-              <span class="btnText">등록</span>
-            </button>
+            <button id="savePhoneBtn" type="button">등록</button>
           </div>
         </div>
       </div>
@@ -1424,7 +1221,7 @@ input, textarea{
       <div id="phoneStatus" aria-live="polite"></div>
 
       <div id="messageRow">
-        <input id="msgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
+        <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
         <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
         <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
         <input id="fileInput" type="file" accept="image/*" />
@@ -1439,22 +1236,14 @@ input, textarea{
       <div id="viewerTitle">이미지 검토 중</div>
       <div id="viewerSubtitle">현재 이미지 선택 대기 중</div>
     </div>
-
     <div id="viewerStats">
       <div class="statBadge" id="drawingCountBadge" data-icon="〰" data-count="0">선 0</div>
       <div class="statBadge" id="noteCountBadge" data-icon="✎" data-count="0">메모 0</div>
       <div class="statBadge state-connected" id="syncStatusBadge" data-icon="●" data-count="on">실시간 연결됨</div>
     </div>
-
     <div id="viewerActions">
-      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="현재 스케치 다운로드" title="다운로드">
-        <span class="btnIcon">↓</span>
-        <span class="btnText">다운로드</span>
-      </button>
-      <button id="closeViewerBtn" class="viewerBtn" type="button" aria-label="뷰어 닫기" title="닫기">
-        <span class="btnIcon">✕</span>
-        <span class="btnText">닫기</span>
-      </button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button">다운로드</button>
+      <button id="closeViewerBtn" class="viewerBtn" type="button">닫기</button>
     </div>
   </div>
 
@@ -1469,26 +1258,14 @@ input, textarea{
       </div>
 
       <div id="toolbar">
-        <div id="mobileToolHint">자주 쓰는 도구는 앞쪽, 전체 삭제는 마지막에 배치했습니다.</div>
-
         <div class="toolSection">
           <div class="toolSectionLabel">그리기</div>
           <div class="toolRow">
             <div class="toolGroup fill">
-              <button id="penBtn" class="toolBtn active" type="button" aria-label="펜 모드" title="펜">
-                <span class="btnIcon">✎</span>
-                <span class="btnText">펜</span>
-              </button>
-              <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개 모드" title="지우개">
-                <span class="btnIcon">⌫</span>
-                <span class="btnText">지우개</span>
-              </button>
-              <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가" title="메모 추가">
-                <span class="btnIcon">T</span>
-                <span class="btnText">메모 추가</span>
-              </button>
+              <button id="penBtn" class="toolBtn active" type="button">펜</button>
+              <button id="eraserBtn" class="toolBtn" type="button">지우개</button>
+              <button id="addTextBtn" class="toolBtn" type="button">메모 추가</button>
             </div>
-
             <div id="thicknessWrap">
               <span>두께</span>
               <input id="thicknessRange" type="range" min="1" max="48" value="3" />
@@ -1507,14 +1284,8 @@ input, textarea{
         <div class="toolSection">
           <div class="toolSectionLabel">이력</div>
           <div class="toolGroup">
-            <button id="undoBtn" class="toolBtn" type="button" aria-label="실행 취소" title="실행 취소">
-              <span class="btnIcon">↶</span>
-              <span class="btnText">Undo</span>
-            </button>
-            <button id="redoBtn" class="toolBtn" type="button" aria-label="다시 실행" title="다시 실행">
-              <span class="btnIcon">↷</span>
-              <span class="btnText">Redo</span>
-            </button>
+            <button id="undoBtn" class="toolBtn" type="button">Undo</button>
+            <button id="redoBtn" class="toolBtn" type="button">Redo</button>
           </div>
         </div>
 
@@ -1522,29 +1293,22 @@ input, textarea{
           <div class="toolSectionLabel">메모</div>
           <div id="noteColorHeader">
             <div id="noteColorTitle">메모 색상</div>
-            <button id="toggleNoteColorsBtn" type="button" title="메모 색상 펼치기">메모 색상</button>
+            <button id="toggleNoteColorsBtn" type="button">메모 색상</button>
           </div>
-
           <div id="noteColorRow">
-            <button class="noteColorSwatch active" type="button" data-note-color="#fff7c2" style="background:#fff7c2;" aria-label="연노랑"></button>
-            <button class="noteColorSwatch" type="button" data-note-color="#dff5ff" style="background:#dff5ff;" aria-label="연하늘"></button>
-            <button class="noteColorSwatch" type="button" data-note-color="#e8ffd9" style="background:#e8ffd9;" aria-label="연초록"></button>
-            <button class="noteColorSwatch" type="button" data-note-color="#ffe4ef" style="background:#ffe4ef;" aria-label="연핑크"></button>
-            <button class="noteColorSwatch" type="button" data-note-color="#efe7ff" style="background:#efe7ff;" aria-label="연보라"></button>
+            <button class="noteColorSwatch active" type="button" data-note-color="#fff7c2" style="background:#fff7c2;"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#dff5ff" style="background:#dff5ff;"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#e8ffd9" style="background:#e8ffd9;"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#ffe4ef" style="background:#ffe4ef;"></button>
+            <button class="noteColorSwatch" type="button" data-note-color="#efe7ff" style="background:#efe7ff;"></button>
           </div>
         </div>
 
         <div class="toolSection">
           <div class="toolSectionLabel">정리</div>
           <div class="toolGroup">
-            <button id="clearDrawingBtn" class="toolBtn danger" type="button" aria-label="현재 이미지의 선 모두 지우기" title="선 지우기">
-              <span class="btnIcon">⌧</span>
-              <span class="btnText">선지우기</span>
-            </button>
-            <button id="clearNotesBtn" class="toolBtn danger" type="button" aria-label="현재 이미지의 메모 모두 지우기" title="메모지우기">
-              <span class="btnIcon">⌦</span>
-              <span class="btnText">메모지우기</span>
-            </button>
+            <button id="clearDrawingBtn" class="toolBtn danger" type="button">선지우기</button>
+            <button id="clearNotesBtn" class="toolBtn danger" type="button">메모지우기</button>
           </div>
         </div>
       </div>
@@ -1552,12 +1316,10 @@ input, textarea{
 
     <section id="viewerRight">
       <div id="viewerChatHeader">실시간 채팅</div>
-      <div id="viewerChatBox">
-        <div id="viewerChatInner"></div>
-      </div>
+      <div id="viewerChatBox"><div id="viewerChatInner"></div></div>
       <div id="viewerInputBar">
-        <input id="viewerMsgInput" type="text" placeholder="메시지 입력..." autocomplete="off" />
-        <button id="viewerSendBtn" type="button" aria-label="메시지 전송">➤</button>
+        <input id="viewerMsgInput" type="text" placeholder="수정 위치나 요청을 바로 남겨주세요" autocomplete="off" />
+        <button id="viewerSendBtn" type="button">➤</button>
       </div>
     </section>
   </div>
@@ -1601,13 +1363,12 @@ input, textarea{
   const params = new URLSearchParams(location.search);
   const role = params.get("role") === "admin" || params.has("admin") ? "admin" : "user";
   const userName = params.get("userName") || localStorage.getItem(STORAGE_KEYS.userName) || "상담자";
-
-  localStorage.setItem(STORAGE_KEYS.userName, userName);
-
   const isViewerMode = params.get("viewer") === "1";
   const isEmbeddedMode = params.get("embed") === "1" || window.parent !== window;
   const initialImageId = params.get("imageId") || "";
   const initialImageUrl = params.get("imageUrl") || "";
+
+  localStorage.setItem(STORAGE_KEYS.userName, userName);
 
   const state = {
     roomId: params.get("room") || localStorage.getItem(STORAGE_KEYS.roomId) || crypto.randomUUID(),
@@ -1623,14 +1384,14 @@ input, textarea{
     currentNotes: [],
     isDrawing: false,
     lastPoint: null,
-    pendingStrokeBatch: [],
-    pendingStrokeImageId: "",
-    strokeBatchRaf: null,
     isComposingMain: false,
     isComposingViewer: false,
     historyUndoStack: [],
     historyRedoStack: [],
     historyLock: false,
+    pendingStrokeBatch: [],
+    pendingStrokeImageId: "",
+    strokeBatchRaf: null,
     activeMarkerId: "",
     activeNoteEditorId: "",
     connectionState: "connected",
@@ -1639,7 +1400,6 @@ input, textarea{
     noteCommitTimers: new Map(),
     noteLiveQueue: new Map(),
     noteLiveRaf: null,
-    localEditingNoteVersion: 0,
     noteInteraction: {
       type: "",
       noteId: "",
@@ -1651,30 +1411,20 @@ input, textarea{
       startClientX: 0,
       startClientY: 0,
       moved: false
+    },
+    summary: {
+      productName: "",
+      requestTypes: [],
+      detailNotes: [],
+      status: "상담 시작"
     }
   };
 
   localStorage.setItem(STORAGE_KEYS.roomId, state.roomId);
 
-  let socket = null;
-
-  function createSafeSocket() {
-    if (typeof window.io !== "function") {
-      console.error("Socket.IO client가 로드되지 않았습니다.");
-      return null;
-    }
-
-    try {
-      return window.io({
-        transports: ["websocket", "polling"]
-      });
-    } catch (error) {
-      console.error("Socket 초기화 실패:", error);
-      return null;
-    }
-  }
-
-  socket = createSafeSocket();
+  const socket = typeof window.io === "function"
+    ? window.io({ transports: ["websocket", "polling"] })
+    : null;
 
   const el = {
     app: document.getElementById("app"),
@@ -1688,28 +1438,31 @@ input, textarea{
     phoneStatus: document.getElementById("phoneStatus"),
     savePhoneBtn: document.getElementById("savePhoneBtn"),
     openViewerBtn: document.getElementById("openViewerBtn"),
-
     toggleContactPanelBtn: document.getElementById("toggleContactPanelBtn"),
     utilityRow: document.getElementById("utilityRow"),
-
+    quickChips: Array.from(document.querySelectorAll(".quickChip")),
+    summaryStatus: document.getElementById("summaryStatus"),
+    summaryProductValue: document.getElementById("summaryProductValue"),
+    summaryRequestsValue: document.getElementById("summaryRequestsValue"),
+    summaryDetailValue: document.getElementById("summaryDetailValue"),
+    summaryComposeBtn: document.getElementById("summaryComposeBtn"),
+    summaryQuoteBtn: document.getElementById("summaryQuoteBtn"),
     viewerOverlay: document.getElementById("viewerOverlay"),
     closeViewerBtn: document.getElementById("closeViewerBtn"),
     viewerImage: document.getElementById("viewerImage"),
+    viewerTitle: document.getElementById("viewerTitle"),
+    viewerSubtitle: document.getElementById("viewerSubtitle"),
     viewerChatInner: document.getElementById("viewerChatInner"),
     viewerChatBox: document.getElementById("viewerChatBox"),
     viewerMsgInput: document.getElementById("viewerMsgInput"),
     viewerSendBtn: document.getElementById("viewerSendBtn"),
     downloadSketchBtn: document.getElementById("downloadSketchBtn"),
-    viewerTitle: document.getElementById("viewerTitle"),
-    viewerSubtitle: document.getElementById("viewerSubtitle"),
     drawingCountBadge: document.getElementById("drawingCountBadge"),
     noteCountBadge: document.getElementById("noteCountBadge"),
     syncStatusBadge: document.getElementById("syncStatusBadge"),
-
     imageStage: document.getElementById("imageStage"),
     drawCanvas: document.getElementById("drawCanvas"),
     textLayer: document.getElementById("textLayer"),
-
     penBtn: document.getElementById("penBtn"),
     eraserBtn: document.getElementById("eraserBtn"),
     addTextBtn: document.getElementById("addTextBtn"),
@@ -1722,12 +1475,10 @@ input, textarea{
     colorSwatches: Array.from(document.querySelectorAll(".colorSwatch")),
     customColorBtn: document.getElementById("customColorBtn"),
     customColorInput: document.getElementById("customColorInput"),
-    noteColorSwatches: Array.from(document.querySelectorAll(".noteColorSwatch")),
     noteColorRow: document.getElementById("noteColorRow"),
+    noteColorSwatches: Array.from(document.querySelectorAll(".noteColorSwatch")),
     toggleNoteColorsBtn: document.getElementById("toggleNoteColorsBtn"),
-
     noteEditorOverlay: document.getElementById("noteEditorOverlay"),
-    noteEditorTitle: document.getElementById("noteEditorTitle"),
     noteEditorTimestamp: document.getElementById("noteEditorTimestamp"),
     noteEditorSaveBadge: document.getElementById("noteEditorSaveBadge"),
     noteEditorTextarea: document.getElementById("noteEditorTextarea"),
@@ -1737,6 +1488,11 @@ input, textarea{
 
   const ctx = el.drawCanvas.getContext("2d");
   el.roleBadge.textContent = role === "admin" ? "관리자 화면" : "고객 채팅";
+
+  function setViewportUnit() {
+    const next = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty("--vh", `${next * 0.01}px`);
+  }
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -1756,10 +1512,7 @@ input, textarea{
 
   function formatTime(ts) {
     try {
-      return new Date(ts).toLocaleTimeString("ko-KR", {
-        hour: "numeric",
-        minute: "2-digit"
-      });
+      return new Date(ts).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
     } catch {
       return "";
     }
@@ -1769,11 +1522,7 @@ input, textarea{
     if (!ts) return "최종 수정 없음";
     try {
       return "최종 수정 " + new Date(ts).toLocaleString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
       });
     } catch {
       return "최종 수정 없음";
@@ -1790,14 +1539,13 @@ input, textarea{
   }
 
   function sanitizeFileName(name) {
-    return String(name || "상담자")
-      .replace(/[\\/:*?"<>|]/g, "_")
-      .replace(/\s+/g, "_")
-      .slice(0, 40);
+    return String(name || "상담자").replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "_").slice(0, 40);
   }
 
-  function getCurrentImageId() {
-    return state.currentViewerImageId;
+  function scrollBottom(node) {
+    requestAnimationFrame(() => {
+      node.scrollTop = node.scrollHeight;
+    });
   }
 
   function setPhoneStatus(message, isError = false) {
@@ -1806,56 +1554,22 @@ input, textarea{
     el.phoneStatus.classList.toggle("show", Boolean(message));
   }
 
-  function scrollBottom(container) {
-    requestAnimationFrame(() => {
-      container.scrollTop = container.scrollHeight;
-    });
-  }
-
-  function restoreMobileViewport() {
-    if (!isMobileViewport()) return;
-    const active = document.activeElement;
-    if (active && typeof active.blur === "function") active.blur();
-
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    if (window.visualViewport) {
-      requestAnimationFrame(() => {
-        const offsetTop = window.visualViewport.offsetTop || 0;
-        if (offsetTop > 0) window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    }
-  }
-
   function toggleContactPanel(forceOpen = null) {
-    const next = forceOpen === null
-      ? !el.utilityRow.classList.contains("open")
-      : Boolean(forceOpen);
-
+    const next = forceOpen === null ? !el.utilityRow.classList.contains("open") : Boolean(forceOpen);
     el.utilityRow.classList.toggle("open", next);
     el.toggleContactPanelBtn.textContent = next ? "닫기" : "열기";
     el.toggleContactPanelBtn.setAttribute("aria-expanded", String(next));
   }
 
-  function updateViewerEntryButton() {
-    const enabled = Boolean(state.lastSelectedImageId && state.lastSelectedImageUrl);
-    el.openViewerBtn.disabled = !enabled;
-    el.openViewerBtn.style.opacity = enabled ? "1" : "0.45";
-  }
-
   function setConnectionState(next) {
     state.connectionState = next;
     el.syncStatusBadge.className = "statBadge";
-
     if (next === "connected") {
       el.syncStatusBadge.classList.add("state-connected");
       el.syncStatusBadge.textContent = "실시간 연결됨";
       el.syncStatusBadge.dataset.count = "on";
       return;
     }
-
     el.syncStatusBadge.classList.add("state-offline");
     el.syncStatusBadge.textContent = "연결 끊김";
     el.syncStatusBadge.dataset.count = "off";
@@ -1867,7 +1581,6 @@ input, textarea{
       clearTimeout(state.saveStateTimer);
       state.saveStateTimer = null;
     }
-
     el.noteEditorSaveBadge.className = "";
 
     if (next === "pending") {
@@ -1908,43 +1621,139 @@ input, textarea{
     if (state.connectionState === "connected") setConnectionState("connected");
   }
 
-  function updateModeLabels() {
-    const isEditingNote = el.noteEditorOverlay.classList.contains("open");
+  function updateViewerEntryButton() {
+    const enabled = Boolean(state.lastSelectedImageId && state.lastSelectedImageUrl);
+    el.openViewerBtn.disabled = !enabled;
+  }
 
-    if (!state.currentViewerImageId) {
-      el.viewerTitle.textContent = "이미지 검토 중";
-      el.viewerSubtitle.textContent = "현재 이미지 선택 대기 중";
-      el.noteEditorTitle.textContent = "메모 편집 중";
-      return;
+  function updateSummaryUI() {
+    el.summaryProductValue.textContent = state.summary.productName || "선택 대기";
+    el.summaryRequestsValue.textContent = state.summary.requestTypes.length
+      ? state.summary.requestTypes.join(", ")
+      : "없음";
+    el.summaryStatus.textContent = state.summary.status;
+    el.summaryDetailValue.textContent = state.summary.detailNotes.length
+      ? state.summary.detailNotes[state.summary.detailNotes.length - 1]
+      : state.summary.status;
+
+    el.quickChips.forEach((button) => {
+      button.classList.toggle("active", state.summary.requestTypes.includes(button.dataset.request));
+    });
+
+    const hasActionableSummary = Boolean(state.summary.productName || state.summary.requestTypes.length || state.summary.detailNotes.length);
+    el.summaryComposeBtn.disabled = !hasActionableSummary;
+    el.summaryQuoteBtn.disabled = !hasActionableSummary;
+  }
+
+  function setSummaryStatus(nextStatus, detail = "") {
+    state.summary.status = nextStatus;
+    if (detail) {
+      state.summary.detailNotes.push(detail);
+      state.summary.detailNotes = state.summary.detailNotes.slice(-3);
+    }
+    updateSummaryUI();
+  }
+
+  function addRequestType(requestType, draftText = "") {
+    if (!requestType) return;
+    if (!state.summary.requestTypes.includes(requestType)) {
+      state.summary.requestTypes.push(requestType);
+    }
+    state.summary.status = "요청 정리 중";
+    if (draftText && !el.msgInput.value.trim()) {
+      el.msgInput.value = draftText;
+      el.msgInput.focus();
+    }
+    updateSummaryUI();
+  }
+
+  function inferRequestTypesFromText(text) {
+    const source = String(text || "").toLowerCase();
+    const matchers = [
+      { type: "색상 변경", patterns: ["색상", "컬러", "색", "블랙", "화이트", "레드", "blue", "black", "white"] },
+      { type: "문구 추가", patterns: ["문구", "이니셜", "각인", "텍스트", "레터링"] },
+      { type: "사이즈 조정", patterns: ["사이즈", "크기", "작게", "크게", "줄여", "늘려", "길이"] },
+      { type: "디자인 수정", patterns: ["디자인", "수정", "변경", "장식", "모양", "제거", "추가"] },
+      { type: "추천 요청", patterns: ["추천", "골라", "어울", "제안", "어떤 게"] },
+      { type: "견적 요청", patterns: ["견적", "가격", "비용", "얼마", "주문"] }
+    ];
+
+    matchers.forEach(({ type, patterns }) => {
+      if (patterns.some((pattern) => source.includes(pattern))) {
+        addRequestType(type);
+      }
+    });
+  }
+
+  function inferProductNameFromText(text) {
+    const source = String(text || "").toLowerCase();
+    const products = [
+      ["의자", ["의자", "체어", "chair"]],
+      ["소파", ["소파", "sofa"]],
+      ["가방", ["가방", "백", "bag"]],
+      ["반지", ["반지", "링", "ring"]],
+      ["목걸이", ["목걸이", "necklace"]],
+      ["조명", ["조명", "lamp", "light"]],
+      ["테이블", ["테이블", "table"]],
+      ["쿠션", ["쿠션", "cushion"]]
+    ];
+
+    for (const [label, patterns] of products) {
+      if (patterns.some((pattern) => source.includes(pattern))) {
+        return label;
+      }
+    }
+    return "";
+  }
+
+  function applyConversationInsights(text) {
+    inferRequestTypesFromText(text);
+    const productName = inferProductNameFromText(text);
+    if (productName && !state.summary.productName) {
+      state.summary.productName = productName;
     }
 
-    if (isEditingNote) {
-      el.viewerTitle.textContent = "메모 편집 중";
-      el.viewerSubtitle.textContent = "텍스트는 자동 저장됩니다";
-      el.noteEditorTitle.textContent = "메모 편집 중";
-      return;
+    const compact = String(text || "").replace(/\s+/g, " ").trim();
+    if (compact) {
+      setSummaryStatus("상담 진행 중", compact.slice(0, 42));
+    }
+  }
+
+  function buildSummaryMessage(mode = "summary") {
+    const product = state.summary.productName || "선택 제품";
+    const requests = state.summary.requestTypes.length ? state.summary.requestTypes.join(", ") : "요청 없음";
+    const detail = state.summary.detailNotes.length ? state.summary.detailNotes[state.summary.detailNotes.length - 1] : "세부 내용 추가 확인 필요";
+
+    if (mode === "quote") {
+      return [
+        `현재 요청 기준으로 견적 상담을 받고 싶어요.`,
+        `제품: ${product}`,
+        `요청: ${requests}`,
+        `세부: ${detail}`
+      ].join("\n");
     }
 
-    if (state.drawMode === "draw") {
-      el.viewerTitle.textContent = "주석 작성 중";
-      el.viewerSubtitle.textContent = "펜으로 이미지 위에 직접 표시하고 있습니다";
-      return;
-    }
+    return [
+      `현재 요청 내용을 정리할게요.`,
+      `제품: ${product}`,
+      `요청: ${requests}`,
+      `현재 메모: ${detail}`
+    ].join("\n");
+  }
 
-    if (state.drawMode === "erase") {
-      el.viewerTitle.textContent = "주석 수정 중";
-      el.viewerSubtitle.textContent = "기존 주석을 지우는 중입니다";
-      return;
-    }
+  function fillActiveInput(text) {
+    const target = el.viewerOverlay.classList.contains("open") ? el.viewerMsgInput : el.msgInput;
+    target.value = text;
+    target.focus();
+  }
 
-    if (state.drawMode === "text") {
-      el.viewerTitle.textContent = "메모 추가 중";
-      el.viewerSubtitle.textContent = "리뷰 포인트를 추가하고 있습니다";
-      return;
-    }
-
-    el.viewerTitle.textContent = "이미지 검토 중";
-    el.viewerSubtitle.textContent = "실시간 협업 중";
+  function inferProductNameFromImage(imageUrl) {
+    if (!imageUrl) return "";
+    const source = imageUrl.toLowerCase();
+    if (source.includes("chair")) return "의자";
+    if (source.includes("bag")) return "가방";
+    if (source.includes("ring")) return "반지";
+    return "선택한 제품";
   }
 
   function updateViewerStats() {
@@ -1952,7 +1761,33 @@ input, textarea{
     el.drawingCountBadge.dataset.count = String(state.currentStrokes.length);
     el.noteCountBadge.textContent = `메모 ${state.currentNotes.length}`;
     el.noteCountBadge.dataset.count = String(state.currentNotes.length);
-    updateModeLabels();
+
+    if (!state.currentViewerImageId) {
+      el.viewerTitle.textContent = "이미지 검토 중";
+      el.viewerSubtitle.textContent = "현재 이미지 선택 대기 중";
+      return;
+    }
+
+    if (el.noteEditorOverlay.classList.contains("open")) {
+      el.viewerTitle.textContent = "메모 편집 중";
+      el.viewerSubtitle.textContent = "텍스트는 자동 저장됩니다";
+      return;
+    }
+
+    if (state.drawMode === "draw") {
+      el.viewerTitle.textContent = "주석 작성 중";
+      el.viewerSubtitle.textContent = "이미지 위에 수정 위치를 표시하고 있습니다";
+      return;
+    }
+
+    if (state.drawMode === "erase") {
+      el.viewerTitle.textContent = "주석 수정 중";
+      el.viewerSubtitle.textContent = "기존 표시를 지우는 중입니다";
+      return;
+    }
+
+    el.viewerTitle.textContent = "이미지 검토 중";
+    el.viewerSubtitle.textContent = "실시간 협업 중";
   }
 
   function setDrawMode(mode) {
@@ -1965,15 +1800,13 @@ input, textarea{
 
   function setActiveColor(color) {
     state.currentColor = color;
-    let matchedPreset = false;
-
+    let matched = false;
     el.colorSwatches.forEach((button) => {
-      const isActive = button.dataset.color === color;
-      button.classList.toggle("active", isActive);
-      if (isActive) matchedPreset = true;
+      const active = button.dataset.color === color;
+      button.classList.toggle("active", active);
+      if (active) matched = true;
     });
-
-    el.customColorBtn.classList.toggle("active", !matchedPreset);
+    el.customColorBtn.classList.toggle("active", !matched);
     el.customColorBtn.style.setProperty("--custom-color-preview", color);
     el.customColorInput.value = color;
   }
@@ -2014,10 +1847,17 @@ input, textarea{
     img.src = data.imageUrl;
     img.alt = "첨부 이미지";
 
+    const hint = document.createElement("div");
+    hint.className = "imageHint";
+    hint.textContent = "눌러서 이미지 위에 수정 위치를 표시하며 상담하세요.";
+
     wrap.appendChild(img);
+    wrap.appendChild(hint);
     wrap.addEventListener("click", () => {
       state.lastSelectedImageId = data.imageId;
       state.lastSelectedImageUrl = data.imageUrl;
+      state.summary.productName = inferProductNameFromImage(data.imageUrl);
+      setSummaryStatus("이미지 선택됨", "수정 위치를 표시하면서 상담할 수 있어요.");
       updateViewerEntryButton();
       openViewerPopup(data.imageId, data.imageUrl);
     });
@@ -2031,11 +1871,34 @@ input, textarea{
     return row;
   }
 
-  function getNormalizedPoint(evt) {
+  function renderTextMessage(data) {
+    el.chatInner.appendChild(createTextRow(data));
+    scrollBottom(el.chatBox);
+    if (el.viewerOverlay.classList.contains("open")) {
+      el.viewerChatInner.appendChild(createTextRow(data));
+      scrollBottom(el.viewerChatBox);
+    }
+  }
+
+  function renderImageMessage(data) {
+    el.chatInner.appendChild(createImageRow(data));
+    scrollBottom(el.chatBox);
+    if (el.viewerOverlay.classList.contains("open")) {
+      el.viewerChatInner.appendChild(createImageRow(data));
+      scrollBottom(el.viewerChatBox);
+    }
+    state.lastSelectedImageId = data.imageId;
+    state.lastSelectedImageUrl = data.imageUrl;
+    state.summary.productName = inferProductNameFromImage(data.imageUrl);
+    updateViewerEntryButton();
+    updateSummaryUI();
+  }
+
+  function getNormalizedPoint(event) {
     const rect = el.drawCanvas.getBoundingClientRect();
     return {
-      x: clamp((evt.clientX - rect.left) / rect.width, 0, 1),
-      y: clamp((evt.clientY - rect.top) / rect.height, 0, 1)
+      x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+      y: clamp((event.clientY - rect.top) / rect.height, 0, 1)
     };
   }
 
@@ -2045,7 +1908,6 @@ input, textarea{
 
   function drawStroke(stroke) {
     if (!el.drawCanvas.width || !el.drawCanvas.height) return;
-
     const x1 = stroke.last.x * el.drawCanvas.width;
     const y1 = stroke.last.y * el.drawCanvas.height;
     const x2 = stroke.current.x * el.drawCanvas.width;
@@ -2055,7 +1917,6 @@ input, textarea{
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = stroke.size || 3;
-
     if (stroke.mode === "erase") {
       ctx.globalCompositeOperation = "destination-out";
       ctx.strokeStyle = "rgba(0,0,0,1)";
@@ -2063,7 +1924,6 @@ input, textarea{
       ctx.globalCompositeOperation = "source-over";
       ctx.strokeStyle = stroke.color || "#ff3b30";
     }
-
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
@@ -2081,7 +1941,6 @@ input, textarea{
     const width = el.imageStage.clientWidth;
     const height = el.imageStage.clientHeight;
     if (!width || !height) return;
-
     el.drawCanvas.width = width;
     el.drawCanvas.height = height;
     redrawAllStrokes();
@@ -2090,16 +1949,11 @@ input, textarea{
 
   function pushHistory() {
     if (state.historyLock || !state.currentViewerImageId) return;
-
     state.historyUndoStack.push(deepClone({
       strokes: state.currentStrokes,
       notes: state.currentNotes
     }));
-
-    if (state.historyUndoStack.length > HISTORY_LIMIT) {
-      state.historyUndoStack.shift();
-    }
-
+    if (state.historyUndoStack.length > HISTORY_LIMIT) state.historyUndoStack.shift();
     state.historyRedoStack = [];
     updateHistoryButtons();
   }
@@ -2110,50 +1964,30 @@ input, textarea{
   }
 
   function applyFullState(snapshot, sync = true) {
-    if (!snapshot || !getCurrentImageId()) return;
-
+    if (!snapshot || !state.currentViewerImageId) return;
     state.historyLock = true;
     state.currentStrokes = deepClone(snapshot.strokes || []).slice(-MAX_CLIENT_STROKES);
     state.currentNotes = deepClone(snapshot.notes || []).slice(-MAX_CLIENT_NOTES);
     redrawAllStrokes();
     renderNotes();
     state.historyLock = false;
-
     if (sync && socket) {
-      socket.emit("replace-drawing-history", {
-        imageId: getCurrentImageId(),
-        strokes: state.currentStrokes
-      });
-      socket.emit("replace-note-history", {
-        imageId: getCurrentImageId(),
-        notes: state.currentNotes
-      });
+      socket.emit("replace-drawing-history", { imageId: state.currentViewerImageId, strokes: state.currentStrokes });
+      socket.emit("replace-note-history", { imageId: state.currentViewerImageId, notes: state.currentNotes });
     }
   }
 
   function undoAction() {
     if (!state.historyUndoStack.length) return;
-
-    state.historyRedoStack.push(deepClone({
-      strokes: state.currentStrokes,
-      notes: state.currentNotes
-    }));
-
-    const previous = state.historyUndoStack.pop();
-    applyFullState(previous, true);
+    state.historyRedoStack.push(deepClone({ strokes: state.currentStrokes, notes: state.currentNotes }));
+    applyFullState(state.historyUndoStack.pop(), true);
     updateHistoryButtons();
   }
 
   function redoAction() {
     if (!state.historyRedoStack.length) return;
-
-    state.historyUndoStack.push(deepClone({
-      strokes: state.currentStrokes,
-      notes: state.currentNotes
-    }));
-
-    const next = state.historyRedoStack.pop();
-    applyFullState(next, true);
+    state.historyUndoStack.push(deepClone({ strokes: state.currentStrokes, notes: state.currentNotes }));
+    applyFullState(state.historyRedoStack.pop(), true);
     updateHistoryButtons();
   }
 
@@ -2161,15 +1995,9 @@ input, textarea{
     if (!socket) return;
     state.pendingStrokeImageId = stroke.imageId;
     state.pendingStrokeBatch.push(stroke);
-
     if (state.strokeBatchRaf) return;
-
     state.strokeBatchRaf = requestAnimationFrame(() => {
-      socket.emit("draw-strokes", {
-        imageId: state.pendingStrokeImageId,
-        strokes: state.pendingStrokeBatch
-      });
-
+      socket.emit("draw-strokes", { imageId: state.pendingStrokeImageId, strokes: state.pendingStrokeBatch });
       state.pendingStrokeBatch = [];
       state.pendingStrokeImageId = "";
       state.strokeBatchRaf = null;
@@ -2180,9 +2008,10 @@ input, textarea{
     const normalized = String(text || "");
     const lines = normalized.split("\n").length || 1;
     const longest = Math.max(...normalized.split("\n").map((line) => line.length), 6);
-    const width = clamp(0.12 + longest * 0.008, 0.12, 0.30);
-    const height = clamp(0.09 + lines * 0.03, 0.09, 0.28);
-    return { width, height };
+    return {
+      width: clamp(0.12 + longest * 0.008, 0.12, 0.30),
+      height: clamp(0.09 + lines * 0.03, 0.09, 0.28)
+    };
   }
 
   function estimateMarkerPosition(index = 0) {
@@ -2194,16 +2023,14 @@ input, textarea{
 
   function normalizeNote(note, index = 0) {
     const base = estimateMarkerPosition(index);
-    const text = String(note?.text || "").slice(0, MAX_NOTE_CHARS);
-    const estimated = estimateNoteSize(text);
-
+    const estimated = estimateNoteSize(note && note.text);
     return {
-      id: note?.id || crypto.randomUUID(),
+      id: note && note.id || crypto.randomUUID(),
       x: typeof note?.x === "number" ? clamp(note.x, 0.06, 0.94) : base.x,
       y: typeof note?.y === "number" ? clamp(note.y, 0.08, 0.92) : base.y,
       width: typeof note?.width === "number" ? clamp(note.width, 0.12, 0.30) : estimated.width,
       height: typeof note?.height === "number" ? clamp(note.height, 0.09, 0.28) : estimated.height,
-      text,
+      text: String(note?.text || "").slice(0, MAX_NOTE_CHARS),
       color: note?.color || "#fff7c2",
       author: note?.author === "admin" ? "admin" : "user",
       updatedAt: typeof note?.updatedAt === "number" ? note.updatedAt : Date.now()
@@ -2219,6 +2046,13 @@ input, textarea{
     return normalized ? normalized.slice(0, 10) : "새 메모";
   }
 
+  function getMarkerPosition(note) {
+    return {
+      left: note.x * (el.imageStage.clientWidth || 1),
+      top: note.y * (el.imageStage.clientHeight || 1)
+    };
+  }
+
   function selectMarker(noteId) {
     state.activeMarkerId = noteId || "";
     el.textLayer.querySelectorAll(".noteMarker").forEach((node) => {
@@ -2226,23 +2060,13 @@ input, textarea{
     });
   }
 
-  function getMarkerPosition(note) {
-    const width = el.imageStage.clientWidth || 1;
-    const height = el.imageStage.clientHeight || 1;
-    return {
-      left: note.x * width,
-      top: note.y * height
-    };
-  }
-
   function applyMarkerLayout(marker, note) {
     const pos = getMarkerPosition(note);
     marker.style.left = `${pos.left}px`;
     marker.style.top = `${pos.top}px`;
     marker.style.background = note.color;
-
-    const text = marker.querySelector(".noteMarkerText");
-    if (text) text.textContent = getNotePreview(note.text);
+    const textNode = marker.querySelector(".noteMarkerText");
+    if (textNode) textNode.textContent = getNotePreview(note.text);
   }
 
   function clearNoteTimers(noteId) {
@@ -2254,29 +2078,68 @@ input, textarea{
     state.noteLiveQueue.delete(noteId);
   }
 
-  function clearAllAsyncState() {
-    if (state.saveStateTimer) {
-      clearTimeout(state.saveStateTimer);
-      state.saveStateTimer = null;
-    }
-
+  function clearAsyncState() {
+    if (state.saveStateTimer) clearTimeout(state.saveStateTimer);
+    state.saveStateTimer = null;
     state.noteCommitTimers.forEach((timer) => clearTimeout(timer));
     state.noteCommitTimers.clear();
     state.noteLiveQueue.clear();
-
-    if (state.noteLiveRaf) {
-      cancelAnimationFrame(state.noteLiveRaf);
-      state.noteLiveRaf = null;
-    }
-
-    if (state.strokeBatchRaf) {
-      cancelAnimationFrame(state.strokeBatchRaf);
-      state.strokeBatchRaf = null;
-    }
-
+    if (state.noteLiveRaf) cancelAnimationFrame(state.noteLiveRaf);
+    if (state.strokeBatchRaf) cancelAnimationFrame(state.strokeBatchRaf);
+    state.noteLiveRaf = null;
+    state.strokeBatchRaf = null;
     state.pendingStrokeBatch = [];
     state.pendingStrokeImageId = "";
     setSaveState(state.connectionState === "connected" ? "idle" : "offline");
+  }
+
+  function openNoteEditor(noteId) {
+    const note = getNoteById(noteId);
+    if (!note) return;
+    state.activeNoteEditorId = noteId;
+    el.noteEditorTextarea.value = note.text || "";
+    el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+    el.noteEditorOverlay.classList.add("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "false");
+    setSaveState(state.connectionState === "connected" ? "idle" : "offline");
+    updateViewerStats();
+    requestAnimationFrame(() => {
+      el.noteEditorTextarea.focus();
+      const length = el.noteEditorTextarea.value.length;
+      try { el.noteEditorTextarea.setSelectionRange(length, length); } catch {}
+    });
+  }
+
+  function closeNoteEditor(save = true) {
+    const note = getNoteById(state.activeNoteEditorId);
+    if (save && note && socket) {
+      const nextText = String(el.noteEditorTextarea.value || "").slice(0, MAX_NOTE_CHARS);
+      const size = estimateNoteSize(nextText);
+      note.text = nextText;
+      note.width = clamp(Math.max(note.width, size.width), 0.12, 0.30);
+      note.height = clamp(Math.max(note.height, size.height), 0.09, 0.28);
+      note.updatedAt = Date.now();
+      upsertMarker(note);
+      clearNoteTimers(note.id);
+      socket.emit("update-note", {
+        imageId: state.currentViewerImageId,
+        noteId: note.id,
+        patch: {
+          text: note.text,
+          width: note.width,
+          height: note.height,
+          updatedAt: note.updatedAt
+        }
+      });
+      setSaveState(state.connectionState === "connected" ? "saved" : "offline");
+      setSummaryStatus("요청 정리 중", "이미지 메모가 업데이트되었습니다.");
+    }
+    state.activeNoteEditorId = "";
+    el.noteEditorOverlay.classList.remove("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "true");
+    el.noteEditorTextarea.blur();
+    renderNotes();
+    updateViewerStats();
   }
 
   function createNoteMarker(note) {
@@ -2284,7 +2147,6 @@ input, textarea{
     marker.className = "noteMarker";
     marker.dataset.id = note.id;
     marker.dataset.author = note.author;
-    marker.style.background = note.color;
 
     const text = document.createElement("span");
     text.className = "noteMarkerText";
@@ -2300,8 +2162,7 @@ input, textarea{
 
     marker.addEventListener("click", (event) => {
       event.stopPropagation();
-      const interaction = state.noteInteraction;
-      if (interaction.noteId === note.id && interaction.moved) return;
+      if (state.noteInteraction.noteId === note.id && state.noteInteraction.moved) return;
       selectMarker(note.id);
       openNoteEditor(note.id);
     });
@@ -2309,13 +2170,11 @@ input, textarea{
     marker.addEventListener("pointerdown", (event) => {
       const current = getNoteById(note.id);
       if (!current) return;
-
       selectMarker(note.id);
 
       if (event.target === resize) {
         event.preventDefault();
         pushHistory();
-
         state.noteInteraction = {
           type: "resize",
           noteId: note.id,
@@ -2328,17 +2187,14 @@ input, textarea{
           startClientY: event.clientY,
           moved: false
         };
-
         marker.setPointerCapture?.(event.pointerId);
         return;
       }
 
       event.preventDefault();
       pushHistory();
-
       const stageRect = el.imageStage.getBoundingClientRect();
       const pos = getMarkerPosition(current);
-
       state.noteInteraction = {
         type: "drag",
         noteId: note.id,
@@ -2351,7 +2207,6 @@ input, textarea{
         startClientY: event.clientY,
         moved: false
       };
-
       marker.setPointerCapture?.(event.pointerId);
     });
 
@@ -2361,15 +2216,10 @@ input, textarea{
 
   function renderNotes() {
     el.textLayer.innerHTML = "";
-
-    state.currentNotes = state.currentNotes
-      .slice(-MAX_CLIENT_NOTES)
-      .map((note, index) => normalizeNote(note, index));
-
+    state.currentNotes = state.currentNotes.slice(-MAX_CLIENT_NOTES).map((note, index) => normalizeNote(note, index));
     state.currentNotes.forEach((note) => {
       el.textLayer.appendChild(createNoteMarker(note));
     });
-
     selectMarker(state.activeMarkerId);
     updateViewerStats();
   }
@@ -2381,125 +2231,16 @@ input, textarea{
       selectMarker(state.activeMarkerId);
       return;
     }
-
     applyMarkerLayout(existing, note);
     existing.classList.toggle("selected", existing.dataset.id === state.activeMarkerId);
   }
 
-  function openNoteEditor(noteId) {
-    const note = getNoteById(noteId);
-    if (!note) return;
-
-    state.activeNoteEditorId = noteId;
-    state.localEditingNoteVersion += 1;
-    el.noteEditorTextarea.value = note.text || "";
-    el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
-    el.noteEditorOverlay.classList.add("open");
-    el.noteEditorOverlay.setAttribute("aria-hidden", "false");
-    setSaveState("idle");
-    updateModeLabels();
-
-    requestAnimationFrame(() => {
-      el.noteEditorTextarea.focus();
-      const length = el.noteEditorTextarea.value.length;
-      try {
-        el.noteEditorTextarea.setSelectionRange(length, length);
-      } catch {}
-    });
-  }
-
-  function closeNoteEditor(save = true) {
-    const note = getNoteById(state.activeNoteEditorId);
-
-    if (save && note && socket) {
-      const nextText = String(el.noteEditorTextarea.value || "").slice(0, MAX_NOTE_CHARS);
-      const size = estimateNoteSize(nextText);
-
-      note.text = nextText;
-      note.width = clamp(Math.max(note.width, size.width), 0.12, 0.30);
-      note.height = clamp(Math.max(note.height, size.height), 0.09, 0.28);
-      note.updatedAt = Date.now();
-
-      upsertMarker(note);
-
-      clearNoteTimers(note.id);
-      socket.emit("update-note", {
-        imageId: getCurrentImageId(),
-        noteId: note.id,
-        patch: {
-          text: note.text,
-          width: note.width,
-          height: note.height,
-          updatedAt: note.updatedAt
-        }
-      });
-
-      setSaveState(state.connectionState === "connected" ? "saved" : "offline");
-    }
-
-    state.activeNoteEditorId = "";
-    el.noteEditorOverlay.classList.remove("open");
-    el.noteEditorOverlay.setAttribute("aria-hidden", "true");
-    el.noteEditorTextarea.blur();
-    renderNotes();
-    updateModeLabels();
-  }
-
-  function addTextNote() {
-    if (!getCurrentImageId() || !socket) return;
-
-    pushHistory();
-
-    const note = normalizeNote({
-      id: crypto.randomUUID(),
-      x: 0.14,
-      y: 0.16,
-      text: "",
-      color: state.currentNoteColor,
-      author: role,
-      updatedAt: Date.now()
-    }, state.currentNotes.length);
-
-    state.currentNotes.push(note);
-    renderNotes();
-    selectMarker(note.id);
-    openNoteEditor(note.id);
-
-    socket.emit("add-note", {
-      imageId: getCurrentImageId(),
-      note
-    });
-  }
-
-  function deleteActiveNote() {
-    if (!socket || !state.activeNoteEditorId || !getCurrentImageId()) return;
-    const noteId = state.activeNoteEditorId;
-    if (!confirm("이 메모를 삭제할까요?")) return;
-
-    clearNoteTimers(noteId);
-    state.currentNotes = state.currentNotes.filter((note) => note.id !== noteId);
-    socket.emit("delete-note", {
-      imageId: getCurrentImageId(),
-      noteId
-    });
-    closeNoteEditor(false);
-    renderNotes();
-  }
-
   function scheduleNoteLiveUpdate(noteId, patch) {
-    if (!socket || !getCurrentImageId()) return;
-    state.noteLiveQueue.set(noteId, {
-      imageId: getCurrentImageId(),
-      noteId,
-      patch
-    });
-
+    if (!socket || !state.currentViewerImageId) return;
+    state.noteLiveQueue.set(noteId, { imageId: state.currentViewerImageId, noteId, patch });
     if (state.noteLiveRaf) return;
-
     state.noteLiveRaf = requestAnimationFrame(() => {
-      state.noteLiveQueue.forEach((payload) => {
-        socket.emit("note-live-update", payload);
-      });
+      state.noteLiveQueue.forEach((payload) => socket.emit("note-live-update", payload));
       state.noteLiveQueue.clear();
       state.noteLiveRaf = null;
     });
@@ -2509,66 +2250,40 @@ input, textarea{
     if (!socket) return;
     const prev = state.noteCommitTimers.get(noteId);
     if (prev) clearTimeout(prev);
-
     const timer = setTimeout(() => {
-      socket.emit("update-note", {
-        imageId: getCurrentImageId(),
-        noteId,
-        patch
-      });
+      socket.emit("update-note", { imageId: state.currentViewerImageId, noteId, patch });
       state.noteCommitTimers.delete(noteId);
     }, delay);
-
     state.noteCommitTimers.set(noteId, timer);
   }
 
   function handleNoteInteractionMove(event) {
     const interaction = state.noteInteraction;
-    if (!interaction.type || !interaction.noteId || !getCurrentImageId()) return;
-
+    if (!interaction.type || !interaction.noteId || !state.currentViewerImageId) return;
     const note = getNoteById(interaction.noteId);
-    if (!note) return;
-
     const marker = el.textLayer.querySelector(`.noteMarker[data-id="${interaction.noteId}"]`);
     const stageRect = el.imageStage.getBoundingClientRect();
-    if (!marker || !stageRect.width || !stageRect.height) return;
+    if (!note || !marker || !stageRect.width || !stageRect.height) return;
 
     const moveX = Math.abs(event.clientX - interaction.startClientX);
     const moveY = Math.abs(event.clientY - interaction.startClientY);
-
-    if (moveX > getDragThreshold() || moveY > getDragThreshold()) {
-      interaction.moved = true;
-    }
+    if (moveX > getDragThreshold() || moveY > getDragThreshold()) interaction.moved = true;
 
     if (interaction.type === "drag") {
-      note.x = clamp(
-        (event.clientX - stageRect.left - interaction.dragOffsetX) / stageRect.width,
-        0.06,
-        0.94
-      );
-      note.y = clamp(
-        (event.clientY - stageRect.top - interaction.dragOffsetY) / stageRect.height,
-        0.08,
-        0.92
-      );
+      note.x = clamp((event.clientX - stageRect.left - interaction.dragOffsetX) / stageRect.width, 0.06, 0.94);
+      note.y = clamp((event.clientY - stageRect.top - interaction.dragOffsetY) / stageRect.height, 0.08, 0.92);
       note.updatedAt = Date.now();
       applyMarkerLayout(marker, note);
-      scheduleNoteLiveUpdate(note.id, {
-        x: note.x,
-        y: note.y,
-        updatedAt: note.updatedAt
-      });
+      scheduleNoteLiveUpdate(note.id, { x: note.x, y: note.y, updatedAt: note.updatedAt });
       return;
     }
 
     if (interaction.type === "resize") {
       const deltaX = event.clientX - interaction.startClientX;
       const deltaY = event.clientY - interaction.startClientY;
-
       note.width = clamp(interaction.startWidth + (deltaX / stageRect.width), 0.12, 0.30);
       note.height = clamp(interaction.startHeight + (deltaY / stageRect.height), 0.09, 0.28);
       note.updatedAt = Date.now();
-      interaction.moved = true;
       applyMarkerLayout(marker, note);
       scheduleNoteLiveUpdate(note.id, {
         width: note.width,
@@ -2580,39 +2295,23 @@ input, textarea{
 
   function finishNoteInteraction() {
     const interaction = state.noteInteraction;
-
-    if (!interaction.type || !interaction.noteId) {
-      state.noteInteraction = {
-        type: "",
-        noteId: "",
-        pointerId: null,
-        dragOffsetX: 0,
-        dragOffsetY: 0,
-        startWidth: 0,
-        startHeight: 0,
-        startClientX: 0,
-        startClientY: 0,
-        moved: false
-      };
-      return;
+    if (interaction.type && interaction.noteId && interaction.moved && socket) {
+      const note = getNoteById(interaction.noteId);
+      if (note) {
+        setSaveState(state.connectionState === "connected" ? "pending" : "offline");
+        socket.emit("update-note", {
+          imageId: state.currentViewerImageId,
+          noteId: note.id,
+          patch: {
+            x: note.x,
+            y: note.y,
+            width: note.width,
+            height: note.height,
+            updatedAt: note.updatedAt
+          }
+        });
+      }
     }
-
-    const note = getNoteById(interaction.noteId);
-    if (note && interaction.moved && socket) {
-      setSaveState(state.connectionState === "connected" ? "pending" : "offline");
-      socket.emit("update-note", {
-        imageId: getCurrentImageId(),
-        noteId: note.id,
-        patch: {
-          x: note.x,
-          y: note.y,
-          width: note.width,
-          height: note.height,
-          updatedAt: note.updatedAt
-        }
-      });
-    }
-
     state.noteInteraction = {
       type: "",
       noteId: "",
@@ -2627,11 +2326,44 @@ input, textarea{
     };
   }
 
+  function addTextNote() {
+    if (!state.currentViewerImageId || !socket) return;
+    pushHistory();
+    const note = normalizeNote({
+      id: crypto.randomUUID(),
+      x: 0.14,
+      y: 0.16,
+      text: "",
+      color: state.currentNoteColor,
+      author: role,
+      updatedAt: Date.now()
+    }, state.currentNotes.length);
+    state.currentNotes.push(note);
+    renderNotes();
+    selectMarker(note.id);
+    addRequestType("이미지 메모", "");
+    setSummaryStatus("요청 정리 중", "이미지에 수정 메모가 추가되었습니다.");
+    socket.emit("add-note", { imageId: state.currentViewerImageId, note });
+    openNoteEditor(note.id);
+  }
+
+  function deleteActiveNote() {
+    if (!socket || !state.activeNoteEditorId || !state.currentViewerImageId) return;
+    if (!confirm("이 메모를 삭제할까요?")) return;
+    clearNoteTimers(state.activeNoteEditorId);
+    state.currentNotes = state.currentNotes.filter((note) => note.id !== state.activeNoteEditorId);
+    socket.emit("delete-note", {
+      imageId: state.currentViewerImageId,
+      noteId: state.activeNoteEditorId
+    });
+    closeNoteEditor(false);
+    renderNotes();
+  }
+
   function startDrawing(event) {
-    if (!getCurrentImageId() || !socket) return;
+    if (!state.currentViewerImageId || !socket) return;
     if (state.drawMode === "text") return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
-
     state.isDrawing = true;
     state.lastPoint = getNormalizedPoint(event);
     pushHistory();
@@ -2639,26 +2371,25 @@ input, textarea{
   }
 
   function moveDrawing(event) {
-    if (!state.isDrawing || !state.lastPoint || !getCurrentImageId()) return;
-
-    const point = getNormalizedPoint(event);
+    if (!state.isDrawing || !state.lastPoint || !state.currentViewerImageId) return;
+    const current = getNormalizedPoint(event);
     const stroke = {
-      imageId: getCurrentImageId(),
+      imageId: state.currentViewerImageId,
       mode: state.drawMode === "erase" ? "erase" : "draw",
       color: state.currentColor,
       size: state.currentSize,
       last: state.lastPoint,
-      current: point
+      current
     };
-
     state.currentStrokes.push(stroke);
     if (state.currentStrokes.length > MAX_CLIENT_STROKES) {
       state.currentStrokes = state.currentStrokes.slice(-MAX_CLIENT_STROKES);
     }
-
     drawStroke(stroke);
     queueStrokeSync(stroke);
-    state.lastPoint = point;
+    state.lastPoint = current;
+    addRequestType("이미지 표시", "");
+    setSummaryStatus("요청 정리 중", "이미지에 표시가 추가되었습니다.");
     updateViewerStats();
   }
 
@@ -2702,54 +2433,54 @@ input, textarea{
     socket.emit("request-note-history", { imageId });
   }
 
-  function prepareForImageContextChange() {
-    clearAllAsyncState();
+  function prepareForImageChange() {
+    clearAsyncState();
     if (state.activeNoteEditorId) closeNoteEditor(false);
-    state.activeMarkerId = "";
-    state.noteInteraction = {
-      type: "",
-      noteId: "",
-      pointerId: null,
-      dragOffsetX: 0,
-      dragOffsetY: 0,
-      startWidth: 0,
-      startHeight: 0,
-      startClientX: 0,
-      startClientY: 0,
-      moved: false
-    };
+    finishNoteInteraction();
+  }
+
+  function lockViewerBackground() {
+    document.body.classList.add("viewer-inline-open");
+  }
+
+  function unlockViewerBackground() {
+    document.body.classList.remove("viewer-inline-open");
+  }
+
+  function focusStableScroll() {
+    if (!isMobileViewport()) return;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      el.viewerOverlay.scrollTop = 0;
+    });
   }
 
   function openViewerInline(imageId, imageUrl) {
     if (!imageId || !imageUrl) return;
-
-    prepareForImageContextChange();
+    prepareForImageChange();
     resetViewerState();
-
     state.currentViewerImageId = imageId;
     state.currentViewerImageUrl = imageUrl;
     state.lastSelectedImageId = imageId;
     state.lastSelectedImageUrl = imageUrl;
-    updateViewerEntryButton();
-
-    document.body.classList.add("viewer-inline-open");
+    state.summary.productName = state.summary.productName || inferProductNameFromImage(imageUrl);
+    lockViewerBackground();
     el.viewerOverlay.classList.add("open");
     el.viewerOverlay.setAttribute("aria-hidden", "false");
     el.viewerImage.src = imageUrl;
-
     updateViewerStats();
+    updateViewerEntryButton();
     saveViewerState();
     requestViewerHistory(imageId);
+    focusStableScroll();
   }
 
   function openViewerPopup(imageId, imageUrl) {
     if (!imageId || !imageUrl) return;
-
-    if (window.innerWidth <= 900) {
+    if (isMobileViewport()) {
       openViewerInline(imageId, imageUrl);
       return;
     }
-
     const url = new URL(window.location.origin + window.location.pathname);
     url.searchParams.set("viewer", "1");
     url.searchParams.set("room", state.roomId);
@@ -2757,24 +2488,19 @@ input, textarea{
     url.searchParams.set("imageId", imageId);
     url.searchParams.set("imageUrl", imageUrl);
     url.searchParams.set("userName", userName);
-
     const popup = window.open(
       url.toString(),
       "designImageViewer",
       `width=${Math.max(window.screen.availWidth || 1400, 1200)},height=${Math.max(window.screen.availHeight || 900, 800)},left=0,top=0,resizable=yes,scrollbars=yes`
     );
-
-    if (!popup) {
-      alert("브라우저에서 새 창이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
-    }
+    if (!popup) alert("브라우저에서 새 창이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
   }
 
   function closeViewer() {
-    prepareForImageContextChange();
-    document.body.classList.remove("viewer-inline-open");
+    prepareForImageChange();
+    unlockViewerBackground();
     el.viewerOverlay.classList.remove("open");
     el.viewerOverlay.setAttribute("aria-hidden", "true");
-
     state.currentViewerImageId = "";
     state.currentViewerImageUrl = "";
     resetViewerState();
@@ -2784,16 +2510,11 @@ input, textarea{
 
   function restoreViewerState() {
     if (params.get("viewer") === "1") return;
-
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.viewerState);
       if (!raw) return;
-
       const data = JSON.parse(raw);
-      if (!data?.isOpen) return;
-      if (data.roomId !== state.roomId) return;
-      if (!data.imageId || !data.imageUrl) return;
-
+      if (!data?.isOpen || data.roomId !== state.roomId || !data.imageId || !data.imageUrl) return;
       openViewerInline(data.imageId, data.imageUrl);
     } catch (error) {
       console.error("viewer 상태 복원 실패:", error);
@@ -2806,26 +2527,16 @@ input, textarea{
       setPhoneStatus("전화번호를 입력해주세요.", true);
       return;
     }
-
     el.savePhoneBtn.disabled = true;
     setPhoneStatus("저장 중...");
-
     try {
       const response = await fetch("/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roomId: state.roomId,
-          role,
-          phone
-        })
+        body: JSON.stringify({ roomId: state.roomId, role, phone })
       });
-
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || "전화번호 저장에 실패했습니다.");
-      }
-
+      if (!response.ok) throw new Error(result.error || "전화번호 저장에 실패했습니다.");
       el.phoneInput.value = result.phone || phone;
       setPhoneStatus("전화번호가 저장되었습니다.");
       toggleContactPanel(false);
@@ -2839,44 +2550,31 @@ input, textarea{
   async function uploadImage(file) {
     const formData = new FormData();
     formData.append("image", file);
-
-    const response = await fetch("/upload", {
-      method: "POST",
-      body: formData
-    });
-
+    const response = await fetch("/upload", { method: "POST", body: formData });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(result.error || "이미지 업로드 실패");
-    }
-
-    if (!result.url) {
-      throw new Error("업로드된 이미지 URL이 없습니다.");
-    }
-
-    if (!socket) {
-      throw new Error("실시간 연결이 없어 이미지를 전송할 수 없습니다.");
-    }
-
+    if (!response.ok) throw new Error(result.error || "이미지 업로드 실패");
+    if (!result.url) throw new Error("업로드된 이미지 URL이 없습니다.");
+    if (!socket) throw new Error("실시간 연결이 없어 이미지를 전송할 수 없습니다.");
     socket.emit("image", { url: result.url });
   }
 
   function sendMainMessage() {
     const text = el.msgInput.value.trim();
     if (!text || state.isComposingMain || !socket) return;
-
+    applyConversationInsights(text);
     socket.emit("message", { text });
     el.msgInput.value = "";
-    restoreMobileViewport();
+    setSummaryStatus("상담 진행 중", "요청 내용을 전달했습니다.");
   }
 
   function sendViewerMessage() {
     const text = el.viewerMsgInput.value.trim();
     if (!text || state.isComposingViewer || !socket) return;
-
+    applyConversationInsights(text);
     socket.emit("message", { text });
     el.viewerMsgInput.value = "";
-    restoreMobileViewport();
+    focusStableScroll();
+    setSummaryStatus("상담 진행 중", "이미지 기준 추가 요청을 전달했습니다.");
   }
 
   function roundRect(ctx2d, x, y, width, height, radius) {
@@ -2891,9 +2589,7 @@ input, textarea{
 
   function wrapTextLines(text, maxCharsPerLine) {
     const result = [];
-    const source = String(text || "").split("\n");
-
-    source.forEach((part) => {
+    String(text || "").split("\n").forEach((part) => {
       if (!part) {
         result.push("");
         return;
@@ -2908,13 +2604,11 @@ input, textarea{
       }
       if (current) result.push(current);
     });
-
     return result.slice(0, 10);
   }
 
   function buildDownload() {
     if (!state.currentViewerImageUrl) return;
-
     const stageWidth = el.imageStage.clientWidth || 1200;
     const stageHeight = el.imageStage.clientHeight || 760;
     const fileName = `${sanitizeFileName(userName)}_상담이미지_${formatFileDate()}.png`;
@@ -2924,23 +2618,19 @@ input, textarea{
       const exportCanvas = document.createElement("canvas");
       exportCanvas.width = Math.round(stageWidth * 2);
       exportCanvas.height = Math.round(stageHeight * 2);
-
       const exportCtx = exportCanvas.getContext("2d");
       exportCtx.fillStyle = "#f7fbff";
       exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-
       exportCtx.fillStyle = "#ffffff";
       roundRect(exportCtx, 8, 8, exportCanvas.width - 16, exportCanvas.height - 16, 24);
       exportCtx.fill();
 
       const stageRect = el.imageStage.getBoundingClientRect();
       const imageRect = el.viewerImage.getBoundingClientRect();
-
       const relX = Math.max(0, imageRect.left - stageRect.left);
       const relY = Math.max(0, imageRect.top - stageRect.top);
       const relW = imageRect.width;
       const relH = imageRect.height;
-
       const drawX = (relX / stageRect.width) * exportCanvas.width;
       const drawY = (relY / stageRect.height) * exportCanvas.height;
       const drawW = (relW / stageRect.width) * exportCanvas.width;
@@ -2957,12 +2647,10 @@ input, textarea{
         const y1 = stroke.last.y * exportCanvas.height;
         const x2 = stroke.current.x * exportCanvas.width;
         const y2 = stroke.current.y * exportCanvas.height;
-
         exportCtx.save();
         exportCtx.lineCap = "round";
         exportCtx.lineJoin = "round";
         exportCtx.lineWidth = (stroke.size || 3) * 2;
-
         if (stroke.mode === "erase") {
           exportCtx.globalCompositeOperation = "destination-out";
           exportCtx.strokeStyle = "rgba(0,0,0,1)";
@@ -2970,7 +2658,6 @@ input, textarea{
           exportCtx.globalCompositeOperation = "source-over";
           exportCtx.strokeStyle = stroke.color || "#ff3b30";
         }
-
         exportCtx.beginPath();
         exportCtx.moveTo(x1, y1);
         exportCtx.lineTo(x2, y2);
@@ -2983,35 +2670,26 @@ input, textarea{
         const y = note.y * exportCanvas.height;
         const width = note.width * exportCanvas.width;
         const height = note.height * exportCanvas.height;
-
         exportCtx.save();
         exportCtx.fillStyle = note.color || "#fff7c2";
         exportCtx.strokeStyle = note.author === "admin" ? "#8a5cff" : "#2491ff";
         exportCtx.lineWidth = 2.5;
-
         roundRect(exportCtx, x, y, width, height, 16);
         exportCtx.fill();
         exportCtx.stroke();
-
         exportCtx.fillStyle = "#17212b";
         exportCtx.font = "bold 24px sans-serif";
         exportCtx.fillText(note.author === "admin" ? "관리자" : "고객", x + 18, y + 30);
-
         exportCtx.font = "24px sans-serif";
-        const lines = wrapTextLines(note.text || "", 20);
-        const lineHeight = 30;
-        lines.forEach((line, idx) => {
-          exportCtx.fillText(line, x + 18, y + 64 + idx * lineHeight);
+        wrapTextLines(note.text || "", 20).forEach((line, index) => {
+          exportCtx.fillText(line, x + 18, y + 64 + index * 30);
         });
-
         exportCtx.restore();
       });
 
-      exportCtx.save();
-      exportCtx.fillStyle = "rgba(0,0,0,0.55)";
+      exportCtx.fillStyle = "rgba(0,0,0,.55)";
       exportCtx.font = "20px sans-serif";
       exportCtx.fillText(`${userName} · ${new Date().toLocaleString("ko-KR")}`, 20, exportCanvas.height - 20);
-      exportCtx.restore();
 
       const link = document.createElement("a");
       link.href = exportCanvas.toDataURL("image/png");
@@ -3024,12 +2702,29 @@ input, textarea{
     img.onerror = () => {
       alert("이미지를 다운로드용으로 불러오지 못했습니다.");
     };
-
     img.src = state.currentViewerImageUrl;
   }
 
-  function bindUIEvents() {
+  function bindUI() {
     el.toggleContactPanelBtn.addEventListener("click", () => toggleContactPanel());
+
+    el.quickChips.forEach((button) => {
+      button.addEventListener("click", () => {
+        addRequestType(button.dataset.request, button.dataset.draft || "");
+        setSummaryStatus("요청 정리 중", `${button.dataset.request} 요청이 추가되었습니다.`);
+      });
+    });
+
+    el.summaryComposeBtn.addEventListener("click", () => {
+      fillActiveInput(buildSummaryMessage("summary"));
+      setSummaryStatus("최종 확인 대기", "요청 정리 문장을 확인하고 전송해 주세요.");
+    });
+
+    el.summaryQuoteBtn.addEventListener("click", () => {
+      fillActiveInput(buildSummaryMessage("quote"));
+      toggleContactPanel(true);
+      setSummaryStatus("견적 요청 준비", "연락처와 함께 견적 요청을 보내면 전환율이 높아집니다.");
+    });
 
     el.msgInput.addEventListener("compositionstart", () => { state.isComposingMain = true; });
     el.msgInput.addEventListener("compositionend", () => { state.isComposingMain = false; });
@@ -3038,14 +2733,12 @@ input, textarea{
 
     el.sendBtn.addEventListener("click", sendMainMessage);
     el.viewerSendBtn.addEventListener("click", sendViewerMessage);
-
     el.msgInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && !state.isComposingMain) {
         event.preventDefault();
         sendMainMessage();
       }
     });
-
     el.viewerMsgInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && !state.isComposingViewer) {
         event.preventDefault();
@@ -3053,8 +2746,12 @@ input, textarea{
       }
     });
 
-    el.savePhoneBtn.addEventListener("click", savePhone);
+    ["focus", "click", "touchstart"].forEach((type) => {
+      el.viewerMsgInput.addEventListener(type, focusStableScroll, { passive: true });
+      el.noteEditorTextarea.addEventListener(type, focusStableScroll, { passive: true });
+    });
 
+    el.savePhoneBtn.addEventListener("click", savePhone);
     el.phoneInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -3063,9 +2760,8 @@ input, textarea{
     });
 
     el.fileInput.addEventListener("change", async (event) => {
-      const file = event.target.files?.[0];
+      const file = event.target.files && event.target.files[0];
       if (!file) return;
-
       try {
         await uploadImage(file);
       } catch (error) {
@@ -3076,78 +2772,60 @@ input, textarea{
     });
 
     el.openViewerBtn.addEventListener("click", () => {
-      const imageId = state.lastSelectedImageId;
-      const imageUrl = state.lastSelectedImageUrl;
-
-      if (!imageId || !imageUrl) {
+      if (!state.lastSelectedImageId || !state.lastSelectedImageUrl) {
         alert("먼저 이미지를 선택해 주세요.");
         return;
       }
-
-      openViewerPopup(imageId, imageUrl);
+      openViewerPopup(state.lastSelectedImageId, state.lastSelectedImageUrl);
     });
 
     el.closeViewerBtn.addEventListener("click", closeViewer);
     el.downloadSketchBtn.addEventListener("click", buildDownload);
-
     el.penBtn.addEventListener("click", () => setDrawMode("draw"));
     el.eraserBtn.addEventListener("click", () => setDrawMode("erase"));
-    el.addTextBtn.addEventListener("click", () => {
-      setDrawMode("text");
-      addTextNote();
-    });
-
-    el.clearDrawingBtn.addEventListener("click", () => {
-      if (!getCurrentImageId() || !state.currentStrokes.length || !socket) return;
-      if (!confirm("현재 이미지의 선을 모두 지울까요?")) return;
-
-      pushHistory();
-      state.currentStrokes = [];
-      redrawAllStrokes();
-      socket.emit("clear-drawing", { imageId: getCurrentImageId() });
-    });
-
-    el.clearNotesBtn.addEventListener("click", () => {
-      if (!getCurrentImageId() || !state.currentNotes.length || !socket) return;
-      if (!confirm("현재 이미지의 메모를 모두 지울까요?")) return;
-
-      pushHistory();
-      state.currentNotes = [];
-      renderNotes();
-      socket.emit("clear-notes", { imageId: getCurrentImageId() });
-    });
-
+    el.addTextBtn.addEventListener("click", addTextNote);
     el.undoBtn.addEventListener("click", undoAction);
     el.redoBtn.addEventListener("click", redoAction);
 
+    el.clearDrawingBtn.addEventListener("click", () => {
+      if (!state.currentViewerImageId || !state.currentStrokes.length || !socket) return;
+      if (!confirm("현재 이미지의 선을 모두 지울까요?")) return;
+      pushHistory();
+      state.currentStrokes = [];
+      redrawAllStrokes();
+      socket.emit("clear-drawing", { imageId: state.currentViewerImageId });
+    });
+
+    el.clearNotesBtn.addEventListener("click", () => {
+      if (!state.currentViewerImageId || !state.currentNotes.length || !socket) return;
+      if (!confirm("현재 이미지의 메모를 모두 지울까요?")) return;
+      pushHistory();
+      state.currentNotes = [];
+      renderNotes();
+      socket.emit("clear-notes", { imageId: state.currentViewerImageId });
+    });
+
     el.thicknessRange.addEventListener("input", () => {
-      state.currentSize = Number(el.thicknessRange.value) || 3;
+      state.currentSize = Number(el.thicknessRange.value || 3);
     });
 
     el.colorSwatches.forEach((button) => {
       button.addEventListener("click", () => {
-        const color = button.dataset.color;
-        if (!color) return;
-        setActiveColor(color);
+        if (!button.dataset.color) return;
+        setActiveColor(button.dataset.color);
         setDrawMode("draw");
       });
     });
 
-    el.customColorBtn.addEventListener("click", () => {
-      el.customColorInput.click();
-    });
-
+    el.customColorBtn.addEventListener("click", () => el.customColorInput.click());
     el.customColorInput.addEventListener("input", () => {
-      setActiveColor(el.customColorInput.value);
+      setActiveColor(el.customColorInput.value || "#2491ff");
       setDrawMode("draw");
     });
 
     el.noteColorSwatches.forEach((button) => {
-      button.addEventListener("click", () => {
-        setActiveNoteColor(button.dataset.noteColor);
-      });
+      button.addEventListener("click", () => setActiveNoteColor(button.dataset.noteColor));
     });
-
     el.toggleNoteColorsBtn.addEventListener("click", () => {
       el.noteColorRow.classList.toggle("open");
     });
@@ -3166,21 +2844,8 @@ input, textarea{
       endDrawing();
     });
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        finishNoteInteraction();
-        endDrawing();
-      }
-    });
-
-    el.textLayer.addEventListener("click", (event) => {
-      const marker = event.target.closest(".noteMarker");
-      if (!marker) selectMarker("");
-    });
-
     el.noteDeleteBtn.addEventListener("click", deleteActiveNote);
     el.noteEditorDoneBtn.addEventListener("click", () => closeNoteEditor(true));
-
     el.noteEditorOverlay.addEventListener("click", (event) => {
       if (event.target === el.noteEditorOverlay) closeNoteEditor(true);
     });
@@ -3188,22 +2853,18 @@ input, textarea{
     el.noteEditorTextarea.addEventListener("input", () => {
       const note = getNoteById(state.activeNoteEditorId);
       if (!note) return;
-
       const nextText = String(el.noteEditorTextarea.value || "").slice(0, MAX_NOTE_CHARS);
       const size = estimateNoteSize(nextText);
       note.text = nextText;
       note.width = clamp(Math.max(note.width, size.width), 0.12, 0.30);
       note.height = clamp(Math.max(note.height, size.height), 0.09, 0.28);
       note.updatedAt = Date.now();
-
       el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
       upsertMarker(note);
-
       if (state.connectionState !== "connected" || !socket) {
         setSaveState("offline");
         return;
       }
-
       setSaveState("pending");
       scheduleNoteLiveUpdate(note.id, {
         text: note.text,
@@ -3211,7 +2872,6 @@ input, textarea{
         height: note.height,
         updatedAt: note.updatedAt
       });
-
       debounceNoteCommit(note.id, {
         text: note.text,
         width: note.width,
@@ -3220,24 +2880,30 @@ input, textarea{
       });
     });
 
-    el.noteEditorTextarea.addEventListener("keydown", (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-        event.preventDefault();
-        closeNoteEditor(true);
-      }
-
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeNoteEditor(true);
-      }
-    });
-
     el.viewerImage.addEventListener("load", () => {
       updateCanvasSize();
-      if (getCurrentImageId()) requestViewerHistory(getCurrentImageId());
+      if (state.currentViewerImageId) requestViewerHistory(state.currentViewerImageId);
     });
 
-    window.addEventListener("resize", updateCanvasSize);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        finishNoteInteraction();
+        endDrawing();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      setViewportUnit();
+      updateCanvasSize();
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => {
+        setViewportUnit();
+        focusStableScroll();
+      });
+      window.visualViewport.addEventListener("scroll", focusStableScroll);
+    }
 
     window.addEventListener("keydown", (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !event.shiftKey) {
@@ -3246,37 +2912,30 @@ input, textarea{
         undoAction();
         return;
       }
-
-      if (
-        ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") ||
-        ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "z")
-      ) {
+      if (((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") ||
+          ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "z")) {
         if (document.activeElement === el.noteEditorTextarea) return;
         event.preventDefault();
         redoAction();
         return;
       }
-
       if (event.key === "Escape") {
         if (el.noteEditorOverlay.classList.contains("open")) {
           closeNoteEditor(true);
           return;
         }
-
-        if (el.viewerOverlay.classList.contains("open")) {
-          closeViewer();
-        }
+        if (el.viewerOverlay.classList.contains("open")) closeViewer();
       }
     });
   }
 
-  function bindSocketEvents() {
-    if (!socket) return;
+  function bindSocket() {
+    if (!socket) {
+      setConnectionState("offline");
+      return;
+    }
 
-    socket.emit("join", {
-      roomId: state.roomId,
-      role
-    });
+    socket.emit("join", { roomId: state.roomId, role });
 
     socket.on("connect", () => {
       setConnectionState("connected");
@@ -3291,103 +2950,67 @@ input, textarea{
     socket.on("history", (messages) => {
       el.chatInner.innerHTML = "";
       el.viewerChatInner.innerHTML = "";
-
       (messages || []).forEach((item) => {
         if (item.type === "text") {
-          el.chatInner.appendChild(createTextRow(item));
-          if (el.viewerOverlay.classList.contains("open")) {
-            el.viewerChatInner.appendChild(createTextRow(item));
+          inferRequestTypesFromText(item.text || "");
+          const productName = inferProductNameFromText(item.text || "");
+          if (productName && !state.summary.productName) {
+            state.summary.productName = productName;
           }
+          el.chatInner.appendChild(createTextRow(item));
+          if (el.viewerOverlay.classList.contains("open")) el.viewerChatInner.appendChild(createTextRow(item));
         }
-
         if (item.type === "image") {
           el.chatInner.appendChild(createImageRow(item));
-          if (el.viewerOverlay.classList.contains("open")) {
-            el.viewerChatInner.appendChild(createImageRow(item));
-          }
-
+          if (el.viewerOverlay.classList.contains("open")) el.viewerChatInner.appendChild(createImageRow(item));
           state.lastSelectedImageId = item.imageId;
           state.lastSelectedImageUrl = item.imageUrl;
         }
       });
-
       updateViewerEntryButton();
+      updateSummaryUI();
       scrollBottom(el.chatBox);
       scrollBottom(el.viewerChatBox);
     });
 
-    socket.on("message", (data) => {
-      const node = createTextRow(data);
-      el.chatInner.appendChild(node);
-      scrollBottom(el.chatBox);
-
-      if (el.viewerOverlay.classList.contains("open")) {
-        el.viewerChatInner.appendChild(createTextRow(data));
-        scrollBottom(el.viewerChatBox);
-      }
-    });
-
-    socket.on("image", (data) => {
-      const node = createImageRow(data);
-      el.chatInner.appendChild(node);
-      scrollBottom(el.chatBox);
-
-      if (el.viewerOverlay.classList.contains("open")) {
-        el.viewerChatInner.appendChild(createImageRow(data));
-        scrollBottom(el.viewerChatBox);
-      }
-
-      state.lastSelectedImageId = data.imageId;
-      state.lastSelectedImageUrl = data.imageUrl;
-      updateViewerEntryButton();
-    });
+    socket.on("message", renderTextMessage);
+    socket.on("image", renderImageMessage);
 
     socket.on("drawing-history", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId()) return;
-      state.currentStrokes = Array.isArray(payload.strokes)
-        ? payload.strokes.slice(-MAX_CLIENT_STROKES)
-        : [];
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.currentStrokes = Array.isArray(payload.strokes) ? payload.strokes.slice(-MAX_CLIENT_STROKES) : [];
       redrawAllStrokes();
     });
 
     socket.on("draw-stroke", (stroke) => {
-      if (!stroke || stroke.imageId !== getCurrentImageId()) return;
-
+      if (!stroke || stroke.imageId !== state.currentViewerImageId) return;
       state.currentStrokes.push(stroke);
-      if (state.currentStrokes.length > MAX_CLIENT_STROKES) {
-        state.currentStrokes = state.currentStrokes.slice(-MAX_CLIENT_STROKES);
-      }
-
+      if (state.currentStrokes.length > MAX_CLIENT_STROKES) state.currentStrokes = state.currentStrokes.slice(-MAX_CLIENT_STROKES);
       drawStroke(stroke);
       updateViewerStats();
     });
 
     socket.on("draw-strokes", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
       const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-
-      strokes.forEach((stroke) => {
-        state.currentStrokes.push(stroke);
-      });
-
+      strokes.forEach((stroke) => state.currentStrokes.push(stroke));
       if (state.currentStrokes.length > MAX_CLIENT_STROKES) {
         state.currentStrokes = state.currentStrokes.slice(-MAX_CLIENT_STROKES);
         redrawAllStrokes();
       } else {
         strokes.forEach(drawStroke);
       }
-
       updateViewerStats();
     });
 
     socket.on("clear-drawing", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
       state.currentStrokes = [];
       redrawAllStrokes();
     });
 
     socket.on("note-history", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
       state.currentNotes = Array.isArray(payload.notes)
         ? payload.notes.map((note, index) => normalizeNote(note, index)).slice(-MAX_CLIENT_NOTES)
         : [];
@@ -3395,11 +3018,8 @@ input, textarea{
     });
 
     socket.on("note-added", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId() || !payload.note) return;
-
-      const exists = state.currentNotes.some((note) => note.id === payload.note.id);
-      if (exists) return;
-
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
+      if (state.currentNotes.some((note) => note.id === payload.note.id)) return;
       state.currentNotes.push(normalizeNote(payload.note, state.currentNotes.length));
       state.currentNotes = state.currentNotes.slice(-MAX_CLIENT_NOTES);
       renderNotes();
@@ -3407,60 +3027,42 @@ input, textarea{
     });
 
     socket.on("note-live-update", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId() || !payload.noteId) return;
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.noteId) return;
       const note = getNoteById(payload.noteId);
       if (!note) return;
-
       Object.assign(note, payload.patch || {});
       upsertMarker(note);
-
-      if (state.activeNoteEditorId === note.id) {
-        if (note.updatedAt) {
-          el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
-        }
+      if (state.activeNoteEditorId === note.id && note.updatedAt) {
+        el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
       }
     });
 
     socket.on("note-updated", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId() || !payload.noteId) return;
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.noteId) return;
       const note = getNoteById(payload.noteId);
       if (!note) return;
-
       Object.assign(note, payload.patch || {});
       note.text = String(note.text || "").slice(0, MAX_NOTE_CHARS);
-      note.width = clamp(note.width || 0.12, 0.12, 0.30);
-      note.height = clamp(note.height || 0.09, 0.09, 0.28);
       note.updatedAt = note.updatedAt || Date.now();
-
       upsertMarker(note);
-
       if (state.activeNoteEditorId === note.id) {
         el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
       }
-
       setSaveState("saved");
       updateViewerStats();
     });
 
     socket.on("note-deleted", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId() || !payload.noteId) return;
-
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.noteId) return;
       clearNoteTimers(payload.noteId);
       state.currentNotes = state.currentNotes.filter((note) => note.id !== payload.noteId);
-
-      if (state.activeMarkerId === payload.noteId) {
-        state.activeMarkerId = "";
-      }
-
-      if (state.activeNoteEditorId === payload.noteId) {
-        closeNoteEditor(false);
-      }
-
+      if (state.activeMarkerId === payload.noteId) state.activeMarkerId = "";
+      if (state.activeNoteEditorId === payload.noteId) closeNoteEditor(false);
       renderNotes();
     });
 
     socket.on("clear-notes", (payload) => {
-      if (!payload || payload.imageId !== getCurrentImageId()) return;
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
       state.currentNotes = [];
       state.activeMarkerId = "";
       if (state.activeNoteEditorId) closeNoteEditor(false);
@@ -3470,39 +3072,30 @@ input, textarea{
   }
 
   function init() {
-    bindUIEvents();
-
-    if (socket) {
-      bindSocketEvents();
-    } else {
-      setConnectionState("offline");
-      console.warn("Socket 연결 없이 UI만 초기화했습니다.");
-    }
-
+    setViewportUnit();
+    bindUI();
+    bindSocket();
     setDrawMode("draw");
     setActiveColor(state.currentColor);
     setActiveNoteColor(state.currentNoteColor);
     updateHistoryButtons();
-    toggleContactPanel(false);
     updateViewerEntryButton();
-    setConnectionState(socket ? "connected" : "offline");
+    updateSummaryUI();
+    toggleContactPanel(false);
     setSaveState(socket ? "idle" : "offline");
 
     if (isViewerMode) {
       el.app.style.display = "none";
       el.viewerOverlay.classList.add("open");
       el.viewerOverlay.setAttribute("aria-hidden", "false");
-
-      if (initialImageId && initialImageUrl) {
-        state.currentViewerImageId = initialImageId;
-        state.currentViewerImageUrl = initialImageUrl;
-        state.lastSelectedImageId = initialImageId;
-        state.lastSelectedImageUrl = initialImageUrl;
-        el.viewerImage.src = initialImageUrl;
-        updateViewerEntryButton();
-        updateViewerStats();
-        if (socket) requestViewerHistory(initialImageId);
-      }
+      state.currentViewerImageId = initialImageId;
+      state.currentViewerImageUrl = initialImageUrl;
+      state.lastSelectedImageId = initialImageId;
+      state.lastSelectedImageUrl = initialImageUrl;
+      if (initialImageUrl) el.viewerImage.src = initialImageUrl;
+      lockViewerBackground();
+      updateViewerStats();
+      if (socket && initialImageId) requestViewerHistory(initialImageId);
       return;
     }
 
