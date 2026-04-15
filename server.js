@@ -9,28 +9,18 @@ const { v2: cloudinary } = require("cloudinary");
 const { Server } = require("socket.io");
 const { v4: uuidv4 } = require("uuid");
 
-/**
- * ----------------------------------------
- * 환경 변수
- * ----------------------------------------
- */
 const {
   PORT = 3000,
-  MONGODB_URI,
-  CLOUD_NAME,
-  CLOUD_KEY,
-  CLOUD_SECRET,
-  TWILIO_SID,
-  TWILIO_TOKEN,
-  TWILIO_NUMBER,
-  ADMIN_PHONE
+  MONGODB_URI = "",
+  CLOUD_NAME = "",
+  CLOUD_KEY = "",
+  CLOUD_SECRET = "",
+  TWILIO_SID = "",
+  TWILIO_TOKEN = "",
+  TWILIO_NUMBER = "",
+  ADMIN_PHONE = ""
 } = process.env;
 
-/**
- * ----------------------------------------
- * Express / HTTP / Socket.IO
- * ----------------------------------------
- */
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -40,38 +30,37 @@ const io = new Server(server, {
   }
 });
 
+const PUBLIC_DIR = path.join(__dirname, "public");
+const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
+const HISTORY_LIMIT = 300;
+const MAX_STROKES = 2000;
+const MAX_NOTES = 100;
+const SAVE_DEBOUNCE_MS = 300;
+
+if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+app.disable("x-powered-by");
 app.use(cors());
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
-
-const PUBLIC_DIR = path.join(__dirname, "public");
-const UPLOAD_DIR = path.join(__dirname, "uploads");
-
-if (!fs.existsSync(PUBLIC_DIR)) {
-  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-}
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-
 app.use(express.static(PUBLIC_DIR));
 app.use("/uploads", express.static(UPLOAD_DIR));
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-/**
- * ----------------------------------------
- * Cloudinary 설정
- * ----------------------------------------
- */
-const hasCloudinary =
-  Boolean(CLOUD_NAME) &&
-  Boolean(CLOUD_KEY) &&
-  Boolean(CLOUD_SECRET);
+app.get("/health", (_req, res) => {
+  res.json({
+    ok: true,
+    mongoConnected: mongoose.connection.readyState === 1,
+    cloudinaryConfigured: Boolean(CLOUD_NAME && CLOUD_KEY && CLOUD_SECRET)
+  });
+});
 
-if (hasCloudinary) {
+const cloudinaryReady = Boolean(CLOUD_NAME && CLOUD_KEY && CLOUD_SECRET);
+if (cloudinaryReady) {
   cloudinary.config({
     cloud_name: CLOUD_NAME,
     api_key: CLOUD_KEY,
@@ -82,13 +71,7 @@ if (hasCloudinary) {
   console.log("⚠️ Cloudinary env not fully configured. Falling back to local uploads.");
 }
 
-/**
- * ----------------------------------------
- * MongoDB 설정
- * ----------------------------------------
- */
-let isMongoConnected = false;
-
+let mongoReady = false;
 mongoose.set("strictQuery", true);
 
 const MessageSchema = new mongoose.Schema(
@@ -133,42 +116,27 @@ const RoomSchema = new mongoose.Schema(
 );
 
 const RoomModel = mongoose.model("Room", RoomSchema);
-
-/**
- * ----------------------------------------
- * 메모리 캐시
- * ----------------------------------------
- */
 const roomCache = new Map();
 const roomSaveTimers = new Map();
 
-function createEmptyRoomState(roomId) {
-  return {
-    roomId,
-    messages: [],
-    images: [],
-    contacts: []
-  };
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
 }
 
-function clone(data) {
-  return JSON.parse(JSON.stringify(data));
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function sanitizeRole(role) {
   return role === "admin" ? "admin" : "user";
 }
 
-function sanitizeText(value, max = 5000) {
+function sanitizeText(value, max = 4000) {
   return String(value || "").trim().slice(0, max);
 }
 
 function sanitizePhone(value) {
-  return String(value || "").trim().slice(0, 40);
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
+  return String(value || "").replace(/[^\d+]/g, "").slice(0, 40);
 }
 
 function sanitizePoint(point = {}) {
@@ -205,7 +173,6 @@ function sanitizeNote(raw = {}) {
 
 function sanitizeNotePatch(raw = {}) {
   const patch = {};
-
   if (typeof raw.x === "number") patch.x = clamp(raw.x, 0.06, 0.94);
   if (typeof raw.y === "number") patch.y = clamp(raw.y, 0.08, 0.92);
   if (typeof raw.width === "number") patch.width = clamp(raw.width, 0.12, 0.30);
@@ -213,19 +180,22 @@ function sanitizeNotePatch(raw = {}) {
   if (typeof raw.text === "string") patch.text = raw.text.slice(0, 500);
   if (typeof raw.color === "string") patch.color = raw.color;
   patch.updatedAt = typeof raw.updatedAt === "number" ? raw.updatedAt : Date.now();
-
   return patch;
 }
 
+function createEmptyRoom(roomId) {
+  return {
+    roomId,
+    messages: [],
+    images: [],
+    contacts: []
+  };
+}
+
 function getImageState(room, imageId, imageUrl = "") {
-  let imageState = room.images.find((img) => img.imageId === imageId);
+  let imageState = room.images.find((image) => image.imageId === imageId);
   if (!imageState) {
-    imageState = {
-      imageId,
-      imageUrl,
-      strokes: [],
-      notes: []
-    };
+    imageState = { imageId, imageUrl, strokes: [], notes: [] };
     room.images.push(imageState);
   } else if (imageUrl && !imageState.imageUrl) {
     imageState.imageUrl = imageUrl;
@@ -234,13 +204,10 @@ function getImageState(room, imageId, imageUrl = "") {
 }
 
 async function loadRoom(roomId) {
-  if (roomCache.has(roomId)) {
-    return roomCache.get(roomId);
-  }
+  if (roomCache.has(roomId)) return roomCache.get(roomId);
 
-  let roomState = createEmptyRoomState(roomId);
-
-  if (isMongoConnected) {
+  let roomState = createEmptyRoom(roomId);
+  if (mongoReady) {
     const doc = await RoomModel.findOne({ roomId }).lean();
     if (doc) {
       roomState = {
@@ -258,8 +225,7 @@ async function loadRoom(roomId) {
 
 async function saveRoomNow(roomId) {
   const room = roomCache.get(roomId);
-  if (!room || !isMongoConnected) return;
-
+  if (!room || !mongoReady) return;
   await RoomModel.findOneAndUpdate(
     { roomId },
     {
@@ -276,14 +242,10 @@ async function saveRoomNow(roomId) {
   );
 }
 
-function scheduleRoomSave(roomId, delay = 250) {
-  if (!isMongoConnected) return;
-
-  const prevTimer = roomSaveTimers.get(roomId);
-  if (prevTimer) {
-    clearTimeout(prevTimer);
-  }
-
+function scheduleRoomSave(roomId, delay = SAVE_DEBOUNCE_MS) {
+  if (!mongoReady) return;
+  const prev = roomSaveTimers.get(roomId);
+  if (prev) clearTimeout(prev);
   const timer = setTimeout(async () => {
     try {
       await saveRoomNow(roomId);
@@ -293,21 +255,14 @@ function scheduleRoomSave(roomId, delay = 250) {
       roomSaveTimers.delete(roomId);
     }
   }, delay);
-
   roomSaveTimers.set(roomId, timer);
 }
 
-/**
- * ----------------------------------------
- * Twilio SMS (패키지 없이 fetch 사용)
- * ----------------------------------------
- */
 async function sendTwilioSms(to, body) {
-  if (!TWILIO_SID || !TWILIO_TOKEN || !TWILIO_NUMBER || !to) return;
+  if (!TWILIO_SID || !TWILIO_TOKEN || !TWILIO_NUMBER || !to) return null;
 
   const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`;
   const auth = Buffer.from(`${TWILIO_SID}:${TWILIO_TOKEN}`).toString("base64");
-
   const form = new URLSearchParams();
   form.set("To", to);
   form.set("From", TWILIO_NUMBER);
@@ -330,17 +285,12 @@ async function sendTwilioSms(to, body) {
   return response.json();
 }
 
-/**
- * ----------------------------------------
- * 업로드
- * ----------------------------------------
- */
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 15 * 1024 * 1024
   },
-  fileFilter(req, file, cb) {
+  fileFilter(_req, file, cb) {
     if (!file.mimetype || !file.mimetype.startsWith("image/")) {
       return cb(new Error("이미지 파일만 업로드할 수 있습니다."));
     }
@@ -354,32 +304,27 @@ app.post("/upload", upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "업로드된 이미지가 없습니다." });
     }
 
-    if (hasCloudinary) {
-      const result = await new Promise((resolve, reject) => {
+    if (cloudinaryReady) {
+      const uploaded = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: "realtime-design-chat",
-            resource_type: "image"
-          },
-          (error, uploaded) => {
+          { folder: "realtime-design-chat", resource_type: "image" },
+          (error, result) => {
             if (error) return reject(error);
-            resolve(uploaded);
+            resolve(result);
           }
         );
-
         stream.end(req.file.buffer);
       });
 
       return res.json({
         success: true,
-        url: result.secure_url
+        url: uploaded.secure_url
       });
     }
 
     const ext = path.extname(req.file.originalname || "").toLowerCase() || ".png";
     const fileName = `${Date.now()}-${uuidv4()}${ext}`;
     const filePath = path.join(UPLOAD_DIR, fileName);
-
     fs.writeFileSync(filePath, req.file.buffer);
 
     return res.json({
@@ -392,11 +337,6 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-/**
- * ----------------------------------------
- * 연락처 저장
- * ----------------------------------------
- */
 app.post("/contact", async (req, res) => {
   try {
     const roomId = String(req.body.roomId || "").trim();
@@ -406,20 +346,13 @@ app.post("/contact", async (req, res) => {
     if (!roomId) {
       return res.status(400).json({ error: "roomId가 필요합니다." });
     }
-
-    if (!phone) {
-      return res.status(400).json({ error: "전화번호를 입력해주세요." });
+    if (!phone || phone.length < 8) {
+      return res.status(400).json({ error: "유효한 전화번호를 입력해주세요." });
     }
 
     const room = await loadRoom(roomId);
     const savedAt = Date.now();
-
-    room.contacts.push({
-      role,
-      phone,
-      savedAt
-    });
-
+    room.contacts.push({ role, phone, savedAt });
     scheduleRoomSave(roomId);
 
     if (ADMIN_PHONE && TWILIO_SID && TWILIO_TOKEN && TWILIO_NUMBER) {
@@ -446,11 +379,6 @@ app.post("/contact", async (req, res) => {
   }
 });
 
-/**
- * ----------------------------------------
- * Socket.IO
- * ----------------------------------------
- */
 io.on("connection", (socket) => {
   console.log("client connected:", socket.id);
 
@@ -458,18 +386,14 @@ io.on("connection", (socket) => {
     try {
       const roomId = String(payload.roomId || "").trim();
       const role = sanitizeRole(payload.role);
-
       if (!roomId) return;
 
       socket.data.roomId = roomId;
       socket.data.role = role;
-
       socket.join(roomId);
 
       const room = await loadRoom(roomId);
       socket.emit("history", clone(room.messages));
-
-      console.log(`socket ${socket.id} joined room ${roomId} as ${role}`);
     } catch (error) {
       console.error("join error:", error);
     }
@@ -493,6 +417,7 @@ io.on("connection", (socket) => {
       };
 
       room.messages.push(message);
+      room.messages = room.messages.slice(-HISTORY_LIMIT);
       scheduleRoomSave(roomId);
       io.to(roomId).emit("message", message);
     } catch (error) {
@@ -511,7 +436,6 @@ io.on("connection", (socket) => {
 
       const room = await loadRoom(roomId);
       const imageId = uuidv4();
-
       getImageState(room, imageId, imageUrl);
 
       const message = {
@@ -523,6 +447,7 @@ io.on("connection", (socket) => {
       };
 
       room.messages.push(message);
+      room.messages = room.messages.slice(-HISTORY_LIMIT);
       scheduleRoomSave(roomId);
       io.to(roomId).emit("image", message);
     } catch (error) {
@@ -533,14 +458,11 @@ io.on("connection", (socket) => {
   socket.on("request-drawing-history", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
+      if (!roomId || !imageId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-
       socket.emit("drawing-history", {
         imageId,
         strokes: clone(imageState.strokes)
@@ -553,18 +475,15 @@ io.on("connection", (socket) => {
   socket.on("draw-stroke", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
+      if (!roomId || !imageId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-      const stroke = sanitizeStroke(payload);
-
-      imageState.strokes.push(stroke);
+      imageState.strokes.push(sanitizeStroke(payload));
+      imageState.strokes = imageState.strokes.slice(-MAX_STROKES);
       scheduleRoomSave(roomId);
-      io.to(roomId).emit("draw-stroke", stroke);
+      io.to(roomId).emit("draw-stroke", sanitizeStroke(payload));
     } catch (error) {
       console.error("draw-stroke error:", error);
     }
@@ -573,24 +492,16 @@ io.on("connection", (socket) => {
   socket.on("draw-strokes", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
+      if (!roomId || !imageId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-      const strokes = Array.isArray(payload.strokes)
-        ? payload.strokes.map(sanitizeStroke)
-        : [];
-
+      const strokes = Array.isArray(payload.strokes) ? payload.strokes.map(sanitizeStroke) : [];
       imageState.strokes.push(...strokes);
+      imageState.strokes = imageState.strokes.slice(-MAX_STROKES);
       scheduleRoomSave(roomId);
-
-      io.to(roomId).emit("draw-strokes", {
-        imageId,
-        strokes
-      });
+      io.to(roomId).emit("draw-strokes", { imageId, strokes });
     } catch (error) {
       console.error("draw-strokes error:", error);
     }
@@ -599,24 +510,14 @@ io.on("connection", (socket) => {
   socket.on("replace-drawing-history", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
+      if (!roomId || !imageId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-
-      imageState.strokes = Array.isArray(payload.strokes)
-        ? payload.strokes.map(sanitizeStroke)
-        : [];
-
+      imageState.strokes = Array.isArray(payload.strokes) ? payload.strokes.map(sanitizeStroke).slice(-MAX_STROKES) : [];
       scheduleRoomSave(roomId);
-
-      io.to(roomId).emit("drawing-history", {
-        imageId,
-        strokes: clone(imageState.strokes)
-      });
+      io.to(roomId).emit("drawing-history", { imageId, strokes: clone(imageState.strokes) });
     } catch (error) {
       console.error("replace-drawing-history error:", error);
     }
@@ -625,17 +526,12 @@ io.on("connection", (socket) => {
   socket.on("clear-drawing", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
-
+      if (!roomId || !imageId) return;
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-
       imageState.strokes = [];
       scheduleRoomSave(roomId);
-
       io.to(roomId).emit("clear-drawing", { imageId });
     } catch (error) {
       console.error("clear-drawing error:", error);
@@ -645,18 +541,11 @@ io.on("connection", (socket) => {
   socket.on("request-note-history", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
-
+      if (!roomId || !imageId) return;
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-
-      socket.emit("note-history", {
-        imageId,
-        notes: clone(imageState.notes)
-      });
+      socket.emit("note-history", { imageId, notes: clone(imageState.notes) });
     } catch (error) {
       console.error("request-note-history error:", error);
     }
@@ -665,25 +554,18 @@ io.on("connection", (socket) => {
   socket.on("add-note", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId || !payload.note) return;
+      if (!roomId || !imageId || !payload.note) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
       const note = sanitizeNote(payload.note);
-
-      const exists = imageState.notes.some((item) => item.id === note.id);
-      if (!exists) {
+      if (!imageState.notes.some((item) => item.id === note.id)) {
         imageState.notes.push(note);
+        imageState.notes = imageState.notes.slice(-MAX_NOTES);
         scheduleRoomSave(roomId);
       }
-
-      io.to(roomId).emit("note-added", {
-        imageId,
-        note
-      });
+      io.to(roomId).emit("note-added", { imageId, note });
     } catch (error) {
       console.error("add-note error:", error);
     }
@@ -692,11 +574,9 @@ io.on("connection", (socket) => {
   socket.on("note-live-update", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
       const noteId = String(payload.noteId || "").trim();
-      if (!imageId || !noteId) return;
+      if (!roomId || !imageId || !noteId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
@@ -705,12 +585,7 @@ io.on("connection", (socket) => {
 
       const patch = sanitizeNotePatch(payload.patch || {});
       Object.assign(note, patch);
-
-      io.to(roomId).emit("note-live-update", {
-        imageId,
-        noteId,
-        patch
-      });
+      io.to(roomId).emit("note-live-update", { imageId, noteId, patch });
     } catch (error) {
       console.error("note-live-update error:", error);
     }
@@ -719,11 +594,9 @@ io.on("connection", (socket) => {
   socket.on("update-note", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
       const noteId = String(payload.noteId || "").trim();
-      if (!imageId || !noteId) return;
+      if (!roomId || !imageId || !noteId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
@@ -732,14 +605,8 @@ io.on("connection", (socket) => {
 
       const patch = sanitizeNotePatch(payload.patch || {});
       Object.assign(note, patch);
-
       scheduleRoomSave(roomId);
-
-      io.to(roomId).emit("note-updated", {
-        imageId,
-        noteId,
-        patch
-      });
+      io.to(roomId).emit("note-updated", { imageId, noteId, patch });
     } catch (error) {
       console.error("update-note error:", error);
     }
@@ -748,22 +615,15 @@ io.on("connection", (socket) => {
   socket.on("delete-note", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
       const noteId = String(payload.noteId || "").trim();
-      if (!imageId || !noteId) return;
+      if (!roomId || !imageId || !noteId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-
       imageState.notes = imageState.notes.filter((item) => item.id !== noteId);
       scheduleRoomSave(roomId);
-
-      io.to(roomId).emit("note-deleted", {
-        imageId,
-        noteId
-      });
+      io.to(roomId).emit("note-deleted", { imageId, noteId });
     } catch (error) {
       console.error("delete-note error:", error);
     }
@@ -772,24 +632,14 @@ io.on("connection", (socket) => {
   socket.on("replace-note-history", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
+      if (!roomId || !imageId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-
-      imageState.notes = Array.isArray(payload.notes)
-        ? payload.notes.map(sanitizeNote)
-        : [];
-
+      imageState.notes = Array.isArray(payload.notes) ? payload.notes.map(sanitizeNote).slice(-MAX_NOTES) : [];
       scheduleRoomSave(roomId);
-
-      io.to(roomId).emit("note-history", {
-        imageId,
-        notes: clone(imageState.notes)
-      });
+      io.to(roomId).emit("note-history", { imageId, notes: clone(imageState.notes) });
     } catch (error) {
       console.error("replace-note-history error:", error);
     }
@@ -798,17 +648,13 @@ io.on("connection", (socket) => {
   socket.on("clear-notes", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) return;
-
       const imageId = String(payload.imageId || "").trim();
-      if (!imageId) return;
+      if (!roomId || !imageId) return;
 
       const room = await loadRoom(roomId);
       const imageState = getImageState(room, imageId);
-
       imageState.notes = [];
       scheduleRoomSave(roomId);
-
       io.to(roomId).emit("clear-notes", { imageId });
     } catch (error) {
       console.error("clear-notes error:", error);
@@ -820,33 +666,57 @@ io.on("connection", (socket) => {
   });
 });
 
-/**
- * ----------------------------------------
- * 에러 핸들링
- * ----------------------------------------
- */
-app.use((error, req, res, next) => {
+app.use((error, _req, res, _next) => {
   console.error("Unhandled express error:", error);
   res.status(500).json({
     error: error.message || "서버 오류가 발생했습니다."
   });
 });
 
-/**
- * ----------------------------------------
- * 서버 시작
- * ----------------------------------------
- */
+async function connectMongo() {
+  if (!MONGODB_URI) {
+    console.log("⚠️ MONGODB_URI not set. Running without DB persistence.");
+    return;
+  }
+  await mongoose.connect(MONGODB_URI);
+  mongoReady = true;
+  console.log("✅ MongoDB connected");
+}
+
+async function flushPendingRoomSaves() {
+  const entries = Array.from(roomSaveTimers.entries());
+  entries.forEach(([, timer]) => clearTimeout(timer));
+  roomSaveTimers.clear();
+  for (const [roomId] of entries) {
+    try {
+      await saveRoomNow(roomId);
+    } catch (error) {
+      console.error(`flush save error [${roomId}]`, error);
+    }
+  }
+}
+
+async function shutdown(signal) {
+  console.log(`${signal} received. Shutting down gracefully.`);
+  try {
+    await flushPendingRoomSaves();
+  } finally {
+    server.close(async () => {
+      if (mongoReady) {
+        await mongoose.disconnect().catch(() => {});
+      }
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(1), 5000).unref();
+  }
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+
 async function start() {
   try {
-    if (MONGODB_URI) {
-      await mongoose.connect(MONGODB_URI);
-      isMongoConnected = true;
-      console.log("✅ MongoDB connected");
-    } else {
-      console.log("⚠️ MONGODB_URI not set. Running without DB persistence.");
-    }
-
+    await connectMongo();
     server.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
     });
