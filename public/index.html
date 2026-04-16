@@ -87,7 +87,7 @@ label:focus-visible{
 }
 
 #chatCard{
-  width:min(1120px,100%);
+  width:min(960px,100%);
   height:calc(var(--vh) * 100);
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(14px);
@@ -275,22 +275,32 @@ label:focus-visible{
   content:"⌄";
 }
 #summaryPreview{
-  display:none;
-  padding:10px 12px;
-  border-radius:14px;
-  background:#fff;
-  border:1px solid #e9eff5;
-  font-size:12px;
-  font-weight:700;
-  color:var(--text-soft);
-  line-height:1.5;
+  min-width:0;
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow:hidden;
+  white-space:nowrap;
 }
-#summaryCard.collapsed #summaryPreview{
-  display:block;
+.summaryInlineChip{
+  height:24px;
+  padding:0 10px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  background:#f5f9fd;
+  color:#53687a;
+  font-size:11px;
+  font-weight:800;
+  max-width:160px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  flex-shrink:0;
 }
-#summaryCard.collapsed #summaryRows,
-#summaryCard.collapsed #summaryActions{
-  display:none;
+.summaryInlineChip.empty{
+  max-width:none;
 }
 #summaryRows{
   display:grid;
@@ -348,7 +358,7 @@ label:focus-visible{
   flex:1;
   min-height:0;
   overflow-y:auto;
-  padding:0 18px 12px;
+  padding:0 16px 12px;
   background:var(--bg-soft);
 }
 #chatInner{
@@ -391,7 +401,7 @@ label:focus-visible{
   padding:0 8px;
 }
 .imageBubble{
-  max-width:min(86%,760px);
+  max-width:min(72%,520px);
   background:#fff;
   border:1px solid var(--line);
   border-radius:22px;
@@ -431,7 +441,7 @@ label:focus-visible{
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  padding:10px 12px;
+  padding:8px 12px;
   border:1px solid var(--line);
   border-radius:16px;
   background:#fbfdff;
@@ -460,16 +470,16 @@ label:focus-visible{
   font-size:12px;
   font-weight:800;
 }
-#utilityRow{display:block}
+#utilityRow{display:none}
 #utilityRow.open{display:block}
 #phonePanel{
   display:flex;
   flex-direction:column;
-  gap:10px;
-  padding:12px;
+  gap:8px;
+  padding:10px 12px;
   border:1px solid #dce7f1;
-  border-radius:18px;
-  background:linear-gradient(180deg, #f8fbff, #f3f8fd);
+  border-radius:16px;
+  background:linear-gradient(180deg, #fbfdff, #f5f9fd);
 }
 #phonePanelHeader{
   display:flex;
@@ -517,19 +527,20 @@ label:focus-visible{
 }
 #phoneInput{
   flex:1;
-  height:42px;
-  border-radius:16px;
-  padding:0 14px;
-  font-size:16px;
+  height:34px;
+  border-radius:12px;
+  padding:0 12px;
+  font-size:13px;
 }
 #savePhoneBtn{
-  height:42px;
-  min-width:64px;
-  padding:0 16px;
-  border-radius:16px;
-  background:#607082;
+  height:34px;
+  min-width:52px;
+  padding:0 12px;
+  border-radius:12px;
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));
   color:#fff;
   font-weight:800;
+  font-size:12px;
 }
 #messageRow{
   display:flex;
@@ -1335,13 +1346,12 @@ body.popup-viewer-mode #viewerSendBtn{
     font-size:14px;
     padding:11px 14px;
   }
-  .chatImg{max-width:220px}
+  .chatImg{max-width:200px}
   #inputArea{
     padding:8px 10px calc(10px + var(--safe-bottom));
     gap:6px;
   }
-  #contactToggleBar{padding:9px 10px}
-  #contactToggleDesc{font-size:10px}
+  #contactToggleBar{padding:8px 10px}
   #phoneRow{flex-direction:column}
   #savePhoneBtn{width:100%}
   #msgInput,#sendBtn,#fileLabel{height:44px}
@@ -1540,13 +1550,13 @@ body.popup-viewer-mode #viewerSendBtn{
         <div id="summaryHeaderLeft">
           <div id="summaryTitle">현재 요청</div>
           <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 접기"></button>
-          <div id="summaryRequestsInline">선택 없음</div>
+          <div id="summaryPreview" aria-live="polite">요약이 아직 없습니다.</div>
         </div>
         <div id="summaryHeaderRight">
-          <div id="summaryStatus">상담 시작</div>
+          
         </div>
       </div>
-      <div id="summaryPreview">요약이 아직 없습니다.</div>
+      
       <div id="summaryRows">
         <div class="summaryItem">
           <div class="summaryLabel">제품</div>
@@ -1566,6 +1576,14 @@ body.popup-viewer-mode #viewerSendBtn{
     <div id="chatBox"><div id="chatInner"></div></div>
 
     <div id="inputArea">
+      <div id="contactToggleBar">
+        <div id="contactToggleText">
+          <div id="contactToggleTitle">연락처 남기기</div>
+          
+        </div>
+        <button id="toggleContactPanelBtn" type="button" aria-expanded="false">열기</button>
+      </div>
+
       <div id="utilityRow">
         <div id="phonePanel">
           <div id="phonePanelHeader">
@@ -1610,8 +1628,8 @@ body.popup-viewer-mode #viewerSendBtn{
     <div id="viewerActions">
       <button id="toggleViewerSizeBtn" class="viewerBtn" type="button"><span class="btnIcon">↕</span><span class="btnText">크기</span></button>
       <button id="popoutViewerBtn" class="viewerBtn" type="button"><span class="btnIcon">⤢</span><span class="btnText">새창</span></button>
-      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon" aria-hidden="true">↓</span><span class="btnText">다운로드</span></button>
-      <button id="closeViewerBtn" class="viewerBtn" type="button"><span class="btnIcon" aria-hidden="true">✕</span><span class="btnText">닫기</span></button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon">↓</span><span class="btnText">다운로드</span></button>
+      <button id="closeViewerBtn" class="viewerBtn" type="button"><span class="btnIcon">✕</span><span class="btnText">닫기</span></button>
     </div>
   </div>
 
@@ -1632,7 +1650,7 @@ body.popup-viewer-mode #viewerSendBtn{
             <div class="toolGroup fill">
               <button id="penBtn" class="toolBtn active" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span><span class="btnText">펜</span></button>
               <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7"/><path d="M14.5 4.5 20 10l-8.5 8.5a2 2 0 0 1-2.8 0L4 13.8a2 2 0 0 1 0-2.8L10.7 4.3a2 2 0 0 1 2.8 0z"/></svg></span><span class="btnText">지우개</span></button>
-              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M16 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span><span class="btnText">메모 추가</span></button>
+              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V16l10.5-10.5a2.1 2.1 0 0 1 3 3L7 19l-3 0.5z"/><path d="M13.5 6.5 17 10"/><path d="M12 20h8"/></svg></span><span class="btnText">메모 추가</span></button>
             </div>
             <div id="drawControlSide">
               <div id="thicknessWrap">
@@ -1655,8 +1673,8 @@ body.popup-viewer-mode #viewerSendBtn{
         <div class="toolSection">
           <div class="toolSectionLabel">이력</div>
           <div class="toolGroup">
-            <button id="undoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true">↶</span><span class="btnText">되돌리기</span></button>
-            <button id="redoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true">↷</span><span class="btnText">다시하기</span></button>
+            <button id="undoBtn" class="toolBtn" type="button"><span class="btnIcon">↶</span><span class="btnText">Undo</span></button>
+            <button id="redoBtn" class="toolBtn" type="button"><span class="btnIcon">↷</span><span class="btnText">Redo</span></button>
           </div>
         </div>
 
@@ -1664,8 +1682,8 @@ body.popup-viewer-mode #viewerSendBtn{
         <div class="toolSection">
           <div class="toolSectionLabel">정리</div>
           <div class="toolGroup">
-            <button id="clearDrawingBtn" class="toolBtn danger" type="button"><span class="btnIcon" aria-hidden="true">⌫</span><span class="btnText">선지우기</span></button>
-            <button id="clearNotesBtn" class="toolBtn danger" type="button"><span class="btnIcon" aria-hidden="true">🗑</span><span class="btnText">메모지우기</span></button>
+            <button id="clearDrawingBtn" class="toolBtn danger" type="button"><span class="btnIcon">⌧</span><span class="btnText">선지우기</span></button>
+            <button id="clearNotesBtn" class="toolBtn danger" type="button"><span class="btnIcon">⌦</span><span class="btnText">메모지우기</span></button>
           </div>
         </div>
       </div>
@@ -2074,8 +2092,10 @@ body.popup-viewer-mode #viewerSendBtn{
   function toggleContactPanel(forceOpen = null) {
     const next = forceOpen === null ? !el.utilityRow.classList.contains("open") : Boolean(forceOpen);
     el.utilityRow.classList.toggle("open", next);
-    el.toggleContactPanelBtn.textContent = next ? "닫기" : "열기";
-    el.toggleContactPanelBtn.setAttribute("aria-expanded", String(next));
+    if (el.toggleContactPanelBtn) {
+      el.toggleContactPanelBtn.textContent = next ? "닫기" : "열기";
+      el.toggleContactPanelBtn.setAttribute("aria-expanded", String(next));
+    }
   }
 
   function isSocketReady() {
@@ -2127,7 +2147,7 @@ body.popup-viewer-mode #viewerSendBtn{
       state.socketJoined = false;
       updateRealtimeControls();
       if (ack && ack.error) {
-        setSummaryStatus("연결 확인 필요", ack.error);
+        setSummaryStatus("", ack.error);
       }
     });
   }
@@ -2196,7 +2216,7 @@ body.popup-viewer-mode #viewerSendBtn{
       el.noteEditorSaveBadge.className = "offline";
       el.noteEditorSaveBadge.textContent = "오프라인";
       setConnectionState("offline");
-      setSummaryStatus("연결 확인 필요", "실시간 서버 연결을 확인해 주세요.");
+      setSummaryStatus("", "실시간 서버 연결을 확인해 주세요.");
       return;
     }
 
@@ -2221,12 +2241,6 @@ body.popup-viewer-mode #viewerSendBtn{
         ? state.summary.requestTypes.join(", ")
         : "없음";
     }
-    if (el.summaryRequestsInline) {
-      el.summaryRequestsInline.textContent = state.summary.requestTypes.length
-        ? state.summary.requestTypes.join(", ")
-        : "선택 없음";
-    }
-    el.summaryStatus.textContent = state.summary.status;
     el.summaryDetailValue.textContent = state.summary.detailNotes.length
       ? state.summary.detailNotes[state.summary.detailNotes.length - 1]
       : state.summary.status;
@@ -2238,9 +2252,17 @@ body.popup-viewer-mode #viewerSendBtn{
     const hasActionableSummary = Boolean(state.summary.productName || state.summary.requestTypes.length || state.summary.detailNotes.length);
     el.summaryComposeBtn.disabled = !hasActionableSummary;
     el.summaryQuoteBtn.disabled = !hasActionableSummary;
-    const previewRequests = state.summary.requestTypes.length ? state.summary.requestTypes.join(", ") : "요청 없음";
-    const previewDetail = state.summary.detailNotes.length ? state.summary.detailNotes[state.summary.detailNotes.length - 1] : state.summary.status;
-    el.summaryPreview.textContent = `${state.summary.productName || "선택 대기"} · ${previewRequests} · ${previewDetail}`;
+
+    const chips = [];
+    if (state.summary.requestTypes.length) {
+      state.summary.requestTypes.forEach((item) => {
+        chips.push(`<span class="summaryInlineChip">${escapeHtml(item)}</span>`);
+      });
+    }
+    if (!chips.length) {
+      chips.push('<span class="summaryInlineChip empty">요약이 아직 없습니다.</span>');
+    }
+    el.summaryPreview.innerHTML = chips.join("");
   }
 
   function toggleSummaryCard(forceCollapsed = null) {
@@ -3440,8 +3462,12 @@ body.popup-viewer-mode #viewerSendBtn{
   }
 
   function bindUI() {
-    el.toggleContactPanelBtn.addEventListener("click", () => toggleContactPanel());
-    el.summaryToggleBtn.addEventListener("click", () => toggleSummaryCard());
+    if (el.toggleContactPanelBtn) {
+      el.toggleContactPanelBtn.addEventListener("click", () => toggleContactPanel());
+    }
+    if (el.summaryToggleBtn) {
+      el.summaryToggleBtn.addEventListener("click", () => toggleSummaryCard());
+    }
 
     el.quickChips.forEach((button) => {
       button.addEventListener("click", () => {
@@ -3459,7 +3485,7 @@ body.popup-viewer-mode #viewerSendBtn{
 
     el.summaryQuoteBtn.addEventListener("click", () => {
       fillActiveInput(buildSummaryMessage("quote"));
-      toggleContactPanel(true);
+      toggleContactPanel(false);
       setSummaryStatus("견적 요청 준비", "연락처와 함께 견적 요청을 보내면 전환율이 높아집니다.");
       if (isMobileViewport()) toggleSummaryCard(true);
     });
@@ -3714,7 +3740,7 @@ body.popup-viewer-mode #viewerSendBtn{
   function bindSocket() {
     if (!socket) {
       setConnectionState("offline");
-      setSummaryStatus("연결 확인 필요", "socket.io 스크립트 또는 실시간 서버 연결을 확인해 주세요.");
+      setSummaryStatus("", "socket.io 스크립트 또는 실시간 서버 연결을 확인해 주세요.");
       return;
     }
 
@@ -3733,7 +3759,7 @@ body.popup-viewer-mode #viewerSendBtn{
       updateRealtimeControls();
       setConnectionState("offline");
       setSaveState("offline");
-      setSummaryStatus("연결 확인 필요", `실시간 연결이 끊겼습니다: ${reason || "unknown"}`);
+      setSummaryStatus("", `실시간 연결이 끊겼습니다: ${reason || "unknown"}`);
     });
 
     socket.on("joined", (payload = {}) => {
@@ -3747,7 +3773,7 @@ body.popup-viewer-mode #viewerSendBtn{
       state.socketJoined = false;
       updateRealtimeControls();
       if (payload.error) {
-        setSummaryStatus("연결 확인 필요", payload.error);
+        setSummaryStatus("", payload.error);
       }
     });
 
