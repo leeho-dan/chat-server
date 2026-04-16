@@ -430,6 +430,208 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   display:inline-flex;align-items:center;gap:6px
 }
 
+
+/* === FINAL POLISH SYSTEM === */
+.toolBtn, .viewerBtn, #sendBtn, #viewerSendBtn, #fileLabel {
+  transition: all .18s ease;
+}
+
+.toolBtn:active, .viewerBtn:active, #sendBtn:active, #viewerSendBtn:active {
+  transform: scale(0.94);
+}
+
+.toolBtn .btnIcon svg,
+.viewerBtn .btnIcon svg,
+#sendBtn .btnIcon svg,
+#viewerSendBtn .btnIcon svg,
+#fileLabel .btnIcon svg {
+  stroke-width: 2.2;
+}
+
+.toolBtn:hover {
+  background: #f6faff;
+}
+
+.viewerBtn:hover {
+  background: #f1f6fb;
+}
+
+#sendBtn:hover, #viewerSendBtn:hover {
+  filter: brightness(1.05);
+}
+
+#fileLabel:hover {
+  background: #eef5fb;
+}
+
+#toolbar {
+  backdrop-filter: blur(14px);
+}
+
+#viewerOverlay {
+  backdrop-filter: blur(6px);
+}
+
+
+/* === ONE-LINE INPUT SYSTEM === */
+#inputArea{
+  flex-shrink:0;
+  border-top:1px solid var(--line);
+  background:rgba(255,255,255,.97);
+  padding:10px 12px calc(12px + var(--safe-bottom));
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#contactInlineBar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fbfdff;
+}
+#phoneGroup{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:0 0 auto;
+}
+#phoneInput{
+  width:118px;
+  height:32px;
+  border-radius:10px;
+  padding:0 10px;
+  font-size:12px;
+}
+#savePhoneBtn,
+#deletePhoneBtn{
+  height:32px;
+  min-width:44px;
+  padding:0 10px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:800;
+}
+#messageRow{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+#msgInput{
+  flex:1;
+  min-width:0;
+  height:34px;
+  border-radius:10px;
+  padding:0 12px;
+  font-size:13px;
+}
+#sendBtn,
+#fileLabel{
+  width:32px;
+  height:32px;
+  min-width:32px;
+  border-radius:10px;
+  font-size:14px;
+}
+#sendBtn .btnIcon svg,
+#fileLabel .btnIcon svg{
+  width:16px;
+  height:16px;
+}
+#phoneStatus{
+  display:none;
+  font-size:11px;
+  color:#5f7286;
+  padding:0 2px;
+}
+#phoneStatus.show{display:block}
+
+@media (min-width:901px){
+  #inputArea{
+    padding:12px 14px calc(14px + var(--safe-bottom));
+  }
+  #contactInlineBar{
+    gap:10px;
+    padding:10px;
+    border-radius:18px;
+  }
+  #phoneInput{
+    width:132px;
+    height:34px;
+  }
+  #savePhoneBtn,
+  #deletePhoneBtn{
+    height:34px;
+    min-width:48px;
+  }
+  #msgInput{
+    height:36px;
+    border-radius:12px;
+    font-size:13px;
+  }
+  #sendBtn,
+  #fileLabel{
+    width:34px;
+    height:34px;
+    min-width:34px;
+    border-radius:11px;
+  }
+}
+
+@media (max-width:900px){
+  #inputArea{
+    padding:8px 8px calc(10px + var(--safe-bottom));
+    gap:4px;
+  }
+  #contactInlineBar{
+    gap:6px;
+    padding:6px;
+    border-radius:14px;
+  }
+  #phoneGroup{
+    gap:4px;
+  }
+  #phoneInput{
+    width:84px;
+    height:30px;
+    padding:0 8px;
+    font-size:11px;
+  }
+  #savePhoneBtn,
+  #deletePhoneBtn{
+    height:30px;
+    min-width:40px;
+    padding:0 8px;
+    border-radius:9px;
+    font-size:11px;
+  }
+  #messageRow{
+    gap:5px;
+  }
+  #msgInput{
+    height:32px;
+    border-radius:10px;
+    padding:0 10px;
+    font-size:12px;
+  }
+  #sendBtn,
+  #fileLabel{
+    width:30px;
+    height:30px;
+    min-width:30px;
+    border-radius:9px;
+  }
+  #sendBtn .btnIcon svg,
+  #fileLabel .btnIcon svg{
+    width:15px;
+    height:15px;
+  }
+}
+
 </style>
 </head>
 <body>
