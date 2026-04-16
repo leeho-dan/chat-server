@@ -70,16 +70,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
   display:flex;flex-direction:column;
 }
 #header{
-  height:72px;flex-shrink:0;
+  height:44px;flex-shrink:0;
   border-bottom:1px solid var(--line);
   background:rgba(255,255,255,.96);
   display:flex;align-items:center;justify-content:center;
   position:relative;
-}
-#roleBadge{
-  position:absolute;left:16px;top:50%;transform:translateY(-50%);
-  height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);
-  background:#f7faff;display:flex;align-items:center;color:var(--sub);font-size:12px;font-weight:800;
 }
 #title{min-width:1px;min-height:1px}
 #headerActions{
@@ -95,17 +90,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
   border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px;
 }
 #quickRequestTitle{font-size:13px;font-weight:700;color:var(--text-soft);letter-spacing:-0.01em}
-#quickRequestDesc{font-size:11px;color:var(--sub);line-height:1.45}
-#quickRequestButtons{display:flex;gap:8px;flex-wrap:wrap}
+#quickRequestDesc{display:none}
+#quickRequestButtons{display:flex;gap:6px;flex-wrap:wrap}
 .quickChip{
   height:34px;padding:0 12px;border-radius:999px;background:#edf4fa;color:#425466;
   font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;
 }
 .quickChip.active{background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff}
 #summaryCard{
-  flex-shrink:0;margin:0 14px 8px;padding:10px 12px;border:1px solid var(--line);
-  border-radius:18px;background:linear-gradient(180deg, #fbfdff, #f5f9fd);
-  display:flex;flex-direction:column;gap:8px;
+  flex-shrink:0;margin:0 12px 6px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:16px;background:linear-gradient(180deg, #fbfdff, #f5f9fd);
+  display:flex;flex-direction:column;gap:6px;
 }
 #summaryHeader{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -116,15 +111,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
 #summaryHeaderRight{
   min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;
 }
-#summaryTitle{font-size:13px;font-weight:800;color:var(--text-soft)}
+#summaryTitle{font-size:12px;font-weight:800;color:var(--text-soft)}
 #summaryToggleBtn{
-  width:30px;min-width:30px;height:30px;border-radius:999px;background:#edf4fa;color:#4f6579;
+  width:26px;min-width:26px;height:26px;border-radius:999px;background:#edf4fa;color:#4f6579;
   font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;
 }
 #summaryToggleBtn::before{content:"⌃";}
 #summaryCard.collapsed #summaryToggleBtn::before{content:"⌄";}
 #summaryPreview{
-  min-width:0;flex:1;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;
+  min-width:0;flex:1;display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap;
 }
 .summaryInlineChip{
   height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;
@@ -149,7 +144,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
 #summaryCard.collapsed #summaryRows,
 #summaryCard.collapsed #summaryActions{display:none}
 #chatBox{
-  flex:1;min-height:0;overflow-y:auto;padding:0 18px 12px;background:var(--bg-soft);
+  flex:1;min-height:0;overflow-y:auto;padding:0 14px 8px;background:var(--bg-soft);
 }
 #chatInner{display:flex;flex-direction:column;gap:14px;min-height:100%}
 .messageRow{display:flex;flex-direction:column;gap:5px}
@@ -182,35 +177,35 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
 }
 #inputArea{
   flex-shrink:0;border-top:1px solid var(--line);background:rgba(255,255,255,.97);
-  padding:10px 14px calc(12px + var(--safe-bottom));display:flex;flex-direction:column;gap:8px;
+  padding:8px 10px calc(10px + var(--safe-bottom));display:flex;flex-direction:column;gap:6px;
 }
 #contactInlineBar{
-  display:flex;align-items:center;gap:8px;
-  padding:8px 12px;border:1px solid var(--line);border-radius:16px;background:#fbfdff;
+  display:flex;align-items:center;gap:6px;
+  padding:6px 10px;border:1px solid var(--line);border-radius:14px;background:#fbfdff;
 }
 #phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
 #phoneStatus.show{display:block}
 #phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
   border:1px solid var(--line-strong);background:#f8fbff;
 }
-#phoneInput{flex:1;height:34px;border-radius:12px;padding:0 12px;font-size:13px}
+#phoneInput{flex:1;height:32px;border-radius:11px;padding:0 10px;font-size:12px}
 #savePhoneBtn{
-  height:34px;min-width:52px;padding:0 12px;border-radius:12px;
+  height:32px;min-width:48px;padding:0 10px;border-radius:11px;
   background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff;font-weight:800;font-size:12px;
 }
 #deletePhoneBtn{
-  height:34px;min-width:52px;padding:0 12px;border-radius:12px;
+  height:32px;min-width:48px;padding:0 10px;border-radius:11px;
   background:#edf4fa;color:#425466;font-weight:800;font-size:12px;
 }
 #messageRow{display:flex;align-items:center;gap:8px}
-#msgInput{flex:1;height:48px;border-radius:18px;padding:0 16px;font-size:16px}
+#msgInput{flex:1;height:42px;border-radius:16px;padding:0 14px;font-size:14px}
 #sendBtn{
-  width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, var(--primary-soft), var(--primary));
+  width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg, var(--primary-soft), var(--primary));
   color:#fff;font-size:20px;font-weight:800;
 }
 #fileInput{display:none}
 #fileLabel{
-  width:48px;height:48px;border-radius:50%;background:#f2f6fa;color:#7b8d9f;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:1px solid #e5edf4;
+  width:42px;height:42px;border-radius:50%;background:#f2f6fa;color:#7b8d9f;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;border:1px solid #e5edf4;
 }
 #fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 #viewerOverlay{
@@ -370,20 +365,20 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
 }
 @media (max-width:900px){
   #chatCard{width:100%;border-radius:0}
-  #header{height:64px}
+  #header{height:40px}
   #quickRequestBar{padding:8px 10px 6px;gap:6px}
   #quickRequestButtons{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   #quickRequestButtons::-webkit-scrollbar{display:none}
   .quickChip{flex:0 0 auto}
-  #summaryCard{margin:0 10px 6px;gap:6px}
+  #summaryCard{margin:0 8px 4px;gap:4px}
   #summaryHeaderLeft{gap:6px}
   #summaryPreview{gap:4px}
   .summaryInlineChip{max-width:110px;font-size:10px;padding:0 8px}
   #summaryRows{grid-template-columns:1fr 1fr;gap:6px}
-  #chatBox{padding:0 12px 8px}
+  #chatBox{padding:0 10px 6px}
   .bubble{max-width:86%;font-size:14px;padding:11px 14px}
   .chatImg{max-width:220px}
-  #inputArea{padding:8px 10px calc(10px + var(--safe-bottom));gap:6px}
+  #inputArea{padding:6px 8px calc(8px + var(--safe-bottom));gap:4px}
   #contactInlineBar{padding:8px 10px;gap:6px}
   #savePhoneBtn{width:auto;min-width:52px}
   #deletePhoneBtn{width:auto;min-width:52px}
@@ -487,8 +482,7 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
 <div id="app">
   <section id="chatCard">
     <div id="header">
-      <div id="roleBadge">고객 채팅</div>
-      <div id="title" aria-label="디자인 상담"></div>
+            <div id="title" aria-label="디자인 상담"></div>
 
     </div>
 
@@ -692,7 +686,6 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
   const el = {
     app: document.getElementById("app"),
     imageStage: document.getElementById("imageStage"),
-    roleBadge: document.getElementById("roleBadge"),
     quickChips: Array.from(document.querySelectorAll(".quickChip")),
     summaryCard: document.getElementById("summaryCard"),
     summaryToggleBtn: document.getElementById("summaryToggleBtn"),
@@ -871,10 +864,6 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
       el.viewerOverlay.classList.add("entering");
       window.setTimeout(() => el.viewerOverlay.classList.remove("entering"), 280);
     });
-  }
-
-  function updateRoleBadge() {
-    el.roleBadge.textContent = role === "admin" ? "관리자 채팅" : "고객 채팅";
   }
 
   function updateSummaryUI() {
@@ -1711,7 +1700,6 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
   }
 
   function init() {
-    updateRoleBadge();
     updateSummaryUI();
     bindEvents();
     bindSocket();
