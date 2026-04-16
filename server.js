@@ -1,565 +1,1510 @@
-const express = require("express");
-const http = require("http");
-const path = require("path");
-const fs = require("fs");
-const cors = require("cors");
-const multer = require("multer");
-const { Server } = require("socket.io");
-const { v4: uuidv4 } = require("uuid");
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>디자인 상담</title>
+<style>
+:root{
+  --bg:#f4f8fc;
+  --bg-soft:#f8fbff;
+  --line:#e3ebf3;
+  --line-strong:#d6e0ea;
+  --text:#17212b;
+  --text-soft:#24313f;
+  --sub:#728292;
+  --primary:#2491ff;
+  --primary-soft:#79c7ff;
+  --danger:#ff5b5b;
+  --warning:#9a6500;
+  --warning-soft:#fff7ea;
+  --success-soft:#ebf9ee;
+  --shadow:0 18px 50px rgba(18,36,61,.10);
+  --radius-xl:28px;
+  --radius-md:16px;
+  --safe-bottom:max(env(safe-area-inset-bottom), 0px);
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;width:100%;height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(36,145,255,.08), transparent 24%),
+    linear-gradient(180deg, #f9fbff 0%, #edf4fa 100%);
+}
+body{overflow:hidden;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button,input,textarea,label{font:inherit}
+button{border:none;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea{outline:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visible{
+  outline:none;box-shadow:0 0 0 3px rgba(36,145,255,.14)
+}
+.btnIcon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1em;height:1em;line-height:1;flex-shrink:0;transform:translateY(-.02em)
+}
+.btnText{display:inline}
+#app{width:100%;height:100%;display:flex;align-items:stretch;justify-content:center}
+#chatCard{
+  width:min(1120px,100%);height:100%;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+#header{
+  height:44px;flex-shrink:0;border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.96);display:flex;align-items:center;justify-content:center
+}
+#quickRequestBar{
+  flex-shrink:0;padding:10px 14px 8px;background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px
+}
+#quickRequestTitle{font-size:13px;font-weight:700;color:var(--text-soft)}
+#quickRequestButtons{display:flex;gap:6px;flex-wrap:wrap}
+.quickChip{
+  height:34px;padding:0 12px;border-radius:999px;background:#edf4fa;color:#425466;
+  font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center
+}
+.quickChip.active{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
+#summaryCard{
+  flex-shrink:0;margin:0 12px 6px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:16px;background:linear-gradient(180deg,#fbfdff,#f5f9fd);
+  display:flex;flex-direction:column;gap:6px
+}
+#summaryHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#summaryHeaderLeft{min-width:0;display:flex;align-items:center;gap:8px;flex:1}
+#summaryTitle{font-size:12px;font-weight:800;color:var(--text-soft)}
+#summaryToggleBtn{
+  width:26px;min-width:26px;height:26px;border-radius:999px;background:#edf4fa;color:#4f6579;
+  font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center
+}
+#summaryToggleBtn::before{content:"⌃"}
+#summaryCard.collapsed #summaryToggleBtn::before{content:"⌄"}
+#summaryPreview{min-width:0;flex:1;display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap}
+.summaryInlineChip{
+  height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;
+  background:#f5f9fd;color:#53687a;font-size:11px;font-weight:800;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0
+}
+.summaryInlineChip.empty{max-width:none}
+#summaryRows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.summaryItem{
+  min-width:0;padding:10px;border-radius:14px;background:#fff;border:1px solid #e9eff5;
+  display:flex;flex-direction:column;gap:4px
+}
+.summaryLabel{font-size:10px;font-weight:800;color:#91a0af;text-transform:uppercase;letter-spacing:.04em}
+.summaryValue{min-height:18px;font-size:13px;font-weight:700;line-height:1.45;color:var(--text);word-break:break-word}
+#summaryActions{display:flex;gap:8px;flex-wrap:wrap}
+.summaryActionBtn{
+  height:36px;padding:0 12px;border-radius:12px;background:#edf4fa;color:#425466;font-size:12px;font-weight:800
+}
+.summaryActionBtn.primary{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
+#summaryCard.collapsed #summaryRows,
+#summaryCard.collapsed #summaryActions{display:none}
 
-const app = express();
-const server = http.createServer(app);
+#chatBox{flex:1;min-height:0;overflow-y:auto;padding:0 14px 8px;background:var(--bg-soft)}
+#chatInner{display:flex;flex-direction:column;gap:14px;min-height:100%}
+.messageRow{display:flex;flex-direction:column;gap:5px}
+.messageRow.me{align-items:flex-end}
+.messageRow.other{align-items:flex-start}
+.bubble{
+  max-width:min(76%,640px);padding:12px 16px;border-radius:22px;
+  font-size:15px;line-height:1.52;letter-spacing:-.02em;word-break:break-word
+}
+.messageRow.me .bubble{
+  background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;
+  border-bottom-right-radius:8px;box-shadow:0 8px 20px rgba(36,145,255,.16)
+}
+.messageRow.other .bubble{
+  background:#fff;border:1px solid var(--line);color:var(--text);border-bottom-left-radius:8px
+}
+.meta{font-size:10px;color:#95a3b1;padding:0 8px}
+.imageBubble{
+  max-width:min(86%,760px);background:#fff;border:1px solid var(--line);border-radius:22px;
+  padding:8px;cursor:pointer;box-shadow:0 8px 18px rgba(18,36,61,.04)
+}
+.chatImg{display:block;width:100%;max-width:420px;border-radius:14px}
+.imageHint{
+  margin-top:8px;padding:8px 10px;border-radius:12px;background:#f6fbff;
+  color:#557086;font-size:10px;font-weight:800
+}
 
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-  transports: ["websocket", "polling"]
-});
+#inputArea{
+  flex-shrink:0;border-top:1px solid var(--line);background:rgba(255,255,255,.97);
+  padding:8px 10px calc(10px + var(--safe-bottom));display:flex;flex-direction:column;gap:6px
+}
+#contactInlineBar{
+  display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
+  border-radius:14px;background:#fbfdff
+}
+#phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
+#phoneStatus.show{display:block}
+#phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
+  border:1px solid var(--line-strong);background:#f8fbff
+}
+#phoneInput{flex:1;height:32px;border-radius:11px;padding:0 10px;font-size:12px}
+#savePhoneBtn{
+  height:32px;min-width:48px;padding:0 10px;border-radius:11px;background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;font-weight:800;font-size:12px
+}
+#deletePhoneBtn{
+  height:32px;min-width:48px;padding:0 10px;border-radius:11px;background:#edf4fa;color:#425466;font-weight:800;font-size:12px
+}
+#messageRow{display:flex;align-items:center;gap:8px}
+#msgInput{flex:1;height:42px;border-radius:16px;padding:0 14px;font-size:14px}
+#sendBtn{
+  width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;font-size:20px;font-weight:800
+}
+#fileInput{display:none}
+#fileLabel{
+  width:42px;height:42px;border-radius:50%;background:#f2f6fa;color:#7b8d9f;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;border:1px solid #e5edf4
+}
+#fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 
-const PORT = Number(process.env.PORT || 3000);
-const HOST = "0.0.0.0";
+#viewerOverlay{
+  position:fixed;inset:0;z-index:1200;display:none;flex-direction:column;width:100vw;height:100vh;min-height:100dvh;background:rgba(245,248,252,.985)
+}
+#viewerOverlay.open{display:flex}
+body.viewer-inline-open{overflow:hidden;touch-action:none}
+#viewerTopbar{
+  height:52px;flex-shrink:0;border-bottom:1px solid var(--line);background:rgba(255,255,255,.96);
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:0 10px
+}
+#viewerTopLeft{min-width:0;display:flex;align-items:center}
+#viewerTitle{border:none;background:transparent;padding:0;font-size:15px;font-weight:800;color:var(--text);cursor:pointer}
+#viewerSubtitle{display:none}
+#viewerStats{display:none}
+#viewerActions{display:flex;gap:6px;flex-shrink:0}
+.viewerBtn{
+  min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
+  display:flex;align-items:center;justify-content:center;gap:0;font-weight:800
+}
+.viewerBtn .btnText{display:none}
+.viewerBtn .btnIcon{display:inline-flex}
+#viewerMain{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)}
+#viewerLeft{min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:#f8fbff}
+#canvasWrap{flex:1;min-height:0;padding:10px;display:flex;align-items:center;justify-content:center}
+#imageStage{
+  position:relative;width:100%;height:min(100%,760px);min-height:420px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,251,255,.96));
+  border:1px solid #dfe9f3;box-shadow:0 18px 38px rgba(18,36,61,.08);overflow:hidden
+}
+#viewerImage{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  max-width:84%;max-height:84%;border-radius:18px;box-shadow:0 14px 32px rgba(18,36,61,.12);
+  pointer-events:none;user-select:none;-webkit-user-drag:none;z-index:1
+}
+#drawCanvas{position:absolute;inset:0;width:100%;height:100%;border-radius:22px;touch-action:none;z-index:2}
+#textLayer{position:absolute;inset:0;z-index:3;pointer-events:none}
+.noteMarker{
+  position:absolute;min-width:56px;height:42px;padding:0 12px;border-radius:14px;display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.74);backdrop-filter:blur(8px);border:1px solid rgba(36,145,255,.18);
+  box-shadow:0 10px 18px rgba(18,36,61,.08);transform:translate(-50%,-50%);pointer-events:auto;user-select:none
+}
+.noteMarker.selected{border-color:rgba(255,139,61,.55);box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.10)}
+.noteMarkerText{max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:var(--text)}
+.noteResize{position:absolute;right:-5px;bottom:-5px;width:14px;height:14px;border-radius:5px;background:#2491ff;box-shadow:0 4px 10px rgba(36,145,255,.18)}
 
-const PUBLIC_DIR = path.join(__dirname, "public");
-const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
+#toolbar{
+  flex-shrink:0;border-top:1px solid var(--line);background:#fff;padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px
+}
+.toolSection{display:flex;flex-direction:column;gap:6px}
+.toolSectionLabel{display:none}
+.toolRow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
+#drawControlSide{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:nowrap}
+.toolGroup{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.toolGroup.fill{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.toolBtn{
+  min-width:44px;width:100%;height:44px;padding:0;border-radius:14px;background:#edf4fa;color:#425466;
+  display:inline-flex;align-items:center;justify-content:center;gap:0;font-weight:800;white-space:nowrap;
+  box-shadow:inset 0 0 0 1px rgba(214,224,234,.45);
+  transition:transform .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+.toolBtn .btnText{display:none}
+.toolBtn .btnIcon{display:inline-flex}
+.toolBtn .btnIcon svg{width:19px;height:19px}
+.toolBtn:hover{transform:translateY(-1px);background:#f4f8fd;box-shadow:inset 0 0 0 1px rgba(186,203,222,.75),0 6px 14px rgba(18,36,61,.06)}
+.toolBtn.active{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;box-shadow:0 8px 20px rgba(36,145,255,.16)}
+#thicknessWrap{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:0;font-weight:700;padding:0 4px}
+#thicknessWrap span{display:none}
+#thicknessRange{width:100%}
+#colorRow{
+  display:flex;gap:0;flex-wrap:nowrap;align-items:center;padding:2px;border:none;border-radius:999px;background:transparent;box-shadow:none
+}
+.colorSwatch,.noteColorSwatch{border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.10)}
+.colorSwatch{width:24px;height:24px}
+.noteColorSwatch{width:22px;height:22px}
+.colorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.20)}
+.noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
+#customColorBtn{
+  position:relative;overflow:hidden;background:
+  linear-gradient(135deg,rgba(255,255,255,.98),rgba(235,241,247,.98)),
+  conic-gradient(from 180deg,#ff3b30,#2491ff,#22c55e,#facc15,#111827,#ffffff,#ff3b30)
+}
+#customColorBtn::before{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--custom-color-preview,#ffffff)}
+#customColorBtn::after{content:"";position:absolute;inset:7px;border-radius:50%;border:1.5px dashed rgba(79,101,121,.55)}
+#customColorInput{
+  position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:.01;pointer-events:none
+}
+#colorRow .colorSwatch:not(#customColorBtn){display:none}
+#customColorBtn{display:inline-flex;width:44px;height:44px}
 
-if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+#viewerChatHeader{display:none}
+#viewerChatBox{flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fbfdff;-webkit-overflow-scrolling:touch}
+#viewerChatInner{display:flex;flex-direction:column;gap:10px}
+#viewerChatInner .meta{display:none}
+#viewerChatInner .bubble{max-width:92%}
+#viewerInputBar{
+  flex-shrink:0;border-top:1px solid var(--line);padding:12px 14px calc(14px + var(--safe-bottom));background:#fff;display:flex;gap:10px
+}
+#viewerMsgInput{flex:1;height:46px;border-radius:16px;padding:0 14px;font-size:15px}
+#viewerSendBtn{
+  width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;font-size:18px;font-weight:800;
+  box-shadow:0 10px 24px rgba(36,145,255,.18)
+}
 
-app.use(cors());
-app.use(express.json({ limit: "20mb" }));
-app.use(express.urlencoded({ extended: true }));
+#noteEditorOverlay{
+  position:fixed;inset:0;z-index:220;display:none;flex-direction:column;width:100vw;height:100vh;background:rgba(245,248,252,.99)
+}
+#noteEditorOverlay.open{display:flex}
+#noteEditorHeader{
+  min-height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-bottom:1px solid var(--line);background:#fff
+}
+#noteEditorTitleWrap{min-width:0;display:flex;flex-direction:column;gap:4px}
+#noteEditorTitle{font-size:17px;font-weight:800}
+#noteEditorMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#noteEditorSaveBadge{
+  height:24px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;background:#eef4fa;color:#587085;font-size:11px;font-weight:800
+}
+#noteEditorSaveBadge.pending{background:var(--warning-soft);color:var(--warning)}
+#noteEditorSaveBadge.saved{background:var(--success-soft);color:#2f7b42}
+#noteEditorSaveBadge.offline{background:#fff3f3;color:#c74242}
+#noteEditorActions{display:flex;align-items:center;gap:8px}
+.noteEditorDangerBtn,#noteEditorDoneBtn{
+  height:38px;padding:0 12px;border-radius:12px;font-weight:800
+}
+.noteEditorDangerBtn{background:#fff1f1;color:#c74242}
+#noteEditorDoneBtn{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
+#noteEditorBody{flex:1;min-height:0;padding:14px;background:#f7fbff;display:flex;flex-direction:column;gap:10px}
+#noteEditorTools{display:flex;flex-direction:column;gap:8px}
+#noteEditorColorRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#noteEditorMetaLine{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--sub);font-size:12px;font-weight:700}
+#noteEditorTextarea{
+  width:100%;height:100%;border-radius:20px;resize:none;padding:16px;font-size:16px;line-height:1.55;color:var(--text)
+}
 
-app.use((req, res, next) => {
-  console.log("[REQ]", req.method, req.url);
-  next();
-});
+#msgInput:focus,#phoneInput:focus,#viewerMsgInput:focus,#noteEditorTextarea:focus{
+  background:#fff;border-color:rgba(36,145,255,.45);box-shadow:0 0 0 4px rgba(36,145,255,.08)
+}
 
-app.use(express.static(PUBLIC_DIR));
-app.use("/uploads", express.static(UPLOAD_DIR));
+@media (min-width:901px){
+  #viewerTopbar{height:58px;padding:0 18px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px}
+  #viewerTopLeft{min-width:0;display:flex;align-items:center}
+  #viewerTitle{font-size:16px;font-weight:700;letter-spacing:-.01em}
+  #downloadSketchBtn{display:none !important}
+  #viewerMain{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(340px,.7fr);min-height:0}
+  #viewerLeft{position:relative;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:#f8fbff}
+  #canvasWrap{flex:1;min-height:0;padding:16px 16px 104px;display:flex;align-items:center;justify-content:center}
+  #imageStage{width:100%;height:min(100%,760px);min-height:460px;border-radius:22px}
+  #toolbar{
+    position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:20;
+    width:auto;max-width:calc(100% - 36px);padding:12px 14px;border:1px solid rgba(214,224,234,.95);
+    border-radius:24px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+    box-shadow:0 18px 38px rgba(18,36,61,.14);display:flex;flex-direction:row;align-items:center;gap:12px
+  }
+  .toolSection{display:flex;flex-direction:row;align-items:center;gap:10px}
+  .toolRow{display:flex;align-items:center;gap:10px}
+  .toolGroup,.toolGroup.fill{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+  #drawControlSide{display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+  .toolBtn{min-width:46px;width:46px;height:46px;padding:0;border-radius:15px;justify-content:center;gap:0}
+  .toolBtn .btnIcon svg{width:20px;height:20px}
+  #thicknessRange{width:124px}
+  #colorRow .colorSwatch:not(#customColorBtn){display:none !important}
+  #customColorBtn{display:inline-flex;width:46px;height:46px}
+  #viewerRight{min-width:0;display:flex;flex-direction:column;border-left:1px solid var(--line);background:#f9fbff}
+  #viewerChatBox{flex:1;min-height:0;overflow-y:auto;padding:16px;background:#f9fbff}
+  #viewerChatInner{display:flex;flex-direction:column;gap:10px}
+  #viewerInputBar{flex-shrink:0;padding:14px 16px calc(16px + var(--safe-bottom));border-top:1px solid var(--line);background:#fff;display:flex;gap:10px}
+  #viewerMsgInput{height:46px;border-radius:16px;font-size:15px}
+  #viewerSendBtn{width:46px;height:46px;border-radius:16px}
+}
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-});
+@media (max-width:900px){
+  #chatCard{width:100%;border-radius:0}
+  #header{height:40px}
+  #quickRequestBar{padding:8px 10px 6px;gap:6px}
+  #quickRequestButtons{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #quickRequestButtons::-webkit-scrollbar{display:none}
+  .quickChip{flex:0 0 auto}
+  #summaryCard{margin:0 8px 4px;gap:4px}
+  #summaryHeaderLeft{gap:6px}
+  #summaryPreview{gap:4px}
+  .summaryInlineChip{max-width:110px;font-size:10px;padding:0 8px}
+  #summaryRows{grid-template-columns:1fr 1fr;gap:6px}
+  #chatBox{padding:0 10px 6px}
+  .bubble{max-width:86%;font-size:14px;padding:11px 14px}
+  .chatImg{max-width:220px}
+  #inputArea{padding:6px 8px calc(8px + var(--safe-bottom));gap:4px}
+  #contactInlineBar{padding:8px 10px;gap:6px}
+  #savePhoneBtn,#deletePhoneBtn{width:auto;min-width:52px}
+  #msgInput,#sendBtn,#fileLabel{height:44px}
+  #sendBtn,#fileLabel{width:44px}
+  body.viewer-inline-open #inputArea,
+  body.viewer-inline-open #contactInlineBar,
+  body.viewer-inline-open #phoneStatus{display:none !important}
+  #viewerOverlay{width:100vw;height:100dvh;min-height:100dvh}
+  #viewerTopbar{min-height:0;height:44px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;padding:0 8px}
+  #viewerTopLeft{min-width:0;display:flex;align-items:center}
+  #viewerTitle{font-size:13px;font-weight:700}
+  #downloadSketchBtn{display:none !important}
+  .viewerBtn{min-width:36px;width:36px;height:36px;padding:0;border-radius:12px}
+  .viewerBtn .btnText{display:none !important}
+  .viewerBtn .btnIcon{display:inline-flex !important}
+  #viewerMain{display:flex;flex-direction:column;min-height:0;height:calc(100dvh - 44px);flex:1}
+  #viewerLeft{display:flex;flex-direction:column;min-height:0;flex:3 1 0;border-right:none;background:#f8fbff}
+  #canvasWrap{flex:2 1 0;min-height:0;padding:8px}
+  #imageStage{min-height:0;height:100%;border-radius:16px}
+  #toolbar{flex:1 1 0;min-height:0;padding:8px 10px 10px;gap:10px;overflow:hidden;background:#fff;border-top:1px solid var(--line)}
+  .toolSection{gap:6px}
+  #toolbar .toolSection:nth-of-type(1) .toolRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  #toolbar .toolSection:nth-of-type(1) .toolGroup.fill{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%}
+  #drawControlSide{width:auto;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+  #toolbar .toolSection:nth-of-type(2){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:0}
+  #toolbar .toolSection:nth-of-type(2) .toolGroup{display:flex;gap:8px;flex-wrap:nowrap}
+  #thicknessWrap{display:flex;align-items:center;gap:6px;font-size:0}
+  #thicknessWrap span{display:none !important}
+  #thicknessRange{width:100%}
+  .toolBtn{min-width:42px;width:100%;height:42px;padding:0;justify-content:center;border-radius:13px}
+  .toolBtn .btnText{display:none !important}
+  .toolBtn .btnIcon{display:inline-flex !important}
+  .toolBtn .btnIcon svg{width:18px;height:18px}
+  #colorRow{display:flex;align-items:center;justify-content:center;padding:0;gap:0;border:none;background:transparent;box-shadow:none}
+  #colorRow .colorSwatch:not(#customColorBtn){display:none !important}
+  #customColorBtn{display:inline-flex;width:40px;height:40px;touch-action:manipulation}
+  #viewerRight{display:flex !important;flex-direction:column;flex:2 1 0;min-height:0;max-height:none;border-top:1px solid var(--line);border-left:none;background:#fff}
+  #viewerChatHeader{display:none !important}
+  #viewerChatBox{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 12px 8px;background:#fbfdff;-webkit-overflow-scrolling:touch}
+  #viewerChatInner{gap:8px}
+  #viewerInputBar{flex-shrink:0;border-top:1px solid var(--line);padding:8px 10px calc(10px + var(--safe-bottom));background:#fff;display:flex;gap:8px}
+  #viewerMsgInput{flex:1;height:44px;border-radius:14px;padding:0 12px;font-size:15px}
+  #viewerSendBtn{width:44px;height:44px;border-radius:14px;font-size:18px}
+  #viewerChatInner .meta{display:none !important}
+  #viewerChatInner .bubble{max-width:92%;font-size:14px;line-height:1.45}
+  #viewerChatInner .imageBubble,#viewerChatInner .chatImg,#viewerChatInner .imageHint{display:none !important}
+  #viewerChatInner .messageRow.has-image{display:none !important}
+  .noteMarker{min-width:48px;height:36px;padding:0 10px}
+  .noteMarkerText{max-width:84px;font-size:10px}
+  #noteEditorHeader{align-items:flex-start;padding:10px 12px}
+  #noteEditorActions{flex-wrap:wrap;justify-content:flex-end}
+  #noteEditorBody{padding:8px;gap:8px}
+  #noteEditorMetaLine{flex-direction:column;align-items:flex-start;gap:4px}
+}
 
-app.get("/health", (req, res) => {
-  res.json({ ok: true });
-});
+#uploadLoading{
+  position:fixed;inset:0;z-index:260;display:none;align-items:center;justify-content:center;
+  background:rgba(245,248,252,.72);backdrop-filter:blur(4px)
+}
+#uploadLoading.show{display:flex}
+#uploadLoadingCard{
+  min-width:180px;padding:18px 20px;border-radius:18px;background:rgba(255,255,255,.96);border:1px solid var(--line);
+  box-shadow:0 18px 40px rgba(18,36,61,.12);display:flex;align-items:center;gap:12px
+}
+.uploadSpinner{
+  width:22px;height:22px;border-radius:50%;border:2px solid rgba(36,145,255,.18);border-top-color:var(--primary);animation:spin .85s linear infinite
+}
+#uploadLoadingText{font-size:13px;font-weight:700;color:var(--text-soft)}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ---------------- upload ---------------- */
+#sendBtn .btnIcon,#viewerSendBtn .btnIcon,#fileLabel .btnIcon,#downloadSketchBtn .btnIcon,
+#penBtn .btnIcon,#eraserBtn .btnIcon,#addTextBtn .btnIcon,#undoBtn .btnIcon,#redoBtn .btnIcon{
+  display:inline-flex;align-items:center;justify-content:center
+}
+#fileLabel .btnIcon svg{width:19px;height:19px}
+#sendBtn .btnIcon svg,#viewerSendBtn .btnIcon svg{width:19px;height:19px}
+#viewerTitle{
+  display:inline-flex;align-items:center;gap:6px
+}
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }
-});
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="chatCard">
+    <div id="header"><div id="title" aria-label="디자인 상담"></div></div>
 
-app.post(
-  "/upload",
-  (req, res, next) => {
-    upload.single("image")(req, res, (err) => {
-      if (!err) return next();
+    <div id="quickRequestBar">
+      <div id="quickRequestTitle">커스텀 내용을 선택해주세요.</div>
+      <div id="quickRequestButtons">
+        <button class="quickChip" type="button" data-request="색상 변경" data-draft="색상을 변경하고 싶어요.">색상 변경</button>
+        <button class="quickChip" type="button" data-request="문구 추가" data-draft="문구를 추가하고 싶어요.">문구 추가</button>
+        <button class="quickChip" type="button" data-request="사이즈 조정" data-draft="사이즈를 조정하고 싶어요.">사이즈 조정</button>
+        <button class="quickChip" type="button" data-request="디자인 수정" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정</button>
+        <button class="quickChip" type="button" data-request="추천 요청" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 요청</button>
+      </div>
+    </div>
 
-      if (err instanceof multer.MulterError) {
-        if (err.code === "LIMIT_FILE_SIZE") {
-          return res
-            .status(400)
-            .json({ error: "이미지 용량이 너무 큽니다. 20MB 이하만 가능합니다." });
-        }
-        return res.status(400).json({ error: "업로드 처리 중 오류가 발생했습니다." });
-      }
+    <div id="summaryCard" class="collapsed">
+      <div id="summaryHeader">
+        <div id="summaryHeaderLeft">
+          <div id="summaryTitle">현재 요청</div>
+          <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 펼치기"></button>
+          <div id="summaryPreview" aria-live="polite"></div>
+        </div>
+      </div>
+      <div id="summaryRows">
+        <div class="summaryItem">
+          <div class="summaryLabel">제품</div>
+          <div class="summaryValue" id="summaryProductValue">선택 대기</div>
+        </div>
+        <div class="summaryItem">
+          <div class="summaryLabel">상세</div>
+          <div class="summaryValue" id="summaryDetailValue">상담 시작</div>
+        </div>
+      </div>
+      <div id="summaryActions">
+        <button id="summaryComposeBtn" class="summaryActionBtn" type="button">요청 정리하기</button>
+        <button id="summaryQuoteBtn" class="summaryActionBtn primary" type="button">견적 요청 문구 만들기</button>
+      </div>
+    </div>
 
-      return res.status(400).json({ error: err.message || "업로드 실패" });
-    });
-  },
-  (req, res) => {
+    <div id="chatBox"><div id="chatInner"></div></div>
+
+    <div id="inputArea">
+      <div id="contactInlineBar">
+        <input id="phoneInput" type="tel" placeholder="연락처" />
+        <button id="savePhoneBtn" type="button">등록</button>
+        <button id="deletePhoneBtn" type="button">삭제</button>
+      </div>
+      <div id="phoneStatus" aria-live="polite"></div>
+      <div id="messageRow">
+        <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
+        <button id="sendBtn" type="button" aria-label="메시지 전송"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span></button>
+        <label id="fileLabel" for="fileInput" aria-label="이미지 첨부"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.2a2 2 0 0 1-2.82-2.83l8.48-8.48"/></svg></span></label>
+        <input id="fileInput" type="file" accept="image/*" />
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="viewerOverlay" aria-hidden="true">
+  <div id="viewerTopbar">
+    <div id="viewerTopLeft">
+      <button id="viewerTitle" type="button" aria-label="스케치 종료">스케치 종료</button>
+      <div id="viewerSubtitle">이미지 검토</div>
+    </div>
+    <div id="viewerStats"></div>
+    <div id="viewerActions">
+      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span><span class="btnText">다운로드</span></button>
+    </div>
+  </div>
+
+  <div id="viewerMain">
+    <section id="viewerLeft">
+      <div id="canvasWrap">
+        <div id="imageStage">
+          <img id="viewerImage" alt="상담 이미지" />
+          <canvas id="drawCanvas"></canvas>
+          <div id="textLayer"></div>
+        </div>
+      </div>
+
+      <div id="toolbar">
+        <div class="toolSection">
+          <div class="toolSectionLabel">그리기</div>
+          <div class="toolRow">
+            <div class="toolGroup fill">
+              <button id="penBtn" class="toolBtn active" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span><span class="btnText">펜</span></button>
+              <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7"/><path d="M14.5 4.5 20 10l-8.5 8.5a2 2 0 0 1-2.8 0L4 13.8a2 2 0 0 1 0-2.8l6.7-6.7a2 2 0 0 1 2.8 0z"/></svg></span><span class="btnText">지우개</span></button>
+              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span><span class="btnText">메모 추가</span></button>
+            </div>
+            <div id="drawControlSide">
+              <div id="thicknessWrap">
+                <span>두께</span>
+                <input id="thicknessRange" type="range" min="1" max="48" value="3" />
+              </div>
+              <div id="colorRow">
+                <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
+                <button class="colorSwatch" type="button" data-color="#2491ff" style="background:#2491ff;" aria-label="파랑"></button>
+                <button class="colorSwatch" type="button" data-color="#22c55e" style="background:#22c55e;" aria-label="초록"></button>
+                <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
+                <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
+                <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
+                <input id="customColorInput" type="color" value="#ffffff" aria-label="사용자 지정 색상" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolSection">
+          <div class="toolSectionLabel">이력</div>
+          <div class="toolGroup">
+            <button id="undoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M20 20a8 8 0 0 0-8-8H4"/></svg></span><span class="btnText">되돌리기</span></button>
+            <button id="redoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M4 20a8 8 0 0 1 8-8h8"/></svg></span><span class="btnText">다시하기</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewerRight">
+      <div id="viewerChatHeader">실시간 채팅</div>
+      <div id="viewerChatBox"><div id="viewerChatInner"></div></div>
+      <div id="viewerInputBar">
+        <input id="viewerMsgInput" type="text" placeholder="수정 위치나 요청을 바로 남겨주세요" autocomplete="off" />
+        <button id="viewerSendBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span></button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="noteEditorOverlay" aria-hidden="true">
+  <div id="noteEditorHeader">
+    <div id="noteEditorTitleWrap">
+      <div id="noteEditorTitle">메모 편집 중</div>
+      <div id="noteEditorMeta"><span id="noteEditorSaveBadge">준비됨</span></div>
+    </div>
+    <div id="noteEditorActions">
+      <button id="noteDeleteBtn" class="noteEditorDangerBtn" type="button">삭제</button>
+      <button id="noteEditorDoneBtn" type="button">완료</button>
+    </div>
+  </div>
+  <div id="noteEditorBody">
+    <div id="noteEditorTools">
+      <div id="noteEditorColorRow" aria-label="메모 색상">
+        <button class="noteColorSwatch active" type="button" data-note-color="#fff7c2" style="background:#fff7c2;" aria-label="노랑"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#dff5ff" style="background:#dff5ff;" aria-label="파랑"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#e8ffd9" style="background:#e8ffd9;" aria-label="초록"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#ffe4ef" style="background:#ffe4ef;" aria-label="분홍"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#efe7ff" style="background:#efe7ff;" aria-label="보라"></button>
+      </div>
+      <div id="noteEditorMetaLine">
+        <span id="noteEditorTimestamp">최종 수정 없음</span>
+        <span id="noteEditorAuthor">수정자 없음</span>
+      </div>
+    </div>
+    <textarea id="noteEditorTextarea" maxlength="500" placeholder="메모를 입력해 주세요."></textarea>
+  </div>
+</div>
+
+<div id="uploadLoading" aria-hidden="true">
+  <div id="uploadLoadingCard">
+    <div class="uploadSpinner" aria-hidden="true"></div>
+    <div id="uploadLoadingText">이미지 업로드 중…</div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const isPopupViewer = params.get("viewer") === "1";
+  const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "") ||
+    ((navigator.maxTouchPoints || 0) > 1 && Math.min(window.screen.width || 0, window.screen.height || 0) <= 900);
+  const socket = typeof window.io === "function" ? window.io({ transports:["websocket","polling"] }) : null;
+
+  const role = localStorage.getItem("role") === "admin" ? "admin" : "user";
+  const userName = (localStorage.getItem("userName") || "").trim();
+  let roomId = (params.get("roomId") || localStorage.getItem("roomId") || "").trim();
+  if (!roomId) {
+    roomId = Math.random().toString(36).slice(2,10);
+    localStorage.setItem("roomId", roomId);
+  }
+
+  const MAX_NOTE_CHARS = 500;
+
+  const el = {
+    quickChips:[...document.querySelectorAll(".quickChip")],
+    summaryCard:document.getElementById("summaryCard"),
+    summaryToggleBtn:document.getElementById("summaryToggleBtn"),
+    summaryProductValue:document.getElementById("summaryProductValue"),
+    summaryDetailValue:document.getElementById("summaryDetailValue"),
+    summaryPreview:document.getElementById("summaryPreview"),
+    summaryComposeBtn:document.getElementById("summaryComposeBtn"),
+    summaryQuoteBtn:document.getElementById("summaryQuoteBtn"),
+    chatInner:document.getElementById("chatInner"),
+    chatBox:document.getElementById("chatBox"),
+    msgInput:document.getElementById("msgInput"),
+    sendBtn:document.getElementById("sendBtn"),
+    fileInput:document.getElementById("fileInput"),
+    fileLabel:document.getElementById("fileLabel"),
+    uploadLoading:document.getElementById("uploadLoading"),
+    contactInlineBar:document.getElementById("contactInlineBar"),
+    phoneInput:document.getElementById("phoneInput"),
+    savePhoneBtn:document.getElementById("savePhoneBtn"),
+    deletePhoneBtn:document.getElementById("deletePhoneBtn"),
+    phoneStatus:document.getElementById("phoneStatus"),
+    viewerOverlay:document.getElementById("viewerOverlay"),
+    viewerTitle:document.getElementById("viewerTitle"),
+    viewerSubtitle:document.getElementById("viewerSubtitle"),
+    viewerImage:document.getElementById("viewerImage"),
+    drawCanvas:document.getElementById("drawCanvas"),
+    textLayer:document.getElementById("textLayer"),
+    viewerChatInner:document.getElementById("viewerChatInner"),
+    viewerChatBox:document.getElementById("viewerChatBox"),
+    viewerMsgInput:document.getElementById("viewerMsgInput"),
+    viewerSendBtn:document.getElementById("viewerSendBtn"),
+    downloadSketchBtn:document.getElementById("downloadSketchBtn"),
+    penBtn:document.getElementById("penBtn"),
+    eraserBtn:document.getElementById("eraserBtn"),
+    addTextBtn:document.getElementById("addTextBtn"),
+    undoBtn:document.getElementById("undoBtn"),
+    redoBtn:document.getElementById("redoBtn"),
+    thicknessRange:document.getElementById("thicknessRange"),
+    colorSwatches:[...document.querySelectorAll(".colorSwatch")],
+    customColorBtn:document.getElementById("customColorBtn"),
+    customColorInput:document.getElementById("customColorInput"),
+    noteEditorOverlay:document.getElementById("noteEditorOverlay"),
+    noteEditorTextarea:document.getElementById("noteEditorTextarea"),
+    noteDeleteBtn:document.getElementById("noteDeleteBtn"),
+    noteEditorDoneBtn:document.getElementById("noteEditorDoneBtn"),
+    noteColorSwatches:[...document.querySelectorAll(".noteColorSwatch")],
+    noteEditorTimestamp:document.getElementById("noteEditorTimestamp"),
+    noteEditorAuthor:document.getElementById("noteEditorAuthor"),
+    noteEditorSaveBadge:document.getElementById("noteEditorSaveBadge"),
+    imageStage:document.getElementById("imageStage")
+  };
+
+  const state = {
+    connected:false,
+    joined:false,
+    summaryCollapsed:true,
+    summary:{ productName:"", requestTypes:[], detailNotes:[] },
+    currentViewerImageId:"",
+    currentViewerImageUrl:"",
+    mode:"draw",
+    color:"#ff3b30",
+    width:3,
+    isDrawing:false,
+    currentStroke:[],
+    strokes:[],
+    redoStrokes:[],
+    notes:[],
+    activeNoteId:"",
+    noteColor:"#fff7c2",
+    noteSaveTimer:null,
+    uploadBusy:false
+  };
+
+  const ctx = el.drawCanvas.getContext("2d");
+
+  function escapeHtml(value){
+    return String(value || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+
+  function formatTime(ts){
+    try { return new Date(ts).toLocaleTimeString("ko-KR",{ hour:"2-digit", minute:"2-digit" }); }
+    catch { return ""; }
+  }
+
+  function formatNoteTimestamp(ts){
+    if (!ts) return "최종 수정 없음";
     try {
-      if (!req.file) {
-        return res.status(400).json({ error: "파일 없음" });
-      }
-
-      const ext = path.extname(req.file.originalname) || ".png";
-      const filename = `${Date.now()}-${uuidv4()}${ext}`;
-      const filepath = path.join(UPLOAD_DIR, filename);
-
-      fs.writeFileSync(filepath, req.file.buffer);
-
-      res.json({
-        success: true,
-        url: `/uploads/${filename}`
+      return "최종 수정 " + new Date(ts).toLocaleString("ko-KR",{
+        year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"
       });
-    } catch (e) {
-      console.error("upload error", e);
-      res.status(500).json({ error: "업로드 실패" });
+    } catch { return "최종 수정 없음"; }
+  }
+
+  function getDisplayName(note = null){
+    if (note && note.updatedByName) return note.updatedByName;
+    return role === "admin" ? "관리자" : (userName || "고객");
+  }
+
+  function setPhoneStatus(text){
+    el.phoneStatus.textContent = text || "";
+    el.phoneStatus.classList.toggle("show", Boolean(text));
+  }
+
+  function setNoteSaveBadge(kind){
+    el.noteEditorSaveBadge.className = "";
+    el.noteEditorSaveBadge.id = "noteEditorSaveBadge";
+    if (kind === "pending") {
+      el.noteEditorSaveBadge.classList.add("pending");
+      el.noteEditorSaveBadge.textContent = "저장 중";
+    } else if (kind === "saved") {
+      el.noteEditorSaveBadge.classList.add("saved");
+      el.noteEditorSaveBadge.textContent = "저장됨";
+    } else if (kind === "offline") {
+      el.noteEditorSaveBadge.classList.add("offline");
+      el.noteEditorSaveBadge.textContent = "오프라인";
+    } else {
+      el.noteEditorSaveBadge.textContent = "준비됨";
     }
   }
-);
 
-/* ---------------- room state ---------------- */
+  function setUploadLoading(isLoading){
+    state.uploadBusy = Boolean(isLoading);
+    el.uploadLoading.classList.toggle("show", state.uploadBusy);
+    el.uploadLoading.setAttribute("aria-hidden", state.uploadBusy ? "false" : "true");
+    el.fileLabel.classList.toggle("disabled", state.uploadBusy);
+    el.fileInput.disabled = state.uploadBusy;
+    el.sendBtn.disabled = state.uploadBusy;
+    el.viewerSendBtn.disabled = state.uploadBusy;
+  }
 
-const rooms = {};
+  function updateSummaryUI(){
+    el.summaryCard.classList.toggle("collapsed", state.summaryCollapsed);
+    el.summaryProductValue.textContent = state.summary.productName || "선택 대기";
+    el.summaryDetailValue.textContent = state.summary.detailNotes.length
+      ? state.summary.detailNotes[state.summary.detailNotes.length - 1]
+      : "상담 시작";
+    el.quickChips.forEach(button => {
+      button.classList.toggle("active", state.summary.requestTypes.includes(button.dataset.request));
+    });
+    const chips = state.summary.requestTypes.length
+      ? state.summary.requestTypes.map(item => `<span class="summaryInlineChip">${escapeHtml(item)}</span>`)
+      : ['<span class="summaryInlineChip empty">요약이 아직 없습니다.</span>'];
+    el.summaryPreview.innerHTML = chips.join("");
+  }
 
-function sanitizeRole(role) {
-  return role === "admin" ? "admin" : "user";
-}
+  function toggleSummaryCard(){
+    state.summaryCollapsed = !state.summaryCollapsed;
+    updateSummaryUI();
+  }
 
-function sanitizeUserName(userName, role) {
-  const name = String(userName || "").trim().slice(0, 60);
-  if (role === "admin") return "관리자";
-  return name || "고객";
-}
+  function buildSummaryText(){
+    const product = state.summary.productName || "선택 대기";
+    const requests = state.summary.requestTypes.length ? state.summary.requestTypes.join(", ") : "요청 없음";
+    const detail = state.summary.detailNotes.length ? state.summary.detailNotes[state.summary.detailNotes.length - 1] : "상담 시작";
+    return `제품: ${product} / 요청: ${requests} / 상세: ${detail}`;
+  }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
+  function appendMessage(message){
+    renderMessage(el.chatInner, message);
+    renderMessage(el.viewerChatInner, message);
+    requestAnimationFrame(() => {
+      el.chatBox.scrollTop = el.chatBox.scrollHeight;
+      el.viewerChatBox.scrollTop = el.viewerChatBox.scrollHeight;
+    });
+  }
 
-function getRoom(roomId) {
-  if (!rooms[roomId]) {
-    rooms[roomId] = {
-      messages: [],
-      drawings: {},
-      notes: {}
+  function renderMessage(target, message){
+    if (!target || !message) return;
+    const isViewerTarget = target === el.viewerChatInner;
+    const isImageMessage = message.type === "image";
+    if (isViewerTarget && isImageMessage) return;
+
+    const row = document.createElement("div");
+    row.className = "messageRow " + (message.sender === role ? "me" : "other");
+    if (isImageMessage) row.classList.add("has-image");
+
+    const bubbleHolder = document.createElement("div");
+    if (isImageMessage) {
+      bubbleHolder.className = "imageBubble";
+      bubbleHolder.innerHTML = `<img class="chatImg" src="${escapeHtml(message.imageUrl)}" alt="첨부 이미지" /><div class="imageHint">이미지를 누르면 협업창이 열립니다.</div>`;
+      bubbleHolder.addEventListener("click", () => openViewer(message.imageId, message.imageUrl));
+    } else {
+      bubbleHolder.className = "bubble";
+      bubbleHolder.textContent = message.text || "";
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${message.senderName || (message.sender === "admin" ? "관리자" : "고객")} · ${formatTime(message.time)}`;
+
+    row.appendChild(bubbleHolder);
+    row.appendChild(meta);
+    target.appendChild(row);
+  }
+
+  function canUseRealtime(){
+    return Boolean(socket && state.connected && state.joined);
+  }
+
+  function emitJoin(){
+    if (!socket) return;
+    socket.emit("join",{ roomId, role, userName:userName || "" },(ack)=>{
+      state.joined = Boolean(ack && ack.ok);
+    });
+  }
+
+  function sendText(text, after){
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return;
+    if (!canUseRealtime()) {
+      alert("실시간 연결을 확인해 주세요.");
+      return;
+    }
+    socket.emit("message",{ text:trimmed },(ack)=>{
+      if (!ack || ack.ok) {
+        state.summary.detailNotes.push(trimmed);
+        if (state.summary.detailNotes.length > 12) state.summary.detailNotes = state.summary.detailNotes.slice(-12);
+        updateSummaryUI();
+        if (typeof after === "function") after();
+      }
+    });
+  }
+
+  async function uploadImage(file){
+    const form = new FormData();
+    form.append("image", file);
+    const res = await fetch("/upload",{ method:"POST", body:form });
+    if (!res.ok) throw new Error("업로드 실패");
+    return res.json();
+  }
+
+  async function handleImageSelect(file){
+    try{
+      if (!file) return;
+      if (!canUseRealtime()) {
+        alert("실시간 연결을 확인해 주세요.");
+        return;
+      }
+      setUploadLoading(true);
+      const uploaded = await uploadImage(file);
+      socket.emit("image",{ url:uploaded.url },(ack)=>{
+        setUploadLoading(false);
+        if (ack && ack.ok) {
+          openViewer(ack.imageId, uploaded.url);
+        } else {
+          alert("이미지 첨부 중 오류가 발생했습니다.");
+        }
+      });
+    } catch (error) {
+      setUploadLoading(false);
+      alert("이미지 첨부 중 오류가 발생했습니다.");
+    } finally {
+      el.fileInput.value = "";
+    }
+  }
+
+  function openViewer(imageId, imageUrl){
+    if (!imageId || !imageUrl) return;
+    if (isPopupViewer) return;
+    state.currentViewerImageId = imageId;
+    state.currentViewerImageUrl = imageUrl;
+    el.viewerImage.src = imageUrl;
+    el.viewerSubtitle.textContent = imageUrl.split("/").pop() || "이미지 검토";
+    el.viewerOverlay.classList.add("open");
+    el.viewerOverlay.setAttribute("aria-hidden","false");
+    document.body.classList.add("viewer-inline-open");
+    resizeCanvas();
+    requestDrawingHistory();
+    requestNoteHistory();
+  }
+
+  function closeViewerInline(){
+    el.viewerOverlay.classList.remove("open");
+    el.viewerOverlay.setAttribute("aria-hidden","true");
+    document.body.classList.remove("viewer-inline-open");
+    closeNoteEditor();
+  }
+
+  function resizeCanvas(){
+    const rect = el.drawCanvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    el.drawCanvas.width = Math.round(rect.width * dpr);
+    el.drawCanvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    redrawCanvas();
+    renderNotes();
+  }
+
+  function getCanvasPoint(event){
+    const rect = el.drawCanvas.getBoundingClientRect();
+    const clientX = event.clientX ?? (event.touches && event.touches[0]?.clientX) ?? 0;
+    const clientY = event.clientY ?? (event.touches && event.touches[0]?.clientY) ?? 0;
+    return { x:clientX - rect.left, y:clientY - rect.top };
+  }
+
+  function drawStroke(stroke){
+    if (!stroke || !stroke.points || stroke.points.length < 2) return;
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = stroke.color || "#ff3b30";
+    ctx.lineWidth = stroke.width || 3;
+    ctx.globalCompositeOperation = stroke.mode === "erase" ? "destination-out" : "source-over";
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (let i = 1; i < stroke.points.length; i++) ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function redrawCanvas(){
+    ctx.clearRect(0,0,el.drawCanvas.width,el.drawCanvas.height);
+    state.strokes.forEach(drawStroke);
+  }
+
+  function syncDrawingHistory(){
+    if (!canUseRealtime()) return;
+    socket.emit("replace-drawing-history",{
+      imageId:state.currentViewerImageId,
+      strokes:state.strokes
+    });
+  }
+
+  function startDrawing(event){
+    if (!state.currentViewerImageId || state.mode === "note") return;
+    state.isDrawing = true;
+    const pt = getCanvasPoint(event);
+    state.currentStroke = [pt, pt];
+  }
+
+  function moveDrawing(event){
+    if (!state.isDrawing) return;
+    const pt = getCanvasPoint(event);
+    state.currentStroke.push(pt);
+    redrawCanvas();
+    drawStroke({
+      mode:state.mode,
+      color:state.color,
+      width:state.width,
+      points:state.currentStroke
+    });
+  }
+
+  function endDrawing(){
+    if (!state.isDrawing) return;
+    state.isDrawing = false;
+    if (state.currentStroke.length < 2) {
+      state.currentStroke = [];
+      return;
+    }
+    const stroke = {
+      imageId:state.currentViewerImageId,
+      mode:state.mode === "erase" ? "erase" : "draw",
+      color:state.color,
+      width:state.width,
+      points:[...state.currentStroke]
+    };
+    state.strokes.push(stroke);
+    state.redoStrokes = [];
+    redrawCanvas();
+    if (canUseRealtime()) socket.emit("draw-stroke", stroke);
+    state.currentStroke = [];
+  }
+
+  function normalizeNote(note = {}){
+    return {
+      id:String(note.id || crypto.randomUUID()),
+      x:typeof note.x === "number" ? note.x : 0.14,
+      y:typeof note.y === "number" ? note.y : 0.16,
+      width:typeof note.width === "number" ? note.width : 0.16,
+      height:typeof note.height === "number" ? note.height : 0.10,
+      text:String(note.text || "").slice(0,MAX_NOTE_CHARS),
+      color:String(note.color || "#fff7c2"),
+      author:note.author || role,
+      updatedAt:typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
+      updatedByRole:note.updatedByRole || role,
+      updatedByName:note.updatedByName || getDisplayName()
     };
   }
-  return rooms[roomId];
-}
 
-function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
-  const updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
+  function getNoteById(noteId){
+    return state.notes.find(item => item.id === noteId) || null;
+  }
 
-  return {
-    id: String(note.id || uuidv4()),
-    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
-    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
-    width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.3) : 0.16,
-    height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.1,
-    text: String(note.text || "").slice(0, 500),
-    color: String(note.color || "#fff7c2"),
-    author: sanitizeRole(note.author || fallbackRole),
-    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
-    updatedByRole,
-    updatedByName
-  };
-}
+  function upsertNote(note){
+    const normalized = normalizeNote(note);
+    const index = state.notes.findIndex(item => item.id === normalized.id);
+    if (index >= 0) state.notes[index] = normalized;
+    else state.notes.push(normalized);
+    renderNotes();
+  }
 
-function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const next = {};
+  function renderNotes(){
+    el.textLayer.innerHTML = "";
+    state.notes.forEach(note => {
+      const marker = document.createElement("div");
+      marker.className = "noteMarker" + (state.activeNoteId === note.id ? " selected" : "");
+      marker.style.left = `${note.x * 100}%`;
+      marker.style.top = `${note.y * 100}%`;
+      marker.style.width = `${note.width * 100}%`;
+      marker.style.height = `${note.height * 100}%`;
+      marker.style.background = note.color || "#fff7c2";
 
-  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
-  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
-  if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.3);
-  if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
-  if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
-  if (typeof patch.color === "string") next.color = patch.color;
-  next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
+      const label = document.createElement("div");
+      label.className = "noteMarkerText";
+      label.textContent = note.text || "메모";
+      marker.appendChild(label);
 
-  const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
-  next.updatedByRole = updatedByRole;
-  next.updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(patch.updatedByName || fallbackUserName, updatedByRole);
+      const resize = document.createElement("div");
+      resize.className = "noteResize";
+      marker.appendChild(resize);
 
-  return next;
-}
-
-/* ---------------- socket ---------------- */
-
-io.on("connection", (socket) => {
-  console.log("connect:", socket.id);
-
-  socket.on("join", (payload = {}, ack) => {
-    try {
-      const roomId = String(payload.roomId || "").trim();
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "roomId 없음" });
-        socket.emit("join-error", { ok: false, error: "roomId 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(payload.role);
-      const userName = sanitizeUserName(payload.userName, role);
-
-      socket.join(roomId);
-      socket.data.roomId = roomId;
-      socket.data.role = role;
-      socket.data.userName = userName;
-
-      const room = getRoom(roomId);
-
-      socket.emit("history", room.messages);
-
-      if (ack) ack({ ok: true, roomId, role, userName });
-      socket.emit("joined", { ok: true, roomId, role, userName });
-    } catch (e) {
-      console.error("join error", e);
-      if (ack) ack({ ok: false, error: "join 오류" });
-      socket.emit("join-error", { ok: false, error: "join 오류" });
-    }
-  });
-
-  socket.on("message", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
-
-      const text = String(payload.text || "").trim();
-      if (!text) {
-        if (ack) ack({ ok: false, error: "메시지 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const message = {
-        type: "text",
-        text,
-        sender: role,
-        senderName: userName,
-        time: Date.now()
-      };
-
-      const room = getRoom(roomId);
-      room.messages.push(message);
-      if (room.messages.length > 300) {
-        room.messages = room.messages.slice(-300);
-      }
-
-      io.to(roomId).emit("message", message);
-
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("message error", e);
-      if (ack) ack({ ok: false, error: "메시지 오류" });
-    }
-  });
-
-  socket.on("image", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
-
-      const imageUrl = String(payload.url || "").trim();
-      if (!imageUrl) {
-        if (ack) ack({ ok: false, error: "imageUrl 없음" });
-        return;
-      }
-
-      const imageId = uuidv4();
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const message = {
-        type: "image",
-        imageId,
-        imageUrl,
-        sender: role,
-        senderName: userName,
-        time: Date.now()
-      };
-
-      const room = getRoom(roomId);
-      room.messages.push(message);
-      if (room.messages.length > 300) {
-        room.messages = room.messages.slice(-300);
-      }
-
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      io.to(roomId).emit("image", message);
-
-      if (ack) ack({ ok: true, imageId, imageUrl });
-    } catch (e) {
-      console.error("image error", e);
-      if (ack) ack({ ok: false, error: "이미지 오류" });
-    }
-  });
-
-  socket.on("request-drawing-history", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      const strokes = room.drawings[imageId] || [];
-      socket.emit("drawing-history", { imageId, strokes });
-    } catch (e) {
-      console.error("request-drawing-history error", e);
-    }
-  });
-
-  socket.on("draw-stroke", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.drawings[imageId].push(payload);
-
-      if (room.drawings[imageId].length > 2000) {
-        room.drawings[imageId] = room.drawings[imageId].slice(-2000);
-      }
-
-      io.to(roomId).emit("draw-stroke", payload);
-    } catch (e) {
-      console.error("draw-stroke error", e);
-    }
-  });
-
-  socket.on("draw-strokes", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId || !strokes.length) return;
-
-      const room = getRoom(roomId);
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.drawings[imageId].push(...strokes);
-
-      if (room.drawings[imageId].length > 2000) {
-        room.drawings[imageId] = room.drawings[imageId].slice(-2000);
-      }
-
-      io.to(roomId).emit("draw-strokes", { imageId, strokes });
-    } catch (e) {
-      console.error("draw-strokes error", e);
-    }
-  });
-
-  socket.on("replace-drawing-history", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      room.drawings[imageId] = strokes.slice(-2000);
-
-      io.to(roomId).emit("drawing-history", {
-        imageId,
-        strokes: room.drawings[imageId]
+      marker.addEventListener("click",(event)=>{
+        event.stopPropagation();
+        state.activeNoteId = note.id;
+        renderNotes();
       });
-    } catch (e) {
-      console.error("replace-drawing-history error", e);
+
+      marker.addEventListener("dblclick",(event)=>{
+        event.preventDefault();
+        event.stopPropagation();
+        openNoteEditor(note.id);
+      });
+
+      el.textLayer.appendChild(marker);
+    });
+  }
+
+  function addNote(){
+    if (!state.currentViewerImageId) return;
+    const note = normalizeNote({
+      id:crypto.randomUUID(),
+      x:0.14,y:0.16,width:0.16,height:0.10,
+      text:"",
+      color:state.noteColor,
+      author:role,
+      updatedAt:Date.now(),
+      updatedByRole:role,
+      updatedByName:getDisplayName()
+    });
+    upsertNote(note);
+    if (canUseRealtime()) socket.emit("add-note",{ imageId:state.currentViewerImageId, note });
+    openNoteEditor(note.id);
+  }
+
+  function updateNoteEditorMeta(note){
+    el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+    el.noteEditorAuthor.textContent = `수정자 ${note.updatedByName || getDisplayName()}`;
+  }
+
+  function updateNoteColorSwatches(){
+    el.noteColorSwatches.forEach(button => {
+      button.classList.toggle("active", (button.dataset.noteColor || "") === state.noteColor);
+    });
+  }
+
+  function openNoteEditor(noteId){
+    const note = getNoteById(noteId);
+    if (!note) return;
+    state.activeNoteId = noteId;
+    state.noteColor = note.color || "#fff7c2";
+    updateNoteColorSwatches();
+    el.noteEditorOverlay.classList.add("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden","false");
+    el.noteEditorTextarea.value = note.text || "";
+    el.noteEditorTextarea.focus();
+    el.noteEditorTextarea.setSelectionRange(el.noteEditorTextarea.value.length, el.noteEditorTextarea.value.length);
+    updateNoteEditorMeta(note);
+    setNoteSaveBadge("idle");
+  }
+
+  function closeNoteEditor(){
+    el.noteEditorOverlay.classList.remove("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden","true");
+    state.activeNoteId = "";
+  }
+
+  function queueNoteSave(note, patch){
+    clearTimeout(state.noteSaveTimer);
+    setNoteSaveBadge(canUseRealtime() ? "pending" : "offline");
+    state.noteSaveTimer = setTimeout(() => {
+      if (!canUseRealtime()) return;
+      socket.emit("update-note",{
+        imageId:state.currentViewerImageId,
+        noteId:note.id,
+        patch
+      },(ack)=>{
+        if (ack && ack.ok) setNoteSaveBadge("saved");
+      });
+    },180);
+  }
+
+  function requestDrawingHistory(){
+    if (canUseRealtime() && state.currentViewerImageId) {
+      socket.emit("request-drawing-history",{ imageId:state.currentViewerImageId });
     }
-  });
+  }
 
-  socket.on("clear-drawing", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      room.drawings[imageId] = [];
-
-      io.to(roomId).emit("clear-drawing", { imageId });
-    } catch (e) {
-      console.error("clear-drawing error", e);
+  function requestNoteHistory(){
+    if (canUseRealtime() && state.currentViewerImageId) {
+      socket.emit("request-note-history",{ imageId:state.currentViewerImageId });
     }
-  });
+  }
 
-  socket.on("request-note-history", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
+  function selectColor(color, button){
+    state.color = color;
+    document.documentElement.style.setProperty("--custom-color-preview", color);
+    el.colorSwatches.forEach(item => item.classList.remove("active"));
+    if (button) button.classList.add("active");
+  }
 
-      const room = getRoom(roomId);
-      const notes = room.notes[imageId] || [];
-      socket.emit("note-history", { imageId, notes });
-    } catch (e) {
-      console.error("request-note-history error", e);
+  function openCustomColorPicker(event){
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
     }
-  });
-
-  socket.on("add-note", (payload = {}) => {
+    const input = el.customColorInput;
+    if (!input) return;
     try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const note = payload.note;
-      if (!roomId || !imageId || !note) return;
+      if (typeof input.showPicker === "function") {
+        input.showPicker();
+      } else {
+        input.click();
+      }
+    } catch {
+      input.click();
+    }
+  }
 
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
+  function bindEvents(){
+    el.summaryToggleBtn.addEventListener("click", toggleSummaryCard);
 
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      const normalized = normalizeNote(note, role, userName);
-
-      const exists = room.notes[imageId].some((item) => item.id === normalized.id);
-      if (!exists) {
-        room.notes[imageId].push(normalized);
-        if (room.notes[imageId].length > 100) {
-          room.notes[imageId] = room.notes[imageId].slice(-100);
+    el.quickChips.forEach(button => {
+      button.addEventListener("click", () => {
+        const request = button.dataset.request;
+        const draft = button.dataset.draft;
+        if (!request) return;
+        if (state.summary.requestTypes.includes(request)) {
+          state.summary.requestTypes = state.summary.requestTypes.filter(v => v !== request);
+        } else {
+          state.summary.requestTypes.push(request);
+          if (!state.summary.productName) state.summary.productName = "디자인 상담";
+          if (draft && !el.msgInput.value.trim()) el.msgInput.value = draft;
         }
-      }
-
-      io.to(roomId).emit("note-added", { imageId, note: normalized });
-    } catch (e) {
-      console.error("add-note error", e);
-    }
-  });
-
-  socket.on("note-live-update", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) return;
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      const note = room.notes[imageId].find((item) => item.id === noteId);
-      if (!note) return;
-
-      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-      Object.assign(note, patch);
-
-      io.to(roomId).emit("note-live-update", { imageId, noteId, patch });
-    } catch (e) {
-      console.error("note-live-update error", e);
-    }
-  });
-
-  socket.on("update-note", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      const note = room.notes[imageId].find((item) => item.id === noteId);
-      if (!note) {
-        if (ack) ack({ ok: false, error: "메모 없음" });
-        return;
-      }
-
-      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-      Object.assign(note, patch);
-
-      io.to(roomId).emit("note-updated", { imageId, noteId, patch });
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("update-note error", e);
-      if (ack) ack({ ok: false, error: "메모 수정 오류" });
-    }
-  });
-
-  socket.on("delete-note", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-      room.notes[imageId] = room.notes[imageId].filter((item) => item.id !== noteId);
-
-      io.to(roomId).emit("note-deleted", { imageId, noteId });
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("delete-note error", e);
-      if (ack) ack({ ok: false, error: "삭제 오류" });
-    }
-  });
-
-  socket.on("replace-note-history", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const notes = Array.isArray(payload.notes) ? payload.notes : [];
-      if (!roomId || !imageId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = notes.map((note) => normalizeNote(note, role, userName)).slice(-100);
-
-      io.to(roomId).emit("note-history", {
-        imageId,
-        notes: room.notes[imageId]
+        updateSummaryUI();
       });
+    });
 
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("replace-note-history error", e);
-      if (ack) ack({ ok: false, error: "노트 이력 교체 오류" });
-    }
-  });
+    el.summaryComposeBtn.addEventListener("click", () => {
+      el.msgInput.value = buildSummaryText();
+      el.msgInput.focus();
+    });
 
-  socket.on("clear-notes", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
+    el.summaryQuoteBtn.addEventListener("click", async () => {
+      const summaryText = `안녕하세요. ${buildSummaryText()} 기준으로 견적 요청드립니다.`;
+      try {
+        await navigator.clipboard.writeText(summaryText);
+        setPhoneStatus("견적 요청 문구가 복사되었습니다.");
+      } catch {
+        el.msgInput.value = summaryText;
+        el.msgInput.focus();
       }
+    });
 
-      const room = getRoom(roomId);
-      room.notes[imageId] = [];
+    el.savePhoneBtn.addEventListener("click", () => {
+      const phone = String(el.phoneInput.value || "").trim();
+      localStorage.setItem("phone", phone);
+      setPhoneStatus(phone ? "연락처가 저장되었습니다." : "");
+    });
 
-      io.to(roomId).emit("clear-notes", { imageId });
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("clear-notes error", e);
-      if (ack) ack({ ok: false, error: "메모 전체 삭제 오류" });
+    el.deletePhoneBtn.addEventListener("click", () => {
+      localStorage.removeItem("phone");
+      el.phoneInput.value = "";
+      setPhoneStatus("");
+    });
+
+    el.sendBtn.addEventListener("click", () => {
+      const text = el.msgInput.value.trim();
+      if (!text) return;
+      sendText(text, () => { el.msgInput.value = ""; });
+    });
+
+    el.msgInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        el.sendBtn.click();
+      }
+    });
+
+    el.viewerSendBtn.addEventListener("click", () => {
+      const text = el.viewerMsgInput.value.trim();
+      if (!text) return;
+      sendText(text, () => {
+        el.viewerMsgInput.value = "";
+        el.viewerMsgInput.blur();
+        requestAnimationFrame(() => resizeCanvas());
+      });
+    });
+
+    el.viewerMsgInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        el.viewerSendBtn.click();
+      }
+    });
+
+    el.fileInput.addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      handleImageSelect(file);
+    });
+
+    el.viewerTitle.addEventListener("click", () => {
+      if (isPopupViewer) window.close();
+      else closeViewerInline();
+    });
+
+    el.downloadSketchBtn.addEventListener("click", () => {
+      const exportCanvas = document.createElement("canvas");
+      const rect = el.imageStage.getBoundingClientRect();
+      exportCanvas.width = rect.width;
+      exportCanvas.height = rect.height;
+      const ectx = exportCanvas.getContext("2d");
+      const img = el.viewerImage;
+      if (img && img.complete && img.naturalWidth) {
+        const scale = Math.min((rect.width * 0.84) / img.naturalWidth, (rect.height * 0.84) / img.naturalHeight);
+        const w = img.naturalWidth * scale;
+        const h = img.naturalHeight * scale;
+        const x = (rect.width - w) / 2;
+        const y = (rect.height - h) / 2;
+        ectx.drawImage(img, x, y, w, h);
+      }
+      state.strokes.forEach((stroke) => drawStrokeToContext(ectx, stroke));
+      const link = document.createElement("a");
+      link.href = exportCanvas.toDataURL("image/png");
+      link.download = "design-consultation.png";
+      link.click();
+    });
+
+    el.penBtn.addEventListener("click", () => {
+      state.mode = "draw";
+      el.penBtn.classList.add("active");
+      el.eraserBtn.classList.remove("active");
+      el.addTextBtn.classList.remove("active");
+    });
+
+    el.eraserBtn.addEventListener("click", () => {
+      state.mode = "erase";
+      el.eraserBtn.classList.add("active");
+      el.penBtn.classList.remove("active");
+      el.addTextBtn.classList.remove("active");
+    });
+
+    el.addTextBtn.addEventListener("click", addNote);
+
+    el.undoBtn.addEventListener("click", () => {
+      const last = state.strokes.pop();
+      if (!last) return;
+      state.redoStrokes.push(last);
+      redrawCanvas();
+      syncDrawingHistory();
+    });
+
+    el.redoBtn.addEventListener("click", () => {
+      const stroke = state.redoStrokes.pop();
+      if (!stroke) return;
+      state.strokes.push(stroke);
+      redrawCanvas();
+      syncDrawingHistory();
+    });
+
+    el.thicknessRange.addEventListener("input", (event) => {
+      state.width = Number(event.target.value || 3);
+    });
+
+    el.colorSwatches.forEach(button => {
+      if (button.id === "customColorBtn") return;
+      button.addEventListener("click", () => {
+        selectColor(button.dataset.color || "#ff3b30", button);
+      });
+    });
+
+    el.customColorBtn.addEventListener("click", openCustomColorPicker);
+    el.customColorBtn.addEventListener("touchend", openCustomColorPicker, { passive:false });
+    el.customColorInput.addEventListener("input", (event) => {
+      selectColor(event.target.value || "#ffffff", el.customColorBtn);
+    });
+    el.customColorInput.addEventListener("change", (event) => {
+      selectColor(event.target.value || "#ffffff", el.customColorBtn);
+    });
+
+    el.noteDeleteBtn.addEventListener("click", () => {
+      const note = getNoteById(state.activeNoteId);
+      if (!note) return;
+      state.notes = state.notes.filter(item => item.id !== note.id);
+      renderNotes();
+      closeNoteEditor();
+      if (canUseRealtime()) socket.emit("delete-note",{ imageId:state.currentViewerImageId, noteId:note.id });
+    });
+
+    el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
+
+    el.noteColorSwatches.forEach(button => {
+      button.addEventListener("click", () => {
+        state.noteColor = button.dataset.noteColor || "#fff7c2";
+        updateNoteColorSwatches();
+        const note = getNoteById(state.activeNoteId);
+        if (!note) return;
+        note.color = state.noteColor;
+        note.updatedAt = Date.now();
+        note.updatedByRole = role;
+        note.updatedByName = getDisplayName();
+        upsertNote(note);
+        updateNoteEditorMeta(note);
+        queueNoteSave(note,{
+          color:note.color,
+          updatedAt:note.updatedAt,
+          updatedByRole:note.updatedByRole,
+          updatedByName:note.updatedByName
+        });
+      });
+    });
+
+    el.noteEditorTextarea.addEventListener("input", () => {
+      const note = getNoteById(state.activeNoteId);
+      if (!note) return;
+      note.text = el.noteEditorTextarea.value.slice(0, MAX_NOTE_CHARS);
+      note.updatedAt = Date.now();
+      note.updatedByRole = role;
+      note.updatedByName = getDisplayName();
+      upsertNote(note);
+      updateNoteEditorMeta(note);
+      queueNoteSave(note,{
+        text:note.text,
+        updatedAt:note.updatedAt,
+        updatedByRole:note.updatedByRole,
+        updatedByName:note.updatedByName
+      });
+    });
+
+    el.drawCanvas.addEventListener("mousedown", startDrawing);
+    window.addEventListener("mousemove", moveDrawing);
+    window.addEventListener("mouseup", endDrawing);
+    el.drawCanvas.addEventListener("touchstart", startDrawing, { passive:true });
+    window.addEventListener("touchmove", moveDrawing, { passive:true });
+    window.addEventListener("touchend", endDrawing);
+
+    window.addEventListener("resize", resizeCanvas);
+  }
+
+  function drawStrokeToContext(context, stroke){
+    if (!stroke || !stroke.points || stroke.points.length < 2) return;
+    context.save();
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.strokeStyle = stroke.color || "#ff3b30";
+    context.lineWidth = stroke.width || 3;
+    context.globalCompositeOperation = stroke.mode === "erase" ? "destination-out" : "source-over";
+    context.beginPath();
+    context.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (let i = 1; i < stroke.points.length; i++) context.lineTo(stroke.points[i].x, stroke.points[i].y);
+    context.stroke();
+    context.restore();
+  }
+
+  function bindSocket(){
+    if (!socket) return;
+    socket.on("connect", () => {
+      state.connected = true;
+      emitJoin();
+    });
+
+    socket.on("disconnect", () => {
+      state.connected = false;
+      state.joined = false;
+    });
+
+    socket.on("joined", () => {
+      state.joined = true;
+    });
+
+    socket.on("history", (messages = []) => {
+      el.chatInner.innerHTML = "";
+      el.viewerChatInner.innerHTML = "";
+      messages.forEach(appendMessage);
+    });
+
+    socket.on("message", appendMessage);
+    socket.on("image", appendMessage);
+
+    socket.on("drawing-history", ({ imageId, strokes = [] }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.strokes = Array.isArray(strokes) ? strokes : [];
+      state.redoStrokes = [];
+      redrawCanvas();
+    });
+
+    socket.on("draw-stroke", (payload) => {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.strokes.push(payload);
+      redrawCanvas();
+    });
+
+    socket.on("draw-strokes", ({ imageId, strokes = [] }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.strokes.push(...strokes);
+      redrawCanvas();
+    });
+
+    socket.on("clear-drawing", ({ imageId }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.strokes = [];
+      state.redoStrokes = [];
+      redrawCanvas();
+    });
+
+    socket.on("note-history", ({ imageId, notes = [] }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.notes = Array.isArray(notes) ? notes : [];
+      renderNotes();
+    });
+
+    socket.on("note-added", ({ imageId, note }) => {
+      if (imageId !== state.currentViewerImageId || !note) return;
+      upsertNote(note);
+    });
+
+    socket.on("note-live-update", ({ imageId, noteId, patch }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      const note = getNoteById(noteId);
+      if (!note) return;
+      Object.assign(note, patch || {});
+      renderNotes();
+      if (state.activeNoteId === noteId) updateNoteEditorMeta(note);
+    });
+
+    socket.on("note-updated", ({ imageId, noteId, patch }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      const note = getNoteById(noteId);
+      if (!note) return;
+      Object.assign(note, patch || {});
+      renderNotes();
+      if (state.activeNoteId === noteId) updateNoteEditorMeta(note);
+    });
+
+    socket.on("note-deleted", ({ imageId, noteId }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.notes = state.notes.filter(item => item.id !== noteId);
+      renderNotes();
+      if (state.activeNoteId === noteId) closeNoteEditor();
+    });
+
+    socket.on("clear-notes", ({ imageId }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.notes = [];
+      renderNotes();
+      closeNoteEditor();
+    });
+  }
+
+  bindEvents();
+  bindSocket();
+  updateSummaryUI();
+
+  const storedPhone = localStorage.getItem("phone");
+  if (storedPhone) el.phoneInput.value = storedPhone;
+
+  if (isPopupViewer) {
+    document.getElementById("app").style.display = "none";
+    el.viewerOverlay.classList.add("open");
+    const imageId = params.get("imageId") || "";
+    const imageUrl = params.get("imageUrl") || "";
+    if (imageId && imageUrl) {
+      state.currentViewerImageId = imageId;
+      state.currentViewerImageUrl = imageUrl;
+      el.viewerImage.src = imageUrl;
+      el.viewerSubtitle.textContent = imageUrl.split("/").pop() || "이미지 검토";
+      requestAnimationFrame(() => {
+        resizeCanvas();
+        requestDrawingHistory();
+        requestNoteHistory();
+      });
     }
-  });
-
-  socket.on("disconnect", (reason) => {
-    console.log("disconnect:", socket.id, reason);
-  });
-});
-
-process.on("uncaughtException", (err) => {
-  console.error("uncaught:", err);
-});
-
-process.on("unhandledRejection", (err) => {
-  console.error("unhandled:", err);
-});
-
-server.keepAliveTimeout = 120000;
-server.headersTimeout = 121000;
-
-server.listen(PORT, HOST, () => {
-  console.log("server running:", PORT);
-});
+  }
+})();
+</script>
+</body>
+</html>
