@@ -87,7 +87,7 @@ label:focus-visible{
 }
 
 #chatCard{
-  width:min(960px,100%);
+  width:min(1120px,100%);
   height:calc(var(--vh) * 100);
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(14px);
@@ -348,7 +348,7 @@ label:focus-visible{
   flex:1;
   min-height:0;
   overflow-y:auto;
-  padding:0 16px 12px;
+  padding:0 18px 12px;
   background:var(--bg-soft);
 }
 #chatInner{
@@ -391,7 +391,7 @@ label:focus-visible{
   padding:0 8px;
 }
 .imageBubble{
-  max-width:min(72%,520px);
+  max-width:min(86%,760px);
   background:#fff;
   border:1px solid var(--line);
   border-radius:22px;
@@ -1335,7 +1335,7 @@ body.popup-viewer-mode #viewerSendBtn{
     font-size:14px;
     padding:11px 14px;
   }
-  .chatImg{max-width:200px}
+  .chatImg{max-width:220px}
   #inputArea{
     padding:8px 10px calc(10px + var(--safe-bottom));
     gap:6px;
@@ -1597,6 +1597,7 @@ body.popup-viewer-mode #viewerSendBtn{
 <div id="viewerOverlay" aria-hidden="true">
   <div id="viewerTopbar">
     <div id="viewerDragHandle" aria-hidden="true"></div>
+    <button id="viewerDragHandleBtn" type="button" aria-label="협업창 높이 전환">높이</button>
     <div id="viewerTopLeft">
       <div id="viewerTitle">디자인 상담 중</div>
       <div id="viewerSubtitle">현재 이미지 선택 대기 중</div>
@@ -1609,8 +1610,8 @@ body.popup-viewer-mode #viewerSendBtn{
     <div id="viewerActions">
       <button id="toggleViewerSizeBtn" class="viewerBtn" type="button"><span class="btnIcon">↕</span><span class="btnText">크기</span></button>
       <button id="popoutViewerBtn" class="viewerBtn" type="button"><span class="btnIcon">⤢</span><span class="btnText">새창</span></button>
-      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon">↓</span><span class="btnText">다운로드</span></button>
-      <button id="closeViewerBtn" class="viewerBtn" type="button"><span class="btnIcon">✕</span><span class="btnText">닫기</span></button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon" aria-hidden="true">↓</span><span class="btnText">다운로드</span></button>
+      <button id="closeViewerBtn" class="viewerBtn" type="button"><span class="btnIcon" aria-hidden="true">✕</span><span class="btnText">닫기</span></button>
     </div>
   </div>
 
@@ -1631,7 +1632,7 @@ body.popup-viewer-mode #viewerSendBtn{
             <div class="toolGroup fill">
               <button id="penBtn" class="toolBtn active" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span><span class="btnText">펜</span></button>
               <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7"/><path d="M14.5 4.5 20 10l-8.5 8.5a2 2 0 0 1-2.8 0L4 13.8a2 2 0 0 1 0-2.8L10.7 4.3a2 2 0 0 1 2.8 0z"/></svg></span><span class="btnText">지우개</span></button>
-              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V16l10.5-10.5a2.1 2.1 0 0 1 3 3L7 19l-3 0.5z"/><path d="M13.5 6.5 17 10"/><path d="M12 20h8"/></svg></span><span class="btnText">메모 추가</span></button>
+              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M16 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span><span class="btnText">메모 추가</span></button>
             </div>
             <div id="drawControlSide">
               <div id="thicknessWrap">
@@ -1654,8 +1655,8 @@ body.popup-viewer-mode #viewerSendBtn{
         <div class="toolSection">
           <div class="toolSectionLabel">이력</div>
           <div class="toolGroup">
-            <button id="undoBtn" class="toolBtn" type="button"><span class="btnIcon">↶</span><span class="btnText">Undo</span></button>
-            <button id="redoBtn" class="toolBtn" type="button"><span class="btnIcon">↷</span><span class="btnText">Redo</span></button>
+            <button id="undoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true">↶</span><span class="btnText">되돌리기</span></button>
+            <button id="redoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true">↷</span><span class="btnText">다시하기</span></button>
           </div>
         </div>
 
@@ -1663,8 +1664,8 @@ body.popup-viewer-mode #viewerSendBtn{
         <div class="toolSection">
           <div class="toolSectionLabel">정리</div>
           <div class="toolGroup">
-            <button id="clearDrawingBtn" class="toolBtn danger" type="button"><span class="btnIcon">⌧</span><span class="btnText">선지우기</span></button>
-            <button id="clearNotesBtn" class="toolBtn danger" type="button"><span class="btnIcon">⌦</span><span class="btnText">메모지우기</span></button>
+            <button id="clearDrawingBtn" class="toolBtn danger" type="button"><span class="btnIcon" aria-hidden="true">⌫</span><span class="btnText">선지우기</span></button>
+            <button id="clearNotesBtn" class="toolBtn danger" type="button"><span class="btnIcon" aria-hidden="true">🗑</span><span class="btnText">메모지우기</span></button>
           </div>
         </div>
       </div>
