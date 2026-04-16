@@ -184,28 +184,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
   flex-shrink:0;border-top:1px solid var(--line);background:rgba(255,255,255,.97);
   padding:10px 14px calc(12px + var(--safe-bottom));display:flex;flex-direction:column;gap:8px;
 }
-#contactToggleBar{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+#contactInlineBar{
+  display:flex;align-items:center;gap:8px;
   padding:8px 12px;border:1px solid var(--line);border-radius:16px;background:#fbfdff;
 }
-#contactToggleText{display:flex;flex-direction:column;gap:0;min-width:0}
-#contactToggleTitle{font-size:13px;font-weight:800;color:var(--text-soft)}
-#toggleContactPanelBtn{
-  height:34px;padding:0 12px;border-radius:999px;background:#edf4fa;color:#425466;font-size:12px;font-weight:800;
+#contactInlineTitle{
+  flex:0 0 auto;
+  font-size:13px;font-weight:800;color:var(--text-soft);
 }
-#utilityRow{display:none}
-#utilityRow.open{display:block}
-#phonePanel{
-  display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid #dce7f1;
-  border-radius:16px;background:linear-gradient(180deg, #fbfdff, #f5f9fd);
-}
-#phonePanelHeader{display:flex;align-items:center;gap:8px}
-#phonePanelIcon{
-  width:28px;height:28px;border-radius:10px;background:#e8f2ff;color:#3d88ea;
-  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
-}
-#phonePanelTitle{font-size:12px;font-weight:800;color:var(--text-soft)}
-#phoneRow{display:flex;gap:8px;align-items:center}
 #phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
 #phoneStatus.show{display:block}
 #phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
@@ -398,9 +384,9 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
   .bubble{max-width:86%;font-size:14px;padding:11px 14px}
   .chatImg{max-width:220px}
   #inputArea{padding:8px 10px calc(10px + var(--safe-bottom));gap:6px}
-  #contactToggleBar{padding:8px 10px}
-  #phoneRow{flex-direction:column}
-  #savePhoneBtn{width:100%}
+  #contactInlineBar{padding:8px 10px;gap:6px}
+  #contactInlineTitle{font-size:12px}
+  #savePhoneBtn{width:auto;min-width:52px}
   #msgInput,#sendBtn,#fileLabel{height:44px}
   #sendBtn,#fileLabel{width:44px}
   #viewerTopbar{
@@ -497,26 +483,10 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
     <div id="chatBox"><div id="chatInner"></div></div>
 
     <div id="inputArea">
-      <div id="contactToggleBar">
-        <div id="contactToggleText">
-          <div id="contactToggleTitle">연락처 남기기</div>
-        </div>
-        <button id="toggleContactPanelBtn" type="button" aria-expanded="false">열기</button>
-      </div>
-
-      <div id="utilityRow">
-        <div id="phonePanel">
-          <div id="phonePanelHeader">
-            <div id="phonePanelIcon" aria-hidden="true">☎</div>
-            <div style="min-width:0;flex:1;">
-              <div id="phonePanelTitle">연락받으실 전화번호</div>
-            </div>
-          </div>
-          <div id="phoneRow">
-            <input id="phoneInput" type="tel" placeholder="전화번호" />
-            <button id="savePhoneBtn" type="button">등록</button>
-          </div>
-        </div>
+      <div id="contactInlineBar">
+        <div id="contactInlineTitle">연락처 남기기</div>
+        <input id="phoneInput" type="tel" placeholder="연락처" />
+        <button id="savePhoneBtn" type="button">등록</button>
       </div>
 
       <div id="phoneStatus" aria-live="polite"></div>
@@ -681,9 +651,7 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
     sendBtn: document.getElementById("sendBtn"),
     fileInput: document.getElementById("fileInput"),
     fileLabel: document.getElementById("fileLabel"),
-    contactToggleBar: document.getElementById("contactToggleBar"),
-    toggleContactPanelBtn: document.getElementById("toggleContactPanelBtn"),
-    utilityRow: document.getElementById("utilityRow"),
+    contactInlineBar: document.getElementById("contactInlineBar"),
     phoneInput: document.getElementById("phoneInput"),
     savePhoneBtn: document.getElementById("savePhoneBtn"),
     phoneStatus: document.getElementById("phoneStatus"),
@@ -1305,14 +1273,6 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
       });
     });
 
-    if (el.toggleContactPanelBtn) {
-      el.toggleContactPanelBtn.addEventListener("click", () => {
-        const willOpen = !el.utilityRow.classList.contains("open");
-        el.utilityRow.classList.toggle("open", willOpen);
-        el.toggleContactPanelBtn.textContent = willOpen ? "닫기" : "열기";
-        el.toggleContactPanelBtn.setAttribute("aria-expanded", String(willOpen));
-      });
-    }
 
     el.savePhoneBtn.addEventListener("click", () => {
       const phone = String(el.phoneInput.value || "").trim();
@@ -1645,11 +1605,6 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
       initPopupViewerMode();
     } else {
       toggleSummaryCard(true);
-      el.utilityRow.classList.remove("open");
-      if (el.toggleContactPanelBtn) {
-        el.toggleContactPanelBtn.textContent = "열기";
-        el.toggleContactPanelBtn.setAttribute("aria-expanded", "false");
-      }
     }
     if (!socket) setSyncState("offline");
   }
