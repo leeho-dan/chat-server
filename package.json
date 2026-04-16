@@ -1,6 +1,6 @@
 {
   "name": "realtime-design-chat",
-  "version": "2.1.0",
+  "version": "2.0.1",
   "description": "Realtime design consultation chat with collaborative image markup, local uploads, and in-memory room state",
   "main": "server.js",
   "scripts": {
