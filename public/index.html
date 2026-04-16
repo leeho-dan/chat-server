@@ -154,7 +154,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
   padding:8px 10px calc(10px + var(--safe-bottom));display:flex;flex-direction:column;gap:6px
 }
 #contactInlineBar{
-  display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
+  display:none;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
   border-radius:14px;background:#fbfdff
 }
 #phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
@@ -180,14 +180,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
 }
 #fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 
-#uploadPromptCard{
-  margin:0 12px 8px;padding:10px 12px;border:1px dashed #c9d9ea;border-radius:16px;background:#f9fcff;
-  display:flex;align-items:center;justify-content:space-between;gap:10px
-}
-#uploadPromptText{font-size:12px;font-weight:700;color:#4d6072;line-height:1.5}
-#uploadPromptBtn{
-  height:38px;padding:0 14px;border-radius:12px;background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;font-size:12px;font-weight:800;white-space:nowrap
-}
 
 #viewerOverlay{
   position:fixed;inset:0;z-index:1200;display:none;flex-direction:column;width:100vw;height:100vh;min-height:100dvh;background:rgba(245,248,252,.985)
@@ -287,14 +279,14 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;font-size:18px;font-weight:800
 }
 #viewerCtaBar{
-  flex-shrink:0;padding:10px 12px;border-top:1px solid var(--line);background:#fff;display:flex;gap:8px
+  flex-shrink:0;padding:10px 12px;border-top:1px solid var(--line);background:#fff;display:flex;justify-content:flex-end;gap:8px
 }
-#consultBtn{
-  flex:1;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;font-size:13px;font-weight:800
-}
+#consultBtn,
 #quoteBtn{
-  width:44px;height:44px;border-radius:14px;background:#edf4fa;color:#425466;font-size:18px
+  width:44px;height:44px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:800
 }
+#consultBtn{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
+#quoteBtn{background:#edf4fa;color:#425466}
 
 #noteEditorOverlay{
   position:fixed;inset:0;z-index:220;display:none;flex-direction:column;width:100vw;height:100vh;background:rgba(245,248,252,.99)
@@ -361,9 +353,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   #savePhoneBtn,#deletePhoneBtn{width:auto;min-width:52px}
   #msgInput,#sendBtn,#fileLabel{height:44px}
   #sendBtn,#fileLabel{width:44px}
-  #uploadPromptCard{margin:0 8px 6px;padding:8px 10px}
-  #uploadPromptText{font-size:11px}
-  #uploadPromptBtn{height:36px;padding:0 12px}
 
   body.viewer-inline-open #inputArea,
   body.viewer-inline-open #contactInlineBar,
@@ -405,7 +394,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   #viewerCtaBar{padding:8px 10px;gap:8px}
   #viewerMsgInput{flex:1;height:44px;border-radius:14px;padding:0 12px;font-size:15px}
   #viewerSendBtn,#consultBtn,#quoteBtn{height:44px}
-  #viewerSendBtn,#quoteBtn{width:44px}
+  #viewerSendBtn,#consultBtn,#quoteBtn{width:44px}
   #viewerChatInner .meta{display:none !important}
   #viewerChatInner .bubble{max-width:92%;font-size:14px;line-height:1.45}
   #viewerChatInner .imageBubble,
@@ -457,12 +446,8 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       </div>
       <div id="summaryActions">
         <button id="summaryComposeBtn" class="summaryActionBtn" type="button">요청 정리하기</button>
-        <button id="summaryQuoteBtn" class="summaryActionBtn primary" type="button">견적 요청 문구 만들기</button>
-      </div>
+              </div>
     </div>
-
-    <div id="uploadPromptCard">
-      <div id="uploadPromptText">디자인을 개선하고 싶은 이미지를 먼저 올리면 상담이 훨씬 빨라져요.</div>
       <button id="uploadPromptBtn" type="button">이미지 올리기</button>
     </div>
 
@@ -546,7 +531,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       <div id="viewerChatHeader">실시간 채팅</div>
       <div id="viewerChatBox"><div id="viewerChatInner"></div></div>
       <div id="viewerCtaBar">
-        <button id="consultBtn" type="button">디자인 상담 받기</button>
+        <button id="consultBtn" type="button" aria-label="상담 시작">⚡</button>
         <button id="quoteBtn" type="button" aria-label="견적 요청">₩</button>
       </div>
       <div id="viewerInputBar">
@@ -1233,16 +1218,16 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       state.summaryCollapsed = !state.summaryCollapsed;
       el.summaryCard.classList.toggle("collapsed", state.summaryCollapsed);
     });
-    el.summaryComposeBtn.addEventListener("click",()=>{
+    el.summaryComposeBtn?.addEventListener("click",()=>{
       const text = composeSummaryText();
       if (text) el.msgInput.value = text;
     });
-    el.summaryQuoteBtn.addEventListener("click",()=>{
+    el.summaryQuoteBtn?.addEventListener("click",()=>{
       const text = composeSummaryText();
       el.msgInput.value = text ? `${text}\n견적 요청 드립니다.` : "견적 요청 드립니다.";
     });
 
-    el.uploadPromptBtn.addEventListener("click",()=>el.fileInput.click());
+    el.uploadPromptBtn?.addEventListener("click",()=>el.fileInput.click());
 
     el.sendBtn.addEventListener("click",()=>{
       const text = (el.msgInput.value || "").trim();
