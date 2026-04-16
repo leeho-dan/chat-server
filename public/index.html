@@ -113,6 +113,8 @@ label:focus-visible{
   font-size:26px;
   font-weight:800;
   letter-spacing:-.03em;
+  min-width:1px;
+  min-height:1px;
 }
 #roleBadge{
   position:absolute;
@@ -195,16 +197,13 @@ label:focus-visible{
 
 #summaryCard{
   flex-shrink:0;
-  margin:0 14px 12px;
-  padding:12px;
+  margin:0 14px 8px;
+  padding:10px 12px;
   border:1px solid var(--line);
   border-radius:18px;
   background:linear-gradient(180deg, #fbfdff, #f5f9fd);
   display:flex;
   flex-direction:column;
-  gap:10px;
-}
-#summaryCard.collapsed{
   gap:8px;
 }
 #summaryHeader{
@@ -218,6 +217,30 @@ label:focus-visible{
   display:flex;
   align-items:center;
   gap:8px;
+}
+#summaryHeaderRight{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex:1;
+}
+#summaryRequestsInline{
+  min-width:0;
+  max-width:58%;
+  height:24px;
+  padding:0 10px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  background:#f5f9fd;
+  color:#53687a;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 #summaryTitle{
   font-size:13px;
@@ -437,7 +460,7 @@ label:focus-visible{
   font-size:12px;
   font-weight:800;
 }
-#utilityRow{display:none}
+#utilityRow{display:block}
 #utilityRow.open{display:block}
 #phonePanel{
   display:flex;
@@ -1492,7 +1515,7 @@ body.popup-viewer-mode #viewerSendBtn{
   <section id="chatCard">
     <div id="header">
       <div id="roleBadge">고객 채팅</div>
-      <div id="title">디자인 상담</div>
+      <div id="title" aria-label="디자인 상담"></div>
       <div id="headerActions">
         <button id="openViewerBtn" class="iconBtn" type="button" aria-label="선택한 이미지를 뷰어로 열기" disabled>⛶</button>
       </div>
@@ -1515,20 +1538,19 @@ body.popup-viewer-mode #viewerSendBtn{
     <div id="summaryCard">
       <div id="summaryHeader">
         <div id="summaryHeaderLeft">
-          <div id="summaryTitle">현재 요청 요약</div>
-          <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 펼치기"></button>
+          <div id="summaryTitle">현재 요청</div>
+          <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 접기"></button>
+          <div id="summaryRequestsInline">선택 없음</div>
         </div>
-        <div id="summaryStatus">상담 시작</div>
+        <div id="summaryHeaderRight">
+          <div id="summaryStatus">상담 시작</div>
+        </div>
       </div>
       <div id="summaryPreview">요약이 아직 없습니다.</div>
       <div id="summaryRows">
         <div class="summaryItem">
           <div class="summaryLabel">제품</div>
           <div class="summaryValue" id="summaryProductValue">선택 대기</div>
-        </div>
-        <div class="summaryItem">
-          <div class="summaryLabel">요청</div>
-          <div class="summaryValue" id="summaryRequestsValue">없음</div>
         </div>
         <div class="summaryItem">
           <div class="summaryLabel">상태</div>
@@ -1544,19 +1566,11 @@ body.popup-viewer-mode #viewerSendBtn{
     <div id="chatBox"><div id="chatInner"></div></div>
 
     <div id="inputArea">
-      <div id="contactToggleBar">
-        <div id="contactToggleText">
-          <div id="contactToggleTitle">연락처 남기기</div>
-          <div id="contactToggleDesc">견적이나 상담 정리가 필요할 때만 연락드려요.</div>
-        </div>
-        <button id="toggleContactPanelBtn" type="button" aria-expanded="false">열기</button>
-      </div>
-
       <div id="utilityRow">
         <div id="phonePanel">
           <div id="phonePanelHeader">
             <div id="phonePanelIcon" aria-hidden="true">☎</div>
-            <div>
+            <div style="min-width:0;flex:1;">
               <div id="phonePanelTitle">연락받으실 전화번호</div>
               <div id="phonePanelDesc">상담 진행상 필요할 때만 연락드려요.</div>
             </div>
@@ -1583,7 +1597,6 @@ body.popup-viewer-mode #viewerSendBtn{
 <div id="viewerOverlay" aria-hidden="true">
   <div id="viewerTopbar">
     <div id="viewerDragHandle" aria-hidden="true"></div>
-    <button id="viewerDragHandleBtn" type="button" aria-label="협업창 높이 전환">높이</button>
     <div id="viewerTopLeft">
       <div id="viewerTitle">디자인 상담 중</div>
       <div id="viewerSubtitle">현재 이미지 선택 대기 중</div>
@@ -2197,11 +2210,21 @@ body.popup-viewer-mode #viewerSendBtn{
 
   function updateSummaryUI() {
     el.summaryCard.classList.toggle("collapsed", state.summaryCollapsed);
-    el.summaryToggleBtn.setAttribute("aria-label", state.summaryCollapsed ? "현재 요청 요약 펼치기" : "현재 요청 요약 접기");
+    if (el.summaryToggleBtn) {
+      el.summaryToggleBtn.hidden = false;
+      el.summaryToggleBtn.setAttribute("aria-label", state.summaryCollapsed ? "현재 요청 요약 펼치기" : "현재 요청 요약 접기");
+    }
     el.summaryProductValue.textContent = state.summary.productName || "선택 대기";
-    el.summaryRequestsValue.textContent = state.summary.requestTypes.length
-      ? state.summary.requestTypes.join(", ")
-      : "없음";
+    if (el.summaryRequestsValue) {
+      el.summaryRequestsValue.textContent = state.summary.requestTypes.length
+        ? state.summary.requestTypes.join(", ")
+        : "없음";
+    }
+    if (el.summaryRequestsInline) {
+      el.summaryRequestsInline.textContent = state.summary.requestTypes.length
+        ? state.summary.requestTypes.join(", ")
+        : "선택 없음";
+    }
     el.summaryStatus.textContent = state.summary.status;
     el.summaryDetailValue.textContent = state.summary.detailNotes.length
       ? state.summary.detailNotes[state.summary.detailNotes.length - 1]
