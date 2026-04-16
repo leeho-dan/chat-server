@@ -1,537 +1,1732 @@
-const express = require("express");
-const http = require("http");
-const path = require("path");
-const fs = require("fs");
-const cors = require("cors");
-const multer = require("multer");
-const { Server } = require("socket.io");
-const { v4: uuidv4 } = require("uuid");
-
-const app = express();
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-  transports: ["websocket", "polling"]
-});
-
-const PORT = Number(process.env.PORT || 3000);
-const HOST = "0.0.0.0";
-
-const PUBLIC_DIR = path.join(__dirname, "public");
-const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
-
-if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-app.use(cors());
-app.use(express.json({ limit: "20mb" }));
-app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  console.log("[REQ]", req.method, req.url);
-  next();
-});
-
-app.use(express.static(PUBLIC_DIR));
-app.use("/uploads", express.static(UPLOAD_DIR));
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-});
-
-app.get("/health", (req, res) => {
-  res.json({ ok: true });
-});
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-app.post("/upload", upload.single("image"), (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "파일 없음" });
-
-    const ext = path.extname(req.file.originalname) || ".png";
-    const filename = `${Date.now()}-${uuidv4()}${ext}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
-
-    fs.writeFileSync(filepath, req.file.buffer);
-
-    res.json({
-      success: true,
-      url: `/uploads/${filename}`
-    });
-  } catch (e) {
-    console.error("upload error", e);
-    res.status(500).json({ error: "업로드 실패" });
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>디자인 상담</title>
+<style>
+:root{
+  --bg:#f4f8fc;
+  --bg-soft:#f8fbff;
+  --card:#ffffff;
+  --line:#e3ebf3;
+  --line-strong:#d6e0ea;
+  --text:#17212b;
+  --text-soft:#24313f;
+  --sub:#728292;
+  --primary:#2491ff;
+  --primary-soft:#79c7ff;
+  --danger:#ff5b5b;
+  --danger-soft:#fff1f1;
+  --success:#2f9e44;
+  --success-soft:#ebf9ee;
+  --warning:#9a6500;
+  --warning-soft:#fff7ea;
+  --purple:#8a5cff;
+  --shadow:0 18px 50px rgba(18,36,61,.10);
+  --radius-xl:28px;
+  --radius-lg:20px;
+  --radius-md:16px;
+  --safe-bottom:max(env(safe-area-inset-bottom), 0px);
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(36,145,255,.08), transparent 24%),
+    linear-gradient(180deg, #f9fbff 0%, #edf4fa 100%);
+}
+body{overflow:hidden;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button,input,textarea,label{font:inherit}
+button{border:none;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea{outline:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(36,145,255,.14);
+}
+.btnIcon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1em;height:1em;line-height:1;flex-shrink:0;transform:translateY(-.02em);
+}
+.btnText{display:inline}
+#app{
+  width:100%;height:100%;
+  display:flex;align-items:stretch;justify-content:center;
+}
+#chatCard{
+  width:min(1120px,100%);
+  height:100%;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+#header{
+  height:72px;flex-shrink:0;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.96);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+#roleBadge{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);
+  background:#f7faff;display:flex;align-items:center;color:var(--sub);font-size:12px;font-weight:800;
+}
+#title{min-width:1px;min-height:1px}
+#headerActions{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  display:flex;gap:8px;
+}
+.iconBtn{
+  width:42px;height:42px;border-radius:50%;background:#eef4fa;color:#556f84;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+#quickRequestBar{
+  flex-shrink:0;padding:10px 14px 8px;background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px;
+}
+#quickRequestTitle{font-size:13px;font-weight:700;color:var(--text-soft);letter-spacing:-0.01em}
+#quickRequestDesc{font-size:11px;color:var(--sub);line-height:1.45}
+#quickRequestButtons{display:flex;gap:8px;flex-wrap:wrap}
+.quickChip{
+  height:34px;padding:0 12px;border-radius:999px;background:#edf4fa;color:#425466;
+  font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;
+}
+.quickChip.active{background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff}
+#summaryCard{
+  flex-shrink:0;margin:0 14px 8px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:18px;background:linear-gradient(180deg, #fbfdff, #f5f9fd);
+  display:flex;flex-direction:column;gap:8px;
+}
+#summaryHeader{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+#summaryHeaderLeft{
+  min-width:0;display:flex;align-items:center;gap:8px;flex:1;
+}
+#summaryHeaderRight{
+  min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;
+}
+#summaryTitle{font-size:13px;font-weight:800;color:var(--text-soft)}
+#summaryToggleBtn{
+  width:30px;min-width:30px;height:30px;border-radius:999px;background:#edf4fa;color:#4f6579;
+  font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;
+}
+#summaryToggleBtn::before{content:"⌃";}
+#summaryCard.collapsed #summaryToggleBtn::before{content:"⌄";}
+#summaryPreview{
+  min-width:0;flex:1;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;
+}
+.summaryInlineChip{
+  height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;
+  background:#f5f9fd;color:#53687a;font-size:11px;font-weight:800;
+  max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;
+}
+.summaryInlineChip.empty{max-width:none}
+#summaryRows{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+}
+.summaryItem{
+  min-width:0;padding:10px;border-radius:14px;background:#fff;border:1px solid #e9eff5;
+  display:flex;flex-direction:column;gap:4px;
+}
+.summaryLabel{font-size:10px;font-weight:800;color:#91a0af;text-transform:uppercase;letter-spacing:.04em}
+.summaryValue{min-height:18px;font-size:13px;font-weight:700;line-height:1.45;color:var(--text);word-break:break-word}
+#summaryActions{display:flex;gap:8px;flex-wrap:wrap}
+.summaryActionBtn{
+  height:36px;padding:0 12px;border-radius:12px;background:#edf4fa;color:#425466;font-size:12px;font-weight:800;
+}
+.summaryActionBtn.primary{background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff}
+#summaryCard.collapsed #summaryRows,
+#summaryCard.collapsed #summaryActions{display:none}
+#chatBox{
+  flex:1;min-height:0;overflow-y:auto;padding:0 18px 12px;background:var(--bg-soft);
+}
+#chatInner{display:flex;flex-direction:column;gap:14px;min-height:100%}
+.messageRow{display:flex;flex-direction:column;gap:5px}
+.messageRow.me{align-items:flex-end}
+.messageRow.other{align-items:flex-start}
+.bubble{
+  max-width:min(76%,640px);padding:12px 16px;border-radius:22px;
+  font-size:15px;line-height:1.52;letter-spacing:-.02em;word-break:break-word;
+}
+.messageRow.me .bubble{
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff;
+  border-bottom-right-radius:8px;box-shadow:0 8px 20px rgba(36,145,255,.16);
+}
+.messageRow.other .bubble{
+  background:#fff;border:1px solid var(--line);color:var(--text);border-bottom-left-radius:8px;
+}
+.meta{font-size:10px;color:#95a3b1;padding:0 8px}
+.imageBubble{
+  max-width:min(86%,760px);background:#fff;border:1px solid var(--line);border-radius:22px;
+  padding:8px;cursor:pointer;box-shadow:0 8px 18px rgba(18,36,61,.04);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.imageBubble:hover{transform:translateY(-2px);border-color:#cfe0f1;box-shadow:0 12px 24px rgba(18,36,61,.08)}
+.messageRow.me .imageBubble{border-bottom-right-radius:8px}
+.messageRow.other .imageBubble{border-bottom-left-radius:8px}
+.chatImg{display:block;width:100%;max-width:420px;border-radius:14px}
+.imageHint{
+  margin-top:8px;padding:8px 10px;border-radius:12px;background:#f6fbff;
+  color:#557086;font-size:10px;font-weight:800;
+}
+#inputArea{
+  flex-shrink:0;border-top:1px solid var(--line);background:rgba(255,255,255,.97);
+  padding:10px 14px calc(12px + var(--safe-bottom));display:flex;flex-direction:column;gap:8px;
+}
+#contactInlineBar{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border:1px solid var(--line);border-radius:16px;background:#fbfdff;
+}
+#phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
+#phoneStatus.show{display:block}
+#phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
+  border:1px solid var(--line-strong);background:#f8fbff;
+}
+#phoneInput{flex:1;height:34px;border-radius:12px;padding:0 12px;font-size:13px}
+#savePhoneBtn{
+  height:34px;min-width:52px;padding:0 12px;border-radius:12px;
+  background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff;font-weight:800;font-size:12px;
+}
+#deletePhoneBtn{
+  height:34px;min-width:52px;padding:0 12px;border-radius:12px;
+  background:#edf4fa;color:#425466;font-weight:800;font-size:12px;
+}
+#messageRow{display:flex;align-items:center;gap:8px}
+#msgInput{flex:1;height:48px;border-radius:18px;padding:0 16px;font-size:16px}
+#sendBtn{
+  width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, var(--primary-soft), var(--primary));
+  color:#fff;font-size:20px;font-weight:800;
+}
+#fileInput{display:none}
+#fileLabel{
+  width:48px;height:48px;border-radius:50%;background:#f2f6fa;color:#7b8d9f;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:1px solid #e5edf4;
+}
+#fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+#viewerOverlay{
+  position:fixed;inset:0;z-index:120;display:none;flex-direction:column;width:100vw;height:100vh;background:rgba(245,248,252,.985)
+}
+#viewerOverlay.open{display:flex}
+#viewerTopbar{
+  height:74px;flex-shrink:0;border-bottom:1px solid var(--line);background:rgba(255,255,255,.96);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;
+}
+#viewerTopLeft{min-width:0;display:flex;flex-direction:column;gap:4px}
+#viewerTitle{font-size:18px;font-weight:800}
+#viewerSubtitle{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#viewerStats{display:flex;gap:8px;flex-wrap:wrap}
+.statBadge{
+  height:30px;padding:0 10px;border-radius:999px;display:flex;align-items:center;
+  background:#eef4fa;color:#587085;font-size:12px;font-weight:700;
+}
+.state-connected{background:var(--success-soft);color:#2f7b42}
+.state-pending{background:var(--warning-soft);color:var(--warning)}
+.state-saved{background:var(--success-soft);color:#2f7b42}
+.state-offline{background:#fff3f3;color:#c74242}
+#viewerActions{display:flex;gap:8px;flex-shrink:0}
+.viewerBtn{
+  height:38px;padding:0 14px;border-radius:12px;background:#edf4fa;color:#425466;
+  display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;
+}
+#viewerMain{flex:1;min-height:0;display:grid;grid-template-columns:7fr 3fr}
+#viewerLeft{min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:#f8fbff}
+#canvasWrap{flex:1;min-height:0;padding:14px;display:flex;align-items:center;justify-content:center}
+#imageStage{
+  position:relative;width:min(100%,1200px);height:min(100%,760px);min-height:420px;border-radius:22px;
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(247,251,255,.96));
+  border:1px solid #dfe9f3;box-shadow:0 18px 38px rgba(18,36,61,.08);overflow:hidden;
+}
+#viewerImage{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  max-width:84%;max-height:84%;border-radius:18px;box-shadow:0 14px 32px rgba(18,36,61,.12);
+  pointer-events:none;user-select:none;-webkit-user-drag:none;z-index:1;
+}
+#drawCanvas{position:absolute;inset:0;width:100%;height:100%;border-radius:22px;touch-action:none;z-index:2}
+#textLayer{position:absolute;inset:0;z-index:3;pointer-events:none}
+.noteMarker{
+  position:absolute;min-width:56px;height:42px;padding:0 12px;border-radius:14px;display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.74);backdrop-filter:blur(8px);border:1px solid rgba(36,145,255,.18);
+  box-shadow:0 10px 18px rgba(18,36,61,.08);transform:translate(-50%,-50%);pointer-events:auto;user-select:none;
+}
+.noteMarker[data-author="admin"]{border-color:rgba(138,92,255,.22)}
+.noteMarker.selected{border-color:rgba(255,139,61,.55);box-shadow:0 0 0 3px rgba(255,139,61,.14), 0 10px 18px rgba(18,36,61,.10)}
+.noteMarkerText{max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:var(--text)}
+.noteResize{position:absolute;right:-5px;bottom:-5px;width:14px;height:14px;border-radius:5px;background:#2491ff;box-shadow:0 4px 10px rgba(36,145,255,.18)}
+.noteMarker[data-author="admin"] .noteResize{background:var(--purple)}
+#toolbar{
+  flex-shrink:0;border-top:1px solid var(--line);background:#fff;padding:14px 12px 16px;display:flex;flex-direction:column;gap:14px;
+}
+.toolSection{display:flex;flex-direction:column;gap:10px}
+.toolSectionLabel{font-size:11px;font-weight:800;color:#8e9baa;text-transform:uppercase;letter-spacing:.04em}
+.toolRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#drawControlSide{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.toolGroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.toolGroup.fill{flex:1}
+.toolBtn{
+  height:38px;padding:0 12px;border-radius:12px;background:#edf4fa;color:#425466;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:800;white-space:nowrap;
+}
+.toolBtn.active{background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff}
+.toolBtn.danger{background:var(--danger-soft);color:#c74242}
+#thicknessWrap{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:12px;font-weight:700}
+#thicknessRange{width:120px}
+#colorRow{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:6px 8px;border:1px solid #dce7f1;
+  border-radius:999px;background:#f8fbff;box-shadow:0 10px 24px rgba(18,36,61,.08);
+}
+.colorSwatch,.noteColorSwatch{border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.10)}
+.colorSwatch{width:24px;height:24px}
+.noteColorSwatch{width:22px;height:22px}
+.colorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.20)}
+.noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
+#customColorBtn{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg, rgba(255,255,255,.98), rgba(235,241,247,.98)), conic-gradient(from 180deg, #ff3b30, #2491ff, #22c55e, #facc15, #111827, #ffffff, #ff3b30);
+}
+#customColorBtn::before{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--custom-color-preview, linear-gradient(135deg, #ffffff, #dde8f3))}
+#customColorBtn::after{content:"";position:absolute;inset:7px;border-radius:50%;border:1.5px dashed rgba(79,101,121,.55)}
+#customColorInput{position:absolute;pointer-events:none;opacity:0}
+#viewerRight{min-width:0;display:flex;flex-direction:column;background:#fff}
+#viewerChatHeader{
+  height:52px;flex-shrink:0;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;
+}
+#viewerChatBox{flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fbfdff;-webkit-overflow-scrolling:touch}
+#viewerChatInner{display:flex;flex-direction:column;gap:10px}
+#viewerInputBar{
+  flex-shrink:0;border-top:1px solid var(--line);padding:10px 12px calc(12px + var(--safe-bottom));background:#fff;display:flex;gap:8px;
+}
+#viewerMsgInput{flex:1;height:44px;border-radius:16px;padding:0 14px;font-size:16px}
+#viewerSendBtn{
+  width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff;font-size:18px;font-weight:800;
+}
+body.popup-viewer-mode #viewerTopbar{height:64px;padding:0 12px}
+body.popup-viewer-mode #viewerTitle{font-size:16px}
+body.popup-viewer-mode #viewerSubtitle{font-size:11px}
+body.popup-viewer-mode #viewerMain{display:grid;grid-template-columns:minmax(0, 1.35fr) minmax(280px, .65fr);grid-template-areas:"work chat";column-gap:0}
+body.popup-viewer-mode #viewerLeft{grid-area:work;min-width:0;border-right:1px solid var(--line)}
+body.popup-viewer-mode #viewerRight{grid-area:chat;min-width:280px;max-width:420px;width:100%;border-left:1px solid var(--line);background:#fff}
+body.popup-viewer-mode #viewerChatHeader{display:flex;align-items:center;justify-content:center}
+body.popup-viewer-mode #canvasWrap{padding:10px}
+body.popup-viewer-mode #imageStage{width:100%;height:100%;min-height:0}
+body.popup-viewer-mode #toolbar{padding:10px 10px 12px;gap:10px}
+body.popup-viewer-mode .toolSection{gap:8px}
+body.popup-viewer-mode .toolSectionLabel{font-size:10px}
+body.popup-viewer-mode .toolBtn,body.popup-viewer-mode .viewerBtn{min-width:40px;height:36px;padding:0 10px}
+body.popup-viewer-mode .toolBtn .btnText,body.popup-viewer-mode .viewerBtn .btnText{display:none}
+body.popup-viewer-mode .toolBtn .btnIcon,body.popup-viewer-mode .viewerBtn .btnIcon{display:inline-flex}
+body.popup-viewer-mode #drawControlSide{justify-content:space-between}
+body.popup-viewer-mode #thicknessRange{width:96px}
+body.popup-viewer-mode #colorRow{padding:5px 7px;gap:6px}
+body.popup-viewer-mode .colorSwatch{width:22px;height:22px}
+body.popup-viewer-mode #viewerChatHeader{height:44px;font-size:14px}
+body.popup-viewer-mode #viewerChatBox{padding:10px}
+body.popup-viewer-mode #viewerInputBar{padding:8px 10px 10px}
+body.popup-viewer-mode #viewerMsgInput{height:40px;font-size:14px}
+body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
+#noteEditorOverlay{
+  position:fixed;inset:0;z-index:220;display:none;flex-direction:column;width:100vw;height:100vh;background:rgba(245,248,252,.99)
+}
+#noteEditorOverlay.open{display:flex}
+#noteEditorHeader{
+  min-height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-bottom:1px solid var(--line);background:#fff;
+}
+#noteEditorTitleWrap{min-width:0;display:flex;flex-direction:column;gap:4px}
+#noteEditorTitle{font-size:17px;font-weight:800}
+#noteEditorMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#noteEditorSaveBadge{
+  height:24px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;background:#eef4fa;color:#587085;font-size:11px;font-weight:800;
+}
+#noteEditorSaveBadge.pending{background:var(--warning-soft);color:var(--warning)}
+#noteEditorSaveBadge.saved{background:var(--success-soft);color:#2f7b42}
+#noteEditorSaveBadge.offline{background:#fff3f3;color:#c74242}
+#noteEditorActions{display:flex;align-items:center;gap:8px}
+.noteEditorDangerBtn,#noteEditorDoneBtn{
+  height:38px;padding:0 12px;border-radius:12px;font-weight:800;
+}
+.noteEditorDangerBtn{background:var(--danger-soft);color:#c74242}
+#noteEditorDoneBtn{background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff}
+#noteEditorBody{flex:1;min-height:0;padding:14px;background:#f7fbff;display:flex;flex-direction:column;gap:10px}
+#noteEditorTools{display:flex;flex-direction:column;gap:8px}
+#noteEditorColorRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#noteEditorMetaLine{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--sub);font-size:12px;font-weight:700;
+}
+#noteEditorTextarea{
+  width:100%;height:100%;border-radius:20px;resize:none;padding:16px;font-size:16px;line-height:1.55;color:var(--text);
+}
+#msgInput:focus,#phoneInput:focus,#viewerMsgInput:focus,#noteEditorTextarea:focus{
+  background:#fff;border-color:rgba(36,145,255,.45);box-shadow:0 0 0 4px rgba(36,145,255,.08);
+}
+@media (max-width:900px){
+  #chatCard{width:100%;border-radius:0}
+  #header{height:64px}
+  #quickRequestBar{padding:8px 10px 6px;gap:6px}
+  #quickRequestButtons{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #quickRequestButtons::-webkit-scrollbar{display:none}
+  .quickChip{flex:0 0 auto}
+  #summaryCard{margin:0 10px 6px;gap:6px}
+  #summaryHeaderLeft{gap:6px}
+  #summaryPreview{gap:4px}
+  .summaryInlineChip{max-width:110px;font-size:10px;padding:0 8px}
+  #summaryRows{grid-template-columns:1fr 1fr;gap:6px}
+  #chatBox{padding:0 12px 8px}
+  .bubble{max-width:86%;font-size:14px;padding:11px 14px}
+  .chatImg{max-width:220px}
+  #inputArea{padding:8px 10px calc(10px + var(--safe-bottom));gap:6px}
+  #contactInlineBar{padding:8px 10px;gap:6px}
+  #savePhoneBtn{width:auto;min-width:52px}
+  #deletePhoneBtn{width:auto;min-width:52px}
+  #msgInput,#sendBtn,#fileLabel{height:44px}
+  #sendBtn,#fileLabel{width:44px}
+  #viewerTopbar{
+    min-height:0;height:auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+    grid-template-areas:"stats title actions";gap:6px 10px;align-items:center;padding:8px 10px;
   }
-});
-
-const rooms = {};
-
-function sanitizeRole(role) {
-  return role === "admin" ? "admin" : "user";
+  #viewerTopLeft{grid-area:title;gap:0}
+  #viewerTitle{font-size:15px;line-height:1.2}
+  #viewerSubtitle{display:none}
+  #viewerStats{grid-area:stats;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  #viewerStats::-webkit-scrollbar{display:none}
+  .statBadge{height:24px;padding:0 7px;gap:0;font-size:0;white-space:nowrap}
+  .statBadge::before{content:attr(data-icon);font-size:11px;line-height:1}
+  .statBadge::after{content:attr(data-count);margin-left:4px;font-size:10px;line-height:1;font-weight:800}
+  #viewerActions{grid-area:actions}
+  #viewerMain{display:flex;flex-direction:column;min-height:0}
+  #viewerLeft{display:contents}
+  #canvasWrap{flex:5 1 0;min-height:0;padding:8px}
+  #imageStage{min-height:0;height:100%;border-radius:18px}
+  #toolbar{flex:2 1 0;min-height:0;padding:8px 10px 10px;gap:10px;overflow:hidden}
+  .toolRow{flex-direction:column;align-items:stretch;gap:8px}
+  #drawControlSide{width:100%;justify-content:space-between}
+  .toolGroup{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .toolGroup::-webkit-scrollbar{display:none}
+  .toolBtn,.viewerBtn{min-width:42px;height:40px;padding:0 10px}
+  .toolBtn .btnText,.viewerBtn .btnText{display:none}
+  .toolBtn .btnIcon,.viewerBtn .btnIcon{display:inline-flex}
+  #thicknessWrap{justify-content:flex-start}
+  #thicknessRange{width:82px}
+  #colorRow{padding:5px 7px;gap:6px}
+  .colorSwatch{width:22px;height:22px}
+  #viewerRight{flex:3 1 0;min-height:0;border-top:1px solid var(--line)}
+  #viewerChatHeader{display:none}
+  #viewerChatBox{padding:10px 10px 6px}
+  #viewerInputBar{padding:8px 10px calc(10px + var(--safe-bottom))}
+  #viewerMsgInput{height:42px;font-size:16px}
+  #viewerSendBtn{width:42px;height:42px}
+  .noteMarker{min-width:50px;height:38px;padding:0 10px}
+  .noteMarkerText{max-width:96px;font-size:11px}
+  #noteEditorHeader{align-items:flex-start;padding:10px 12px}
+  #noteEditorActions{flex-wrap:wrap;justify-content:flex-end}
+  #noteEditorBody{padding:8px;gap:8px}
+  #noteEditorMetaLine{flex-direction:column;align-items:flex-start;gap:4px}
 }
 
-function sanitizeUserName(userName, role) {
-  const name = String(userName || "").trim().slice(0, 60);
-  if (role === "admin") return "관리자";
-  return name || "고객";
+#uploadLoading{
+  position:fixed;
+  inset:0;
+  z-index:260;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(245,248,252,.72);
+  backdrop-filter:blur(4px);
+}
+#uploadLoading.show{display:flex}
+#uploadLoadingCard{
+  min-width:180px;
+  padding:18px 20px;
+  border-radius:18px;
+  background:rgba(255,255,255,.96);
+  border:1px solid var(--line);
+  box-shadow:0 18px 40px rgba(18,36,61,.12);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.uploadSpinner{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:2px solid rgba(36,145,255,.18);
+  border-top-color:var(--primary);
+  animation:spin .85s linear infinite;
+}
+#uploadLoadingText{
+  font-size:13px;
+  font-weight:700;
+  color:var(--text-soft);
+}
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+@keyframes viewerFadeUp{
+  from{opacity:0;transform:translateY(16px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+#viewerOverlay.entering{
+  animation:viewerFadeUp .22s ease-out both;
+}
+#viewerOverlay.entering #viewerMain{
+  animation:viewerFadeUp .26s ease-out both;
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="chatCard">
+    <div id="header">
+      <div id="roleBadge">고객 채팅</div>
+      <div id="title" aria-label="디자인 상담"></div>
 
-function getRoom(roomId) {
-  if (!rooms[roomId]) {
-    rooms[roomId] = {
-      messages: [],
-      drawings: {},
-      notes: {}
+    </div>
+
+    <div id="quickRequestBar">
+      <div id="quickRequestTitle">커스텀 내용을 선택해주세요.</div>
+            <div id="quickRequestButtons">
+        <button class="quickChip" type="button" data-request="색상 변경" data-draft="색상을 변경하고 싶어요.">색상 변경</button>
+        <button class="quickChip" type="button" data-request="문구 추가" data-draft="문구를 추가하고 싶어요.">문구 추가</button>
+        <button class="quickChip" type="button" data-request="사이즈 조정" data-draft="사이즈를 조정하고 싶어요.">사이즈 조정</button>
+        <button class="quickChip" type="button" data-request="디자인 수정" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정</button>
+        <button class="quickChip" type="button" data-request="추천 요청" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 요청</button>
+      </div>
+    </div>
+
+    <div id="summaryCard" class="collapsed">
+      <div id="summaryHeader">
+        <div id="summaryHeaderLeft">
+          <div id="summaryTitle">현재 요청</div>
+          <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 펼치기"></button>
+          <div id="summaryPreview" aria-live="polite"></div>
+        </div>
+        <div id="summaryHeaderRight"></div>
+      </div>
+      <div id="summaryRows">
+        <div class="summaryItem">
+          <div class="summaryLabel">제품</div>
+          <div class="summaryValue" id="summaryProductValue">선택 대기</div>
+        </div>
+        <div class="summaryItem">
+          <div class="summaryLabel">상세</div>
+          <div class="summaryValue" id="summaryDetailValue">상담 시작</div>
+        </div>
+      </div>
+      <div id="summaryActions">
+        <button id="summaryComposeBtn" class="summaryActionBtn" type="button">요청 정리하기</button>
+        <button id="summaryQuoteBtn" class="summaryActionBtn primary" type="button">견적 요청 문구 만들기</button>
+      </div>
+    </div>
+
+    <div id="chatBox"><div id="chatInner"></div></div>
+
+    <div id="inputArea">
+      <div id="contactInlineBar">
+                <input id="phoneInput" type="tel" placeholder="연락처" />
+        <button id="savePhoneBtn" type="button">등록</button>
+        <button id="deletePhoneBtn" type="button">삭제</button>
+      </div>
+
+      <div id="phoneStatus" aria-live="polite"></div>
+
+      <div id="messageRow">
+        <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
+        <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
+        <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
+        <input id="fileInput" type="file" accept="image/*" />
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="viewerOverlay" aria-hidden="true">
+  <div id="viewerTopbar">
+    <div id="viewerTopLeft">
+      <div id="viewerTitle">디자인 상담 중</div>
+      <div id="viewerSubtitle">이미지 검토</div>
+    </div>
+    <div id="viewerStats">
+      <div class="statBadge" id="drawingCountBadge" data-icon="〰" data-count="0">선 0</div>
+      <div class="statBadge" id="noteCountBadge" data-icon="✎" data-count="0">메모 0</div>
+      <div class="statBadge state-connected" id="syncStatusBadge" data-icon="●" data-count="on">실시간 연결됨</div>
+    </div>
+    <div id="viewerActions">
+      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon" aria-hidden="true">↓</span><span class="btnText">다운로드</span></button>
+      <button id="closeViewerBtn" class="viewerBtn" type="button"><span class="btnIcon" aria-hidden="true">✕</span><span class="btnText">닫기</span></button>
+    </div>
+  </div>
+
+  <div id="viewerMain">
+    <section id="viewerLeft">
+      <div id="canvasWrap">
+        <div id="imageStage">
+          <img id="viewerImage" alt="상담 이미지" />
+          <canvas id="drawCanvas"></canvas>
+          <div id="textLayer"></div>
+        </div>
+      </div>
+
+      <div id="toolbar">
+        <div class="toolSection">
+          <div class="toolSectionLabel">그리기</div>
+          <div class="toolRow">
+            <div class="toolGroup fill">
+              <button id="penBtn" class="toolBtn active" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span><span class="btnText">펜</span></button>
+              <button id="eraserBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7"/><path d="M14.5 4.5 20 10l-8.5 8.5a2 2 0 0 1-2.8 0L4 13.8a2 2 0 0 1 0-2.8L10.7 4.3a2 2 0 0 1 2.8 0z"/></svg></span><span class="btnText">지우개</span></button>
+              <button id="addTextBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span><span class="btnText">메모 추가</span></button>
+            </div>
+            <div id="drawControlSide">
+              <div id="thicknessWrap">
+                <span>두께</span>
+                <input id="thicknessRange" type="range" min="1" max="48" value="3" />
+              </div>
+              <div id="colorRow">
+                <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
+                <button class="colorSwatch" type="button" data-color="#2491ff" style="background:#2491ff;" aria-label="파랑"></button>
+                <button class="colorSwatch" type="button" data-color="#22c55e" style="background:#22c55e;" aria-label="초록"></button>
+                <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
+                <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
+                <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
+                <input id="customColorInput" type="color" value="#ffffff" aria-label="사용자 지정 색상" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolSection">
+          <div class="toolSectionLabel">이력</div>
+          <div class="toolGroup">
+            <button id="undoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true">↶</span><span class="btnText">되돌리기</span></button>
+            <button id="redoBtn" class="toolBtn" type="button"><span class="btnIcon" aria-hidden="true">↷</span><span class="btnText">다시하기</span></button>
+          </div>
+        </div>
+
+        <div class="toolSection">
+          <div class="toolSectionLabel">정리</div>
+          <div class="toolGroup">
+            <button id="clearDrawingBtn" class="toolBtn danger" type="button"><span class="btnIcon" aria-hidden="true">⌫</span><span class="btnText">선지우기</span></button>
+            <button id="clearNotesBtn" class="toolBtn danger" type="button"><span class="btnIcon" aria-hidden="true">🗑</span><span class="btnText">메모지우기</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewerRight">
+      <div id="viewerChatHeader">실시간 채팅</div>
+      <div id="viewerChatBox"><div id="viewerChatInner"></div></div>
+      <div id="viewerInputBar">
+        <input id="viewerMsgInput" type="text" placeholder="수정 위치나 요청을 바로 남겨주세요" autocomplete="off" />
+        <button id="viewerSendBtn" type="button">➤</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="noteEditorOverlay" aria-hidden="true">
+  <div id="noteEditorHeader">
+    <div id="noteEditorTitleWrap">
+      <div id="noteEditorTitle">메모 편집 중</div>
+      <div id="noteEditorMeta">
+        <span id="noteEditorSaveBadge">준비됨</span>
+      </div>
+    </div>
+    <div id="noteEditorActions">
+      <button id="noteDeleteBtn" class="noteEditorDangerBtn" type="button">삭제</button>
+      <button id="noteEditorDoneBtn" type="button">완료</button>
+    </div>
+  </div>
+  <div id="noteEditorBody">
+    <div id="noteEditorTools">
+      <div id="noteEditorColorRow" aria-label="메모 색상">
+        <button class="noteColorSwatch active" type="button" data-note-color="#fff7c2" style="background:#fff7c2;" aria-label="노랑"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#dff5ff" style="background:#dff5ff;" aria-label="파랑"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#e8ffd9" style="background:#e8ffd9;" aria-label="초록"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#ffe4ef" style="background:#ffe4ef;" aria-label="분홍"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#efe7ff" style="background:#efe7ff;" aria-label="보라"></button>
+      </div>
+      <div id="noteEditorMetaLine">
+        <span id="noteEditorTimestamp">최종 수정 없음</span>
+        <span id="noteEditorAuthor">수정자 없음</span>
+      </div>
+    </div>
+    <textarea id="noteEditorTextarea" maxlength="500" placeholder="메모를 입력해 주세요."></textarea>
+  </div>
+</div>
+
+
+<div id="uploadLoading" aria-hidden="true">
+  <div id="uploadLoadingCard">
+    <div class="uploadSpinner" aria-hidden="true"></div>
+    <div id="uploadLoadingText">이미지 업로드 중…</div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const isPopupViewer = params.get("viewer") === "1";
+  const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "") || ((navigator.maxTouchPoints || 0) > 1 && Math.min(window.screen.width || 0, window.screen.height || 0) <= 900);
+  const socket = typeof window.io === "function" ? window.io({ transports: ["websocket", "polling"] }) : null;
+
+  const role = localStorage.getItem("role") === "admin" ? "admin" : "user";
+  const userName = (localStorage.getItem("userName") || "").trim();
+  let roomId = (params.get("roomId") || localStorage.getItem("roomId") || "").trim();
+  if (!roomId) {
+    roomId = Math.random().toString(36).slice(2, 10);
+    localStorage.setItem("roomId", roomId);
+  }
+
+  const MAX_NOTE_CHARS = 500;
+
+  const el = {
+    app: document.getElementById("app"),
+    imageStage: document.getElementById("imageStage"),
+    roleBadge: document.getElementById("roleBadge"),
+    quickChips: Array.from(document.querySelectorAll(".quickChip")),
+    summaryCard: document.getElementById("summaryCard"),
+    summaryToggleBtn: document.getElementById("summaryToggleBtn"),
+    summaryProductValue: document.getElementById("summaryProductValue"),
+    summaryDetailValue: document.getElementById("summaryDetailValue"),
+    summaryPreview: document.getElementById("summaryPreview"),
+    summaryComposeBtn: document.getElementById("summaryComposeBtn"),
+    summaryQuoteBtn: document.getElementById("summaryQuoteBtn"),
+    chatInner: document.getElementById("chatInner"),
+    chatBox: document.getElementById("chatBox"),
+    msgInput: document.getElementById("msgInput"),
+    sendBtn: document.getElementById("sendBtn"),
+    fileInput: document.getElementById("fileInput"),
+    fileLabel: document.getElementById("fileLabel"),
+    uploadLoading: document.getElementById("uploadLoading"),
+    contactInlineBar: document.getElementById("contactInlineBar"),
+    phoneInput: document.getElementById("phoneInput"),
+    savePhoneBtn: document.getElementById("savePhoneBtn"),
+    deletePhoneBtn: document.getElementById("deletePhoneBtn"),
+    phoneStatus: document.getElementById("phoneStatus"),
+    viewerOverlay: document.getElementById("viewerOverlay"),
+    viewerTitle: document.getElementById("viewerTitle"),
+    viewerSubtitle: document.getElementById("viewerSubtitle"),
+    viewerImage: document.getElementById("viewerImage"),
+    drawCanvas: document.getElementById("drawCanvas"),
+    textLayer: document.getElementById("textLayer"),
+    viewerChatInner: document.getElementById("viewerChatInner"),
+    viewerChatBox: document.getElementById("viewerChatBox"),
+    viewerMsgInput: document.getElementById("viewerMsgInput"),
+    viewerSendBtn: document.getElementById("viewerSendBtn"),
+    closeViewerBtn: document.getElementById("closeViewerBtn"),
+    downloadSketchBtn: document.getElementById("downloadSketchBtn"),
+    penBtn: document.getElementById("penBtn"),
+    eraserBtn: document.getElementById("eraserBtn"),
+    addTextBtn: document.getElementById("addTextBtn"),
+    undoBtn: document.getElementById("undoBtn"),
+    redoBtn: document.getElementById("redoBtn"),
+    clearDrawingBtn: document.getElementById("clearDrawingBtn"),
+    clearNotesBtn: document.getElementById("clearNotesBtn"),
+    thicknessRange: document.getElementById("thicknessRange"),
+    colorSwatches: Array.from(document.querySelectorAll(".colorSwatch")),
+    customColorBtn: document.getElementById("customColorBtn"),
+    customColorInput: document.getElementById("customColorInput"),
+    drawingCountBadge: document.getElementById("drawingCountBadge"),
+    noteCountBadge: document.getElementById("noteCountBadge"),
+    syncStatusBadge: document.getElementById("syncStatusBadge"),
+    noteEditorOverlay: document.getElementById("noteEditorOverlay"),
+    noteEditorTextarea: document.getElementById("noteEditorTextarea"),
+    noteDeleteBtn: document.getElementById("noteDeleteBtn"),
+    noteEditorDoneBtn: document.getElementById("noteEditorDoneBtn"),
+    noteColorSwatches: Array.from(document.querySelectorAll(".noteColorSwatch")),
+    noteEditorTimestamp: document.getElementById("noteEditorTimestamp"),
+    noteEditorAuthor: document.getElementById("noteEditorAuthor"),
+    noteEditorSaveBadge: document.getElementById("noteEditorSaveBadge"),
+  };
+
+  const state = {
+    connected: false,
+    joined: false,
+    summaryCollapsed: true,
+    summary: {
+      productName: "",
+      requestTypes: [],
+      detailNotes: [],
+    },
+    selectedImageId: "",
+    selectedImageUrl: "",
+    currentViewerImageId: "",
+    currentViewerImageUrl: "",
+    mode: "draw",
+    color: "#ff3b30",
+    width: 3,
+    isDrawing: false,
+    currentStroke: [],
+    strokes: [],
+    redoStrokes: [],
+    notes: [],
+    activeNoteId: "",
+    noteColor: "#fff7c2",
+    noteSaveTimer: null,
+    draggingNoteId: "",
+    dragOffsetX: 0,
+    dragOffsetY: 0,
+    uploadBusy: false,
+  };
+
+  const ctx = el.drawCanvas.getContext("2d");
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function formatTime(ts) {
+    try {
+      return new Date(ts).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  }
+
+  function formatNoteTimestamp(ts) {
+    if (!ts) return "최종 수정 없음";
+    try {
+      return "최종 수정 " + new Date(ts).toLocaleString("ko-KR", {
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
+      });
+    } catch {
+      return "최종 수정 없음";
+    }
+  }
+
+  function getDisplayName(note = null) {
+    if (note && note.updatedByName) return note.updatedByName;
+    return role === "admin" ? "관리자" : (userName || "고객");
+  }
+
+  function setSyncState(kind) {
+    el.syncStatusBadge.className = "statBadge";
+    if (kind === "connected") {
+      el.syncStatusBadge.classList.add("state-connected");
+      el.syncStatusBadge.dataset.count = "on";
+      el.syncStatusBadge.textContent = "실시간 연결됨";
+    } else if (kind === "pending") {
+      el.syncStatusBadge.classList.add("state-pending");
+      el.syncStatusBadge.dataset.count = "...";
+      el.syncStatusBadge.textContent = "저장 중";
+    } else if (kind === "saved") {
+      el.syncStatusBadge.classList.add("state-saved");
+      el.syncStatusBadge.dataset.count = "ok";
+      el.syncStatusBadge.textContent = "저장됨";
+    } else {
+      el.syncStatusBadge.classList.add("state-offline");
+      el.syncStatusBadge.dataset.count = "off";
+      el.syncStatusBadge.textContent = "오프라인";
+    }
+  }
+
+  function setNoteSaveBadge(kind) {
+    el.noteEditorSaveBadge.className = "";
+    el.noteEditorSaveBadge.id = "noteEditorSaveBadge";
+    if (kind === "pending") {
+      el.noteEditorSaveBadge.classList.add("pending");
+      el.noteEditorSaveBadge.textContent = "저장 중";
+    } else if (kind === "saved") {
+      el.noteEditorSaveBadge.classList.add("saved");
+      el.noteEditorSaveBadge.textContent = "저장됨";
+    } else if (kind === "offline") {
+      el.noteEditorSaveBadge.classList.add("offline");
+      el.noteEditorSaveBadge.textContent = "오프라인";
+    } else {
+      el.noteEditorSaveBadge.textContent = "준비됨";
+    }
+  }
+
+
+  function setUploadLoading(isLoading) {
+    state.uploadBusy = Boolean(isLoading);
+    if (el.uploadLoading) {
+      el.uploadLoading.classList.toggle("show", state.uploadBusy);
+      el.uploadLoading.setAttribute("aria-hidden", state.uploadBusy ? "false" : "true");
+    }
+    el.fileLabel.classList.toggle("disabled", state.uploadBusy);
+    el.fileInput.disabled = state.uploadBusy;
+    el.sendBtn.disabled = state.uploadBusy;
+    el.viewerSendBtn.disabled = state.uploadBusy;
+  }
+
+  function playViewerEnterAnimation() {
+    el.viewerOverlay.classList.remove("entering");
+    requestAnimationFrame(() => {
+      el.viewerOverlay.classList.add("entering");
+      window.setTimeout(() => el.viewerOverlay.classList.remove("entering"), 280);
+    });
+  }
+
+  function updateRoleBadge() {
+    el.roleBadge.textContent = role === "admin" ? "관리자 채팅" : "고객 채팅";
+  }
+
+  function updateSummaryUI() {
+    el.summaryCard.classList.toggle("collapsed", state.summaryCollapsed);
+    el.summaryToggleBtn.setAttribute("aria-label", state.summaryCollapsed ? "현재 요청 요약 펼치기" : "현재 요청 요약 접기");
+    el.summaryProductValue.textContent = state.summary.productName || "선택 대기";
+    el.summaryDetailValue.textContent = state.summary.detailNotes.length
+      ? state.summary.detailNotes[state.summary.detailNotes.length - 1]
+      : "상담 시작";
+
+    el.quickChips.forEach((button) => {
+      button.classList.toggle("active", state.summary.requestTypes.includes(button.dataset.request));
+    });
+
+    const chips = [];
+    if (state.summary.requestTypes.length) {
+      state.summary.requestTypes.forEach((item) => {
+        chips.push(`<span class="summaryInlineChip">${escapeHtml(item)}</span>`);
+      });
+    } else {
+      chips.push('<span class="summaryInlineChip empty">요약이 아직 없습니다.</span>');
+    }
+    el.summaryPreview.innerHTML = chips.join("");
+
+    const actionable = Boolean(state.summary.productName || state.summary.requestTypes.length || state.summary.detailNotes.length);
+    el.summaryComposeBtn.disabled = !actionable;
+    el.summaryQuoteBtn.disabled = !actionable;
+  }
+
+  function toggleSummaryCard(forceCollapsed = null) {
+    state.summaryCollapsed = forceCollapsed === null ? !state.summaryCollapsed : Boolean(forceCollapsed);
+    updateSummaryUI();
+  }
+
+  function addDetailNote(text) {
+    const t = String(text || "").trim();
+    if (!t) return;
+    state.summary.detailNotes.push(t);
+    if (state.summary.detailNotes.length > 12) state.summary.detailNotes = state.summary.detailNotes.slice(-12);
+    updateSummaryUI();
+  }
+
+  function buildSummaryText() {
+    const product = state.summary.productName || "선택 대기";
+    const requests = state.summary.requestTypes.length ? state.summary.requestTypes.join(", ") : "요청 없음";
+    const detail = state.summary.detailNotes.length ? state.summary.detailNotes[state.summary.detailNotes.length - 1] : "상담 시작";
+    return `제품: ${product} / 요청: ${requests} / 상세: ${detail}`;
+  }
+
+
+  function renderMessage(target, message) {
+    const row = document.createElement("div");
+    row.className = "messageRow " + (message.sender === role ? "me" : "other");
+
+    const bubbleHolder = document.createElement("div");
+    if (message.type === "image") {
+      bubbleHolder.className = "imageBubble";
+      bubbleHolder.dataset.imageId = message.imageId;
+      bubbleHolder.dataset.imageUrl = message.imageUrl;
+      bubbleHolder.innerHTML = `<img class="chatImg" src="${message.imageUrl}" alt="첨부 이미지" /><div class="imageHint">이미지를 누르면 협업창이 열립니다.</div>`;
+      bubbleHolder.addEventListener("click", () => {
+        state.selectedImageId = message.imageId;
+        state.selectedImageUrl = message.imageUrl;
+        openViewer(message.imageId, message.imageUrl);
+      });
+    } else {
+      bubbleHolder.className = "bubble";
+      bubbleHolder.textContent = message.text || "";
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${message.senderName || (message.sender === "admin" ? "관리자" : "고객")} · ${formatTime(message.time)}`;
+
+    row.appendChild(bubbleHolder);
+    row.appendChild(meta);
+    target.appendChild(row);
+  }
+
+  function syncMessagesToViewer() {
+    el.viewerChatInner.innerHTML = el.chatInner.innerHTML;
+  }
+
+  function appendMessage(message) {
+    renderMessage(el.chatInner, message);
+    if (el.chatInner !== el.viewerChatInner) {
+      renderMessage(el.viewerChatInner, message);
+    }
+    requestAnimationFrame(() => {
+      el.chatBox.scrollTop = el.chatBox.scrollHeight;
+      el.viewerChatBox.scrollTop = el.viewerChatBox.scrollHeight;
+    });
+  }
+
+  function emitJoin() {
+    if (!socket) return;
+    socket.emit("join", { roomId, role, userName: userName || "" }, (ack) => {
+      state.joined = Boolean(ack && ack.ok);
+      setSyncState(state.joined ? "connected" : "offline");
+    });
+  }
+
+  function canUseRealtime() {
+    return Boolean(socket && state.connected && state.joined);
+  }
+
+  function sendText(text) {
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return;
+    if (!canUseRealtime()) {
+      alert("실시간 연결을 확인해 주세요.");
+      return;
+    }
+    socket.emit("message", { text: trimmed }, (ack) => {
+      if (ack && ack.ok) {
+        addDetailNote(trimmed);
+      }
+    });
+  }
+
+  async function uploadImage(file) {
+    const form = new FormData();
+    form.append("image", file);
+    const res = await fetch("/upload", { method: "POST", body: form });
+    if (!res.ok) throw new Error("업로드 실패");
+    return res.json();
+  }
+
+  async function handleImageSelect(file) {
+    try {
+      if (!file) return;
+      if (!canUseRealtime()) {
+        alert("실시간 연결을 확인해 주세요.");
+        return;
+      }
+      setUploadLoading(true);
+      const uploaded = await uploadImage(file);
+      socket.emit("image", { url: uploaded.url }, (ack) => {
+        setUploadLoading(false);
+        if (ack && ack.ok) {
+          state.selectedImageId = ack.imageId;
+          state.selectedImageUrl = uploaded.url;
+        } else {
+          alert("이미지 첨부 중 오류가 발생했습니다.");
+        }
+      });
+    } catch (error) {
+      setUploadLoading(false);
+      alert("이미지 첨부 중 오류가 발생했습니다.");
+    } finally {
+      el.fileInput.value = "";
+    }
+  }
+
+  function viewerUrl(imageId, imageUrl) {
+    const url = new URL(location.origin + location.pathname);
+    url.searchParams.set("viewer", "1");
+    url.searchParams.set("roomId", roomId);
+    url.searchParams.set("imageId", imageId);
+    url.searchParams.set("imageUrl", imageUrl);
+    if (role) url.searchParams.set("role", role);
+    if (userName) url.searchParams.set("userName", userName);
+    return url.toString();
+  }
+
+  function openViewer(imageId, imageUrl) {
+    if (!imageId || !imageUrl) return;
+    state.currentViewerImageId = imageId;
+    state.currentViewerImageUrl = imageUrl;
+
+    if (isPopupViewer) return;
+
+    if (isMobileDevice) {
+      openViewerInline(imageId, imageUrl);
+      return;
+    }
+
+    const popupWidth = Math.min(Math.max(980, Math.round((window.screen.availWidth || 1440) * 0.74)), Math.max((window.screen.availWidth || 1440) - 160, 980));
+    const popupHeight = Math.min(Math.max(700, Math.round((window.screen.availHeight || 960) * 0.78)), Math.max((window.screen.availHeight || 960) - 120, 700));
+    const left = Math.round(((window.screen.availWidth || popupWidth) - popupWidth) / 2);
+    const top = Math.round(((window.screen.availHeight || popupHeight) - popupHeight) / 2);
+    const popup = window.open(viewerUrl(imageId, imageUrl), "viewerWindow", `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`);
+    if (!popup) {
+      alert("팝업이 차단되어 협업창을 열 수 없습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.");
+    }
+  }
+
+  function openViewerInline(imageId, imageUrl) {
+    state.currentViewerImageId = imageId;
+    state.currentViewerImageUrl = imageUrl;
+    el.viewerOverlay.classList.add("open", "inline-sheet", "expanded");
+    playViewerEnterAnimation();
+    document.body.classList.add("viewer-inline-open");
+    el.viewerImage.src = imageUrl;
+    el.viewerSubtitle.textContent = imageUrl.split("/").pop() || "이미지 검토";
+    resizeCanvas();
+    requestDrawingHistory();
+    requestNoteHistory();
+  }
+
+  function closeViewerInline() {
+    el.viewerOverlay.classList.remove("open", "inline-sheet", "expanded");
+    document.body.classList.remove("viewer-inline-open");
+    closeNoteEditor();
+  }
+
+  function initPopupViewerMode() {
+    document.body.classList.add("popup-viewer-mode");
+    el.app.style.display = "none";
+    el.viewerOverlay.classList.add("open");
+    playViewerEnterAnimation();
+    const imageId = params.get("imageId") || "";
+    const imageUrl = params.get("imageUrl") || "";
+    state.currentViewerImageId = imageId;
+    state.currentViewerImageUrl = imageUrl;
+    if (imageUrl) {
+      el.viewerImage.src = imageUrl;
+      el.viewerSubtitle.textContent = imageUrl.split("/").pop() || "이미지 검토";
+    }
+    resizeCanvas();
+    requestDrawingHistory();
+    requestNoteHistory();
+  }
+
+  function resizeCanvas() {
+    const rect = el.drawCanvas.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    el.drawCanvas.width = Math.round(rect.width * dpr);
+    el.drawCanvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    redrawCanvas();
+    renderNotes();
+  }
+
+  function getCanvasPoint(event) {
+    const rect = el.drawCanvas.getBoundingClientRect();
+    const clientX = event.clientX ?? (event.touches && event.touches[0]?.clientX) ?? 0;
+    const clientY = event.clientY ?? (event.touches && event.touches[0]?.clientY) ?? 0;
+    return { x: clientX - rect.left, y: clientY - rect.top, rect };
+  }
+
+  function drawStroke(stroke) {
+    if (!stroke || !stroke.points || stroke.points.length < 2) return;
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = stroke.color || "#ff3b30";
+    ctx.lineWidth = stroke.width || 3;
+    ctx.globalCompositeOperation = stroke.mode === "erase" ? "destination-out" : "source-over";
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (let i = 1; i < stroke.points.length; i++) {
+      ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function redrawCanvas() {
+    ctx.clearRect(0, 0, el.drawCanvas.width, el.drawCanvas.height);
+    state.strokes.forEach(drawStroke);
+    el.drawingCountBadge.dataset.count = String(state.strokes.length);
+    el.drawingCountBadge.textContent = `선 ${state.strokes.length}`;
+  }
+
+  function normalizeNote(note) {
+    return {
+      id: String(note.id || crypto.randomUUID()),
+      x: typeof note.x === "number" ? note.x : 0.14,
+      y: typeof note.y === "number" ? note.y : 0.16,
+      width: typeof note.width === "number" ? note.width : 0.16,
+      height: typeof note.height === "number" ? note.height : 0.10,
+      text: String(note.text || "").slice(0, MAX_NOTE_CHARS),
+      color: note.color || state.noteColor,
+      author: note.author === "admin" ? "admin" : "user",
+      updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
+      updatedByRole: note.updatedByRole === "admin" ? "admin" : "user",
+      updatedByName: typeof note.updatedByName === "string" && note.updatedByName.trim()
+        ? note.updatedByName.trim().slice(0, 60)
+        : getDisplayName(),
     };
   }
-  return rooms[roomId];
-}
 
-function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
-  const updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
-
-  return {
-    id: String(note.id || uuidv4()),
-    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
-    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
-    width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.30) : 0.16,
-    height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.10,
-    text: String(note.text || "").slice(0, 500),
-    color: String(note.color || "#fff7c2"),
-    author: sanitizeRole(note.author || fallbackRole),
-    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
-    updatedByRole,
-    updatedByName
-  };
-}
-
-function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const next = {};
-
-  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
-  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
-  if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.30);
-  if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
-  if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
-  if (typeof patch.color === "string") next.color = patch.color;
-  next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
-
-  const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
-  next.updatedByRole = updatedByRole;
-  next.updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(patch.updatedByName || fallbackUserName, updatedByRole);
-
-  return next;
-}
-
-io.on("connection", (socket) => {
-  console.log("connect:", socket.id);
-
-  socket.on("join", (payload = {}, ack) => {
-    try {
-      const roomId = String(payload.roomId || "").trim();
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "roomId 없음" });
-        socket.emit("join-error", { ok: false, error: "roomId 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(payload.role);
-      const userName = sanitizeUserName(payload.userName, role);
-
-      socket.join(roomId);
-      socket.data.roomId = roomId;
-      socket.data.role = role;
-      socket.data.userName = userName;
-
-      const room = getRoom(roomId);
-
-      socket.emit("history", room.messages);
-
-      if (ack) ack({ ok: true, roomId, role, userName });
-      socket.emit("joined", { ok: true, roomId, role, userName });
-    } catch (e) {
-      console.error("join error", e);
-      if (ack) ack({ ok: false, error: "join 오류" });
-      socket.emit("join-error", { ok: false, error: "join 오류" });
-    }
-  });
-
-  socket.on("message", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
-
-      const text = String(payload.text || "").trim();
-      if (!text) {
-        if (ack) ack({ ok: false, error: "메시지 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const message = {
-        type: "text",
-        text,
-        sender: role,
-        senderName: userName,
-        time: Date.now()
-      };
-
-      const room = getRoom(roomId);
-      room.messages.push(message);
-      if (room.messages.length > 300) {
-        room.messages = room.messages.slice(-300);
-      }
-
-      io.to(roomId).emit("message", message);
-
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("message error", e);
-      if (ack) ack({ ok: false, error: "메시지 오류" });
-    }
-  });
-
-  socket.on("image", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
-
-      const imageUrl = String(payload.url || "").trim();
-      if (!imageUrl) {
-        if (ack) ack({ ok: false, error: "imageUrl 없음" });
-        return;
-      }
-
-      const imageId = uuidv4();
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const message = {
-        type: "image",
-        imageId,
-        imageUrl,
-        sender: role,
-        senderName: userName,
-        time: Date.now()
-      };
-
-      const room = getRoom(roomId);
-      room.messages.push(message);
-      if (room.messages.length > 300) {
-        room.messages = room.messages.slice(-300);
-      }
-
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      io.to(roomId).emit("image", message);
-
-      if (ack) ack({ ok: true, imageId, imageUrl });
-    } catch (e) {
-      console.error("image error", e);
-      if (ack) ack({ ok: false, error: "이미지 오류" });
-    }
-  });
-
-  socket.on("request-drawing-history", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      const strokes = room.drawings[imageId] || [];
-      socket.emit("drawing-history", { imageId, strokes });
-    } catch (e) {
-      console.error("request-drawing-history error", e);
-    }
-  });
-
-  socket.on("draw-stroke", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.drawings[imageId].push(payload);
-
-      if (room.drawings[imageId].length > 2000) {
-        room.drawings[imageId] = room.drawings[imageId].slice(-2000);
-      }
-
-      io.to(roomId).emit("draw-stroke", payload);
-    } catch (e) {
-      console.error("draw-stroke error", e);
-    }
-  });
-
-  socket.on("draw-strokes", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId || !strokes.length) return;
-
-      const room = getRoom(roomId);
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.drawings[imageId].push(...strokes);
-
-      if (room.drawings[imageId].length > 2000) {
-        room.drawings[imageId] = room.drawings[imageId].slice(-2000);
-      }
-
-      io.to(roomId).emit("draw-strokes", { imageId, strokes });
-    } catch (e) {
-      console.error("draw-strokes error", e);
-    }
-  });
-
-  socket.on("replace-drawing-history", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      room.drawings[imageId] = strokes.slice(-2000);
-
-      io.to(roomId).emit("drawing-history", {
-        imageId,
-        strokes: room.drawings[imageId]
+  function renderNotes() {
+    el.textLayer.innerHTML = "";
+    const stageRect = el.imageStage.getBoundingClientRect();
+    state.notes.forEach((note) => {
+      const marker = document.createElement("div");
+      marker.className = "noteMarker" + (state.activeNoteId === note.id ? " selected" : "");
+      marker.dataset.noteId = note.id;
+      marker.dataset.author = note.author;
+      marker.style.left = `${note.x * stageRect.width}px`;
+      marker.style.top = `${note.y * stageRect.height}px`;
+      marker.style.width = `${Math.max(56, note.width * stageRect.width)}px`;
+      marker.style.height = `${Math.max(38, note.height * stageRect.height)}px`;
+      marker.style.background = note.color;
+      marker.innerHTML = `<span class="noteMarkerText">${escapeHtml(note.text || "메모")}</span><span class="noteResize"></span>`;
+      marker.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openNoteEditor(note.id);
       });
-    } catch (e) {
-      console.error("replace-drawing-history error", e);
+      marker.addEventListener("pointerdown", beginNoteDrag);
+      el.textLayer.appendChild(marker);
+    });
+    el.noteCountBadge.dataset.count = String(state.notes.length);
+    el.noteCountBadge.textContent = `메모 ${state.notes.length}`;
+  }
+
+  function getNoteById(id) {
+    return state.notes.find((item) => item.id === id) || null;
+  }
+
+  function upsertNote(note) {
+    const idx = state.notes.findIndex((item) => item.id === note.id);
+    if (idx >= 0) {
+      state.notes[idx] = note;
+    } else {
+      state.notes.push(note);
     }
-  });
+    renderNotes();
+  }
 
-  socket.on("clear-drawing", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
+  function removeNote(noteId) {
+    state.notes = state.notes.filter((item) => item.id !== noteId);
+    renderNotes();
+  }
 
-      const room = getRoom(roomId);
-      room.drawings[imageId] = [];
+  function beginNoteDrag(event) {
+    const marker = event.currentTarget;
+    if ((event.target && event.target.classList.contains("noteResize")) || !marker) return;
+    const noteId = marker.dataset.noteId;
+    const note = getNoteById(noteId);
+    if (!note) return;
+    const stageRect = el.imageStage.getBoundingClientRect();
+    const point = getCanvasPoint(event);
+    state.draggingNoteId = noteId;
+    state.dragOffsetX = point.x - (note.x * stageRect.width);
+    state.dragOffsetY = point.y - (note.y * stageRect.height);
+    marker.setPointerCapture?.(event.pointerId);
+  }
 
-      io.to(roomId).emit("clear-drawing", { imageId });
-    } catch (e) {
-      console.error("clear-drawing error", e);
+  function handleNoteDrag(event) {
+    if (!state.draggingNoteId) return;
+    const note = getNoteById(state.draggingNoteId);
+    if (!note) return;
+    const rect = el.imageStage.getBoundingClientRect();
+    const point = getCanvasPoint(event);
+    note.x = Math.max(0.06, Math.min(0.94, (point.x - state.dragOffsetX) / rect.width));
+    note.y = Math.max(0.08, Math.min(0.92, (point.y - state.dragOffsetY) / rect.height));
+    note.updatedAt = Date.now();
+    note.updatedByRole = role;
+    note.updatedByName = getDisplayName();
+    renderNotes();
+  }
+
+  function finishNoteDrag() {
+    if (!state.draggingNoteId) return;
+    const note = getNoteById(state.draggingNoteId);
+    const noteId = state.draggingNoteId;
+    state.draggingNoteId = "";
+    if (!note || !canUseRealtime()) return;
+    socket.emit("update-note", {
+      imageId: state.currentViewerImageId,
+      noteId,
+      patch: {
+        x: note.x,
+        y: note.y,
+        updatedAt: note.updatedAt,
+        updatedByRole: note.updatedByRole,
+        updatedByName: note.updatedByName,
+      }
+    }, () => setSyncState("saved"));
+  }
+
+  function openNoteEditor(noteId) {
+    const note = getNoteById(noteId);
+    if (!note) return;
+    state.activeNoteId = noteId;
+    el.noteEditorOverlay.classList.add("open");
+    el.noteEditorTextarea.value = note.text || "";
+    el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+    el.noteEditorAuthor.textContent = `수정자 ${note.updatedByName || getDisplayName(note)}`;
+    setNoteSaveBadge("saved");
+    state.noteColor = note.color || "#fff7c2";
+    updateNoteColorSwatches();
+  }
+
+  function closeNoteEditor() {
+    state.activeNoteId = "";
+    el.noteEditorOverlay.classList.remove("open");
+  }
+
+  function updateNoteColorSwatches() {
+    el.noteColorSwatches.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.noteColor === state.noteColor);
+    });
+  }
+
+  function requestDrawingHistory() {
+    if (!canUseRealtime() || !state.currentViewerImageId) return;
+    socket.emit("request-drawing-history", { imageId: state.currentViewerImageId });
+  }
+
+  function requestNoteHistory() {
+    if (!canUseRealtime() || !state.currentViewerImageId) return;
+    socket.emit("request-note-history", { imageId: state.currentViewerImageId });
+  }
+
+  function pushStroke(stroke, shouldBroadcast = true) {
+    state.strokes.push(stroke);
+    if (state.strokes.length > 2000) state.strokes = state.strokes.slice(-2000);
+    state.redoStrokes = [];
+    redrawCanvas();
+    if (shouldBroadcast && canUseRealtime()) {
+      socket.emit("draw-stroke", { ...stroke, imageId: state.currentViewerImageId });
+      setSyncState("saved");
     }
-  });
+  }
 
-  socket.on("request-note-history", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const room = getRoom(roomId);
-      const notes = room.notes[imageId] || [];
-      socket.emit("note-history", { imageId, notes });
-    } catch (e) {
-      console.error("request-note-history error", e);
+  function clearDrawing(shouldBroadcast = true) {
+    state.strokes = [];
+    state.redoStrokes = [];
+    redrawCanvas();
+    if (shouldBroadcast && canUseRealtime()) {
+      socket.emit("clear-drawing", { imageId: state.currentViewerImageId });
+      setSyncState("saved");
     }
-  });
+  }
 
-  socket.on("add-note", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const note = payload.note;
-      if (!roomId || !imageId || !note) return;
+  function syncDrawingHistory() {
+    if (!canUseRealtime()) return;
+    socket.emit("replace-drawing-history", {
+      imageId: state.currentViewerImageId,
+      strokes: state.strokes
+    });
+    setSyncState("saved");
+  }
 
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
+  function addNote() {
+    if (!state.currentViewerImageId) return;
+    const note = normalizeNote({
+      id: crypto.randomUUID(),
+      x: 0.14, y: 0.16, width: 0.16, height: 0.10,
+      text: "",
+      color: state.noteColor,
+      author: role,
+      updatedAt: Date.now(),
+      updatedByRole: role,
+      updatedByName: getDisplayName(),
+    });
+    upsertNote(note);
+    if (canUseRealtime()) {
+      socket.emit("add-note", { imageId: state.currentViewerImageId, note });
+      setSyncState("saved");
+    }
+    openNoteEditor(note.id);
+  }
 
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      const normalized = normalizeNote(note, role, userName);
-
-      const exists = room.notes[imageId].some((item) => item.id === normalized.id);
-      if (!exists) {
-        room.notes[imageId].push(normalized);
-        if (room.notes[imageId].length > 100) {
-          room.notes[imageId] = room.notes[imageId].slice(-100);
+  function queueNoteSave(note, patch) {
+    clearTimeout(state.noteSaveTimer);
+    setNoteSaveBadge(canUseRealtime() ? "pending" : "offline");
+    setSyncState(canUseRealtime() ? "pending" : "offline");
+    state.noteSaveTimer = setTimeout(() => {
+      if (!canUseRealtime()) return;
+      socket.emit("update-note", {
+        imageId: state.currentViewerImageId,
+        noteId: note.id,
+        patch
+      }, (ack) => {
+        if (ack && ack.ok) {
+          setNoteSaveBadge("saved");
+          setSyncState("saved");
         }
-      }
-
-      io.to(roomId).emit("note-added", { imageId, note: normalized });
-    } catch (e) {
-      console.error("add-note error", e);
-    }
-  });
-
-  socket.on("note-live-update", (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) return;
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      const note = room.notes[imageId].find((item) => item.id === noteId);
-      if (!note) return;
-
-      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-      Object.assign(note, patch);
-
-      io.to(roomId).emit("note-live-update", { imageId, noteId, patch });
-    } catch (e) {
-      console.error("note-live-update error", e);
-    }
-  });
-
-  socket.on("update-note", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      const note = room.notes[imageId].find((item) => item.id === noteId);
-      if (!note) {
-        if (ack) ack({ ok: false, error: "메모 없음" });
-        return;
-      }
-
-      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-      Object.assign(note, patch);
-
-      io.to(roomId).emit("note-updated", { imageId, noteId, patch });
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("update-note error", e);
-      if (ack) ack({ ok: false, error: "메모 수정 오류" });
-    }
-  });
-
-  socket.on("delete-note", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-      room.notes[imageId] = room.notes[imageId].filter((item) => item.id !== noteId);
-
-      io.to(roomId).emit("note-deleted", { imageId, noteId });
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("delete-note error", e);
-      if (ack) ack({ ok: false, error: "삭제 오류" });
-    }
-  });
-
-  socket.on("replace-note-history", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const notes = Array.isArray(payload.notes) ? payload.notes : [];
-      if (!roomId || !imageId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = notes
-        .map((note) => normalizeNote(note, role, userName))
-        .slice(-100);
-
-      io.to(roomId).emit("note-history", {
-        imageId,
-        notes: room.notes[imageId]
       });
+    }, 180);
+  }
 
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("replace-note-history error", e);
-      if (ack) ack({ ok: false, error: "노트 이력 교체 오류" });
-    }
-  });
+  function bindEvents() {
+    el.summaryToggleBtn.addEventListener("click", () => toggleSummaryCard());
+    el.quickChips.forEach((button) => {
+      button.addEventListener("click", () => {
+        const request = button.dataset.request;
+        const draft = button.dataset.draft;
+        if (!request) return;
+        if (state.summary.requestTypes.includes(request)) {
+          state.summary.requestTypes = state.summary.requestTypes.filter((v) => v !== request);
+        } else {
+          state.summary.requestTypes.push(request);
+          if (!state.summary.productName) state.summary.productName = "디자인 상담";
+          if (draft && !el.msgInput.value.trim()) el.msgInput.value = draft;
+        }
+        updateSummaryUI();
+      });
+    });
 
-  socket.on("clear-notes", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
+    el.summaryComposeBtn.addEventListener("click", () => {
+      const summaryText = buildSummaryText();
+      el.msgInput.value = summaryText;
+      el.msgInput.focus();
+    });
+
+    el.summaryQuoteBtn.addEventListener("click", async () => {
+      const summaryText = `안녕하세요. ${buildSummaryText()} 기준으로 견적 요청드립니다.`;
+      try {
+        await navigator.clipboard.writeText(summaryText);
+        el.phoneStatus.textContent = "견적 요청 문구가 복사되었습니다.";
+        el.phoneStatus.classList.add("show");
+      } catch {
+        el.msgInput.value = summaryText;
+        el.msgInput.focus();
       }
+    });
 
-      const room = getRoom(roomId);
-      room.notes[imageId] = [];
 
-      io.to(roomId).emit("clear-notes", { imageId });
-      if (ack) ack({ ok: true });
-    } catch (e) {
-      console.error("clear-notes error", e);
-      if (ack) ack({ ok: false, error: "메모 전체 삭제 오류" });
+
+    el.savePhoneBtn.addEventListener("click", () => {
+      const phone = String(el.phoneInput.value || "").trim();
+      localStorage.setItem("phone", phone);
+      el.phoneStatus.textContent = phone ? "연락처가 저장되었습니다." : "";
+      el.phoneStatus.classList.toggle("show", Boolean(phone));
+    });
+    el.deletePhoneBtn.addEventListener("click", () => {
+      localStorage.removeItem("phone");
+      el.phoneInput.value = "";
+      el.phoneStatus.textContent = "";
+      el.phoneStatus.classList.remove("show");
+    });
+
+    el.sendBtn.addEventListener("click", () => {
+      const text = el.msgInput.value.trim();
+      if (!text) return;
+      sendText(text);
+      el.msgInput.value = "";
+    });
+    el.msgInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        el.sendBtn.click();
+      }
+    });
+
+    el.viewerSendBtn.addEventListener("click", () => {
+      const text = el.viewerMsgInput.value.trim();
+      if (!text) return;
+      sendText(text);
+      el.viewerMsgInput.value = "";
+    });
+    el.viewerMsgInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        el.viewerSendBtn.click();
+      }
+    });
+
+    el.fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      handleImageSelect(file);
+    });
+
+    el.closeViewerBtn.addEventListener("click", () => {
+      if (isPopupViewer) {
+        window.close();
+      } else {
+        closeViewerInline();
+      }
+    });
+
+    el.downloadSketchBtn.addEventListener("click", () => {
+      const exportCanvas = document.createElement("canvas");
+      const rect = el.imageStage.getBoundingClientRect();
+      exportCanvas.width = rect.width;
+      exportCanvas.height = rect.height;
+      const ectx = exportCanvas.getContext("2d");
+      const img = el.viewerImage;
+      if (img && img.complete && img.naturalWidth) {
+        const scale = Math.min((rect.width * 0.84) / img.naturalWidth, (rect.height * 0.84) / img.naturalHeight);
+        const w = img.naturalWidth * scale;
+        const h = img.naturalHeight * scale;
+        const x = (rect.width - w) / 2;
+        const y = (rect.height - h) / 2;
+        ectx.drawImage(img, x, y, w, h);
+      }
+      state.strokes.forEach((stroke) => {
+        ectx.save();
+        ectx.lineCap = "round";
+        ectx.lineJoin = "round";
+        ectx.strokeStyle = stroke.color || "#ff3b30";
+        ectx.lineWidth = stroke.width || 3;
+        ectx.globalCompositeOperation = stroke.mode === "erase" ? "destination-out" : "source-over";
+        ectx.beginPath();
+        ectx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        for (let i = 1; i < stroke.points.length; i++) ectx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        ectx.stroke();
+        ectx.restore();
+      });
+      const link = document.createElement("a");
+      link.href = exportCanvas.toDataURL("image/png");
+      link.download = "design-consultation.png";
+      link.click();
+    });
+
+    el.penBtn.addEventListener("click", () => {
+      state.mode = "draw";
+      el.penBtn.classList.add("active");
+      el.eraserBtn.classList.remove("active");
+    });
+    el.eraserBtn.addEventListener("click", () => {
+      state.mode = "erase";
+      el.eraserBtn.classList.add("active");
+      el.penBtn.classList.remove("active");
+    });
+    el.addTextBtn.addEventListener("click", addNote);
+    el.undoBtn.addEventListener("click", () => {
+      const last = state.strokes.pop();
+      if (!last) return;
+      state.redoStrokes.push(last);
+      redrawCanvas();
+      syncDrawingHistory();
+    });
+    el.redoBtn.addEventListener("click", () => {
+      const stroke = state.redoStrokes.pop();
+      if (!stroke) return;
+      state.strokes.push(stroke);
+      redrawCanvas();
+      syncDrawingHistory();
+    });
+    el.clearDrawingBtn.addEventListener("click", () => clearDrawing(true));
+    el.clearNotesBtn.addEventListener("click", () => {
+      state.notes = [];
+      renderNotes();
+      if (canUseRealtime()) socket.emit("clear-notes", { imageId: state.currentViewerImageId });
+    });
+    el.thicknessRange.addEventListener("input", () => {
+      state.width = Number(el.thicknessRange.value || 3);
+    });
+
+    el.colorSwatches.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.id === "customColorBtn") return;
+        state.color = button.dataset.color || "#ff3b30";
+        el.colorSwatches.forEach((b) => b.classList.toggle("active", b === button));
+      });
+    });
+    el.customColorBtn.addEventListener("click", () => el.customColorInput.click());
+    el.customColorInput.addEventListener("input", () => {
+      state.color = el.customColorInput.value;
+      document.documentElement.style.setProperty("--custom-color-preview", state.color);
+      el.colorSwatches.forEach((b) => b.classList.toggle("active", false));
+      el.customColorBtn.classList.add("active");
+    });
+
+    el.drawCanvas.addEventListener("pointerdown", (event) => {
+      if (!state.currentViewerImageId || !el.viewerOverlay.classList.contains("open")) return;
+      if (state.mode !== "draw" && state.mode !== "erase") return;
+      const { x, y } = getCanvasPoint(event);
+      state.isDrawing = true;
+      state.currentStroke = [{ x, y }];
+      el.drawCanvas.setPointerCapture?.(event.pointerId);
+    });
+    el.drawCanvas.addEventListener("pointermove", (event) => {
+      if (!state.isDrawing) return;
+      const { x, y } = getCanvasPoint(event);
+      state.currentStroke.push({ x, y });
+      redrawCanvas();
+      drawStroke({
+        points: state.currentStroke,
+        color: state.color,
+        width: state.width,
+        mode: state.mode
+      });
+    });
+    const finishStroke = () => {
+      if (!state.isDrawing) return;
+      state.isDrawing = false;
+      if (state.currentStroke.length > 1) {
+        pushStroke({
+          imageId: state.currentViewerImageId,
+          points: [...state.currentStroke],
+          color: state.color,
+          width: state.width,
+          mode: state.mode
+        }, true);
+      } else {
+        redrawCanvas();
+      }
+      state.currentStroke = [];
+    };
+    el.drawCanvas.addEventListener("pointerup", finishStroke);
+    el.drawCanvas.addEventListener("pointercancel", finishStroke);
+
+    window.addEventListener("pointermove", handleNoteDrag);
+    window.addEventListener("pointerup", finishNoteDrag);
+
+    el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
+    el.noteDeleteBtn.addEventListener("click", () => {
+      const note = getNoteById(state.activeNoteId);
+      if (!note) return;
+      const noteId = note.id;
+      removeNote(noteId);
+      closeNoteEditor();
+      if (canUseRealtime()) {
+        socket.emit("delete-note", { imageId: state.currentViewerImageId, noteId });
+      }
+    });
+    el.noteColorSwatches.forEach((button) => {
+      button.addEventListener("click", () => {
+        state.noteColor = button.dataset.noteColor || "#fff7c2";
+        updateNoteColorSwatches();
+        const note = getNoteById(state.activeNoteId);
+        if (!note) return;
+        note.color = state.noteColor;
+        note.updatedAt = Date.now();
+        note.updatedByRole = role;
+        note.updatedByName = getDisplayName();
+        upsertNote(note);
+        el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+        el.noteEditorAuthor.textContent = `수정자 ${note.updatedByName}`;
+        queueNoteSave(note, {
+          color: note.color,
+          updatedAt: note.updatedAt,
+          updatedByRole: note.updatedByRole,
+          updatedByName: note.updatedByName
+        });
+      });
+    });
+    el.noteEditorTextarea.addEventListener("input", () => {
+      const note = getNoteById(state.activeNoteId);
+      if (!note) return;
+      note.text = el.noteEditorTextarea.value.slice(0, MAX_NOTE_CHARS);
+      note.updatedAt = Date.now();
+      note.updatedByRole = role;
+      note.updatedByName = getDisplayName();
+      upsertNote(note);
+      el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+      el.noteEditorAuthor.textContent = `수정자 ${note.updatedByName}`;
+      queueNoteSave(note, {
+        text: note.text,
+        updatedAt: note.updatedAt,
+        updatedByRole: note.updatedByRole,
+        updatedByName: note.updatedByName
+      });
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+  }
+
+  function bindSocket() {
+    if (!socket) return;
+    socket.on("connect", () => {
+      state.connected = true;
+      setSyncState("connected");
+      emitJoin();
+    });
+    socket.on("disconnect", () => {
+      state.connected = false;
+      state.joined = false;
+      setSyncState("offline");
+    });
+    socket.on("joined", () => {
+      state.joined = true;
+      setSyncState("connected");
+    });
+    socket.on("history", (messages = []) => {
+      el.chatInner.innerHTML = "";
+      el.viewerChatInner.innerHTML = "";
+      messages.forEach((message) => appendMessage(message));
+    });
+    socket.on("message", appendMessage);
+    socket.on("image", appendMessage);
+    socket.on("drawing-history", ({ imageId, strokes = [] }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.strokes = Array.isArray(strokes) ? strokes : [];
+      state.redoStrokes = [];
+      redrawCanvas();
+    });
+    socket.on("draw-stroke", (payload) => {
+      if (payload.imageId !== state.currentViewerImageId) return;
+      state.strokes.push(payload);
+      redrawCanvas();
+    });
+    socket.on("draw-strokes", ({ imageId, strokes = [] }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.strokes.push(...strokes);
+      redrawCanvas();
+    });
+    socket.on("clear-drawing", ({ imageId }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      clearDrawing(false);
+    });
+    socket.on("note-history", ({ imageId, notes = [] }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.notes = Array.isArray(notes) ? notes.map(normalizeNote) : [];
+      renderNotes();
+    });
+    socket.on("note-added", ({ imageId, note }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      upsertNote(normalizeNote(note));
+    });
+    socket.on("note-live-update", ({ imageId, noteId, patch }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      const note = getNoteById(noteId);
+      if (!note) return;
+      Object.assign(note, patch || {});
+      upsertNote(note);
+      if (state.activeNoteId === noteId) {
+        el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+        el.noteEditorAuthor.textContent = `수정자 ${note.updatedByName || getDisplayName(note)}`;
+      }
+    });
+    socket.on("note-updated", ({ imageId, noteId, patch }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      const note = getNoteById(noteId);
+      if (!note) return;
+      Object.assign(note, patch || {});
+      upsertNote(note);
+      if (state.activeNoteId === noteId) {
+        el.noteEditorTextarea.value = note.text || "";
+        el.noteEditorTimestamp.textContent = formatNoteTimestamp(note.updatedAt);
+        el.noteEditorAuthor.textContent = `수정자 ${note.updatedByName || getDisplayName(note)}`;
+        setNoteSaveBadge("saved");
+      }
+    });
+    socket.on("note-deleted", ({ imageId, noteId }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      removeNote(noteId);
+      if (state.activeNoteId === noteId) closeNoteEditor();
+    });
+    socket.on("clear-notes", ({ imageId }) => {
+      if (imageId !== state.currentViewerImageId) return;
+      state.notes = [];
+      renderNotes();
+      closeNoteEditor();
+    });
+  }
+
+  function init() {
+    updateRoleBadge();
+    updateSummaryUI();
+    bindEvents();
+    bindSocket();
+    el.phoneInput.value = localStorage.getItem("phone") || "";
+
+    if (isPopupViewer) {
+      initPopupViewerMode();
+    } else {
+      toggleSummaryCard(true);
     }
-  });
+    if (!socket) setSyncState("offline");
+  }
 
-  socket.on("disconnect", (reason) => {
-    console.log("disconnect:", socket.id, reason);
-  });
-});
-
-process.on("uncaughtException", (err) => {
-  console.error("uncaught:", err);
-});
-
-process.on("unhandledRejection", (err) => {
-  console.error("unhandled:", err);
-});
-
-server.keepAliveTimeout = 120000;
-server.headersTimeout = 121000;
-
-server.listen(PORT, HOST, () => {
-  console.log("server running:", PORT);
-});
+  init();
+})();
+</script>
+</body>
+</html>
