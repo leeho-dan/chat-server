@@ -188,10 +188,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
   display:flex;align-items:center;gap:8px;
   padding:8px 12px;border:1px solid var(--line);border-radius:16px;background:#fbfdff;
 }
-#contactInlineTitle{
-  flex:0 0 auto;
-  font-size:13px;font-weight:800;color:var(--text-soft);
-}
 #phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
 #phoneStatus.show{display:block}
 #phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
@@ -201,6 +197,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
 #savePhoneBtn{
   height:34px;min-width:52px;padding:0 12px;border-radius:12px;
   background:linear-gradient(135deg, var(--primary-soft), var(--primary));color:#fff;font-weight:800;font-size:12px;
+}
+#deletePhoneBtn{
+  height:34px;min-width:52px;padding:0 12px;border-radius:12px;
+  background:#edf4fa;color:#425466;font-weight:800;font-size:12px;
 }
 #messageRow{display:flex;align-items:center;gap:8px}
 #msgInput{flex:1;height:48px;border-radius:18px;padding:0 16px;font-size:16px}
@@ -385,8 +385,8 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
   .chatImg{max-width:220px}
   #inputArea{padding:8px 10px calc(10px + var(--safe-bottom));gap:6px}
   #contactInlineBar{padding:8px 10px;gap:6px}
-  #contactInlineTitle{font-size:12px}
   #savePhoneBtn{width:auto;min-width:52px}
+  #deletePhoneBtn{width:auto;min-width:52px}
   #msgInput,#sendBtn,#fileLabel{height:44px}
   #sendBtn,#fileLabel{width:44px}
   #viewerTopbar{
@@ -482,9 +482,9 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
 
     <div id="inputArea">
       <div id="contactInlineBar">
-        <div id="contactInlineTitle">연락처 남기기</div>
-        <input id="phoneInput" type="tel" placeholder="연락처" />
+                <input id="phoneInput" type="tel" placeholder="연락처" />
         <button id="savePhoneBtn" type="button">등록</button>
+        <button id="deletePhoneBtn" type="button">삭제</button>
       </div>
 
       <div id="phoneStatus" aria-live="polite"></div>
@@ -651,6 +651,7 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
     contactInlineBar: document.getElementById("contactInlineBar"),
     phoneInput: document.getElementById("phoneInput"),
     savePhoneBtn: document.getElementById("savePhoneBtn"),
+    deletePhoneBtn: document.getElementById("deletePhoneBtn"),
     phoneStatus: document.getElementById("phoneStatus"),
     viewerOverlay: document.getElementById("viewerOverlay"),
     viewerTitle: document.getElementById("viewerTitle"),
@@ -1282,6 +1283,12 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
       localStorage.setItem("phone", phone);
       el.phoneStatus.textContent = phone ? "연락처가 저장되었습니다." : "";
       el.phoneStatus.classList.toggle("show", Boolean(phone));
+    });
+    el.deletePhoneBtn.addEventListener("click", () => {
+      localStorage.removeItem("phone");
+      el.phoneInput.value = "";
+      el.phoneStatus.textContent = "";
+      el.phoneStatus.classList.remove("show");
     });
 
     el.sendBtn.addEventListener("click", () => {
