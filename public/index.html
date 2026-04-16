@@ -209,7 +209,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visi
 }
 #fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 #viewerOverlay{
-  position:fixed;inset:0;z-index:120;display:none;flex-direction:column;width:100vw;height:100vh;background:rgba(245,248,252,.985)
+  position:fixed;inset:0;z-index:120;display:none;flex-direction:column;width:100vw;height:100vh;min-height:100dvh;background:rgba(245,248,252,.985)
 }
 #viewerOverlay.open{display:flex}
 #viewerTopbar{
@@ -384,27 +384,86 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
   #deletePhoneBtn{width:auto;min-width:52px}
   #msgInput,#sendBtn,#fileLabel{height:44px}
   #sendBtn,#fileLabel{width:44px}
-  #viewerTopbar{
-    min-height:0;height:auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
-    grid-template-areas:"stats title actions";gap:6px 10px;align-items:center;padding:8px 10px;
+
+  #viewerOverlay{
+    width:100vw;
+    height:100dvh;
+    min-height:100dvh;
   }
+
+  #viewerTopbar{
+    min-height:0;
+    height:auto;
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr) auto;
+    grid-template-areas:"stats title actions";
+    gap:6px 10px;
+    align-items:center;
+    padding:8px 10px;
+  }
+
   #viewerTopLeft{grid-area:title;gap:0}
   #viewerTitle{font-size:15px;line-height:1.2}
   #viewerSubtitle{display:none}
-  #viewerStats{grid-area:stats;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  #viewerStats{
+    grid-area:stats;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
   #viewerStats::-webkit-scrollbar{display:none}
   .statBadge{height:24px;padding:0 7px;gap:0;font-size:0;white-space:nowrap}
   .statBadge::before{content:attr(data-icon);font-size:11px;line-height:1}
   .statBadge::after{content:attr(data-count);margin-left:4px;font-size:10px;line-height:1;font-weight:800}
   #viewerActions{grid-area:actions}
-  #viewerMain{display:flex;flex-direction:column;min-height:0}
-  #viewerLeft{display:contents}
-  #canvasWrap{flex:5 1 0;min-height:0;padding:8px}
-  #imageStage{min-height:0;height:100%;border-radius:18px}
-  #toolbar{flex:2 1 0;min-height:0;padding:8px 10px 10px;gap:10px;overflow:hidden}
+
+  #viewerMain{
+    flex:1;
+    min-height:0;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+
+  #viewerLeft{
+    display:flex;
+    flex-direction:column;
+    flex:1 1 auto;
+    min-height:0;
+    border-right:none;
+    background:#f8fbff;
+  }
+
+  #canvasWrap{
+    flex:1 1 auto;
+    min-height:0;
+    padding:8px;
+  }
+
+  #imageStage{
+    min-height:0;
+    height:100%;
+    border-radius:18px;
+  }
+
+  #toolbar{
+    flex:0 0 auto;
+    min-height:auto;
+    padding:8px 10px 10px;
+    gap:10px;
+    overflow:hidden;
+  }
+
   .toolRow{flex-direction:column;align-items:stretch;gap:8px}
   #drawControlSide{width:100%;justify-content:space-between}
-  .toolGroup{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .toolGroup{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-bottom:6px;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
   .toolGroup::-webkit-scrollbar{display:none}
   .toolBtn,.viewerBtn{min-width:42px;height:40px;padding:0 10px}
   .toolBtn .btnText,.viewerBtn .btnText{display:none}
@@ -413,12 +472,17 @@ body.popup-viewer-mode #viewerSendBtn{width:40px;height:40px}
   #thicknessRange{width:82px}
   #colorRow{padding:5px 7px;gap:6px}
   .colorSwatch{width:22px;height:22px}
-  #viewerRight{flex:3 1 0;min-height:0;border-top:1px solid var(--line)}
-  #viewerChatHeader{display:none}
-  #viewerChatBox{padding:10px 10px 6px}
-  #viewerInputBar{padding:8px 10px calc(10px + var(--safe-bottom))}
-  #viewerMsgInput{height:42px;font-size:16px}
-  #viewerSendBtn{width:42px;height:42px}
+
+  #viewerRight{
+    display:none !important;
+  }
+
+  #viewerChatHeader,
+  #viewerChatBox,
+  #viewerInputBar{
+    display:none !important;
+  }
+
   .noteMarker{min-width:50px;height:38px;padding:0 10px}
   .noteMarkerText{max-width:96px;font-size:11px}
   #noteEditorHeader{align-items:flex-start;padding:10px 12px}
