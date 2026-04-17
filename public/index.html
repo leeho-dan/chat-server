@@ -279,12 +279,12 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 #toolbarInline::-webkit-scrollbar{display:none}
 .toolBtn{
   min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
-  display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto
+  display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;position:relative
 }
 .toolBtn.active{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
 .toolBtnSmall{min-width:32px;width:32px;height:32px;border-radius:10px;font-size:13px}
 .toolBtn svg{
-  width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round
+  width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:2
 }
 #thicknessWrap{
   display:flex;align-items:center;padding:0 8px;height:40px;border-radius:12px;background:#f6faff;
@@ -292,16 +292,33 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 #thicknessRange{width:88px}
 #paletteBtn{
-  position:relative;overflow:hidden;
-  background:
-    linear-gradient(135deg,rgba(255,255,255,.98),rgba(235,241,247,.98)),
-    conic-gradient(from 180deg,#ff3b30,#2491ff,#22c55e,#facc15,#111827,#ffffff,#ff3b30)
+  position:relative;
+  overflow:hidden;
+  background:#edf4fa;
+  color:#425466;
 }
-#paletteBtn::before{
-  content:"";position:absolute;inset:3px;border-radius:10px;background:var(--selected-draw-color,#ff3b30)
+#paletteBtn svg{
+  position:relative;
+  z-index:2;
+  width:18px;
+  height:18px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
-#paletteBtn::after{
-  content:"🎨";position:relative;z-index:1;font-size:14px
+#palettePreview{
+  position:absolute;
+  right:4px;
+  bottom:4px;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:var(--selected-draw-color,#ff3b30);
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:0 1px 4px rgba(18,36,61,.16);
+  z-index:3;
 }
 #paletteInput{
   position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:.01;pointer-events:none
@@ -526,7 +543,16 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
             <input id="thicknessRange" type="range" min="1" max="48" value="3" aria-label="선 두께 조절" />
           </div>
 
-          <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택"></button>
+          <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택">
+            <span id="palettePreview"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3a9 9 0 1 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-1a1.4 1.4 0 0 1 0-2.8H15A6 6 0 0 0 15 3h-3z"></path>
+              <circle cx="7.5" cy="10" r="1"></circle>
+              <circle cx="10" cy="7.5" r="1"></circle>
+              <circle cx="14" cy="7.5" r="1"></circle>
+              <circle cx="16.5" cy="10" r="1"></circle>
+            </svg>
+          </button>
           <input id="paletteInput" type="color" value="#ff3b30" aria-label="색상 선택기" />
 
           <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
@@ -707,6 +733,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     clearBtn: document.getElementById("clearBtn"),
     thicknessRange: document.getElementById("thicknessRange"),
     paletteBtn: document.getElementById("paletteBtn"),
+    palettePreview: document.getElementById("palettePreview"),
     paletteInput: document.getElementById("paletteInput"),
     downloadSketchBtn: document.getElementById("downloadSketchBtn"),
     viewerChatBox: document.getElementById("viewerChatBox"),
@@ -983,6 +1010,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     state.color = color;
     document.documentElement.style.setProperty("--selected-draw-color", color);
     el.paletteInput.value = color;
+
+    if (el.palettePreview) {
+      el.palettePreview.style.background = color;
+    }
 
     if (el.brushCursor && el.brushCursor.style.display !== "none") {
       updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
