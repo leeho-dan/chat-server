@@ -1,34 +1,33 @@
 const express = require("express");
 const http = require("http");
 const path = require("path");
-const fs = require("fs");
 const cors = require("cors");
 const multer = require("multer");
+const mongoose = require("mongoose");
 const { Server } = require("socket.io");
 const { v4: uuidv4 } = require("uuid");
+const { v2: cloudinary } = require("cloudinary");
 
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-  transports: ["websocket", "polling"]
-});
-
 const PORT = Number(process.env.PORT || 3000);
 const HOST = "0.0.0.0";
-
 const PUBLIC_DIR = path.join(__dirname, "public");
-const UPLOAD_DIR = path.join(PUBLIC_DIR, "uploads");
 
-if (!fs.existsSync(PUBLIC_DIR)) {
-  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-}
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+const ALLOWED_ORIGINS = String(process.env.CLIENT_ORIGIN || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
-app.use(cors());
+const corsOriginHandler = (origin, callback) => {
+  if (!origin) return callback(null, true);
+  if (ALLOWED_ORIGINS.length === 0) return callback(null, true);
+  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  return callback(new Error("CORS not allowed"));
+};
+
+app.use(cors({ origin: corsOriginHandler, credentials: false }));
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -37,21 +36,348 @@ app.use((req, res, next) => {
   next();
 });
 
+const io = new Server(server, {
+  cors: {
+    origin: ALLOWED_ORIGINS.length ? ALLOWED_ORIGINS : true,
+    methods: ["GET", "POST"]
+  },
+  transports: ["websocket", "polling"]
+});
+
 app.use(express.static(PUBLIC_DIR));
-app.use("/uploads", express.static(UPLOAD_DIR));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-app.get("/health", (req, res) => {
-  res.json({ ok: true, uptime: process.uptime() });
+app.get("/health", async (req, res) => {
+  const mongoReady = mongoose.connection.readyState === 1;
+  res.json({
+    ok: true,
+    uptime: process.uptime(),
+    mongoReady
+  });
 });
+
+const hasCloudinaryEnv =
+  process.env.CLOUD_NAME &&
+  process.env.CLOUD_KEY &&
+  process.env.CLOUD_SECRET;
+
+if (hasCloudinaryEnv) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.CLOUD_KEY,
+    api_secret: process.env.CLOUD_SECRET,
+    secure: true
+  });
+}
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file || !file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("이미지 파일만 업로드할 수 있습니다."));
+    }
+    cb(null, true);
+  }
 });
+
+const messageSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, required: true, index: true },
+    type: { type: String, enum: ["text", "image"], required: true },
+    text: { type: String, default: "" },
+    imageId: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
+    sender: { type: String, enum: ["user", "admin"], required: true },
+    senderName: { type: String, required: true },
+    time: { type: Number, required: true, index: true }
+  },
+  { versionKey: false }
+);
+
+const drawingSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, required: true, index: true },
+    imageId: { type: String, required: true, index: true },
+    strokes: { type: Array, default: [] }
+  },
+  { versionKey: false }
+);
+
+drawingSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
+
+const noteSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, required: true, index: true },
+    imageId: { type: String, required: true, index: true },
+    noteId: { type: String, required: true },
+    x: { type: Number, default: 0.14 },
+    y: { type: Number, default: 0.16 },
+    width: { type: Number, default: 0.16 },
+    height: { type: Number, default: 0.1 },
+    text: { type: String, default: "" },
+    color: { type: String, default: "#fff7c2" },
+    author: { type: String, enum: ["user", "admin"], default: "user" },
+    updatedAt: { type: Number, default: Date.now },
+    updatedByRole: { type: String, enum: ["user", "admin"], default: "user" },
+    updatedByName: { type: String, default: "고객" }
+  },
+  { versionKey: false }
+);
+
+noteSchema.index({ roomId: 1, imageId: 1, noteId: 1 }, { unique: true });
+
+const Message = mongoose.model("Message", messageSchema);
+const Drawing = mongoose.model("Drawing", drawingSchema);
+const Note = mongoose.model("Note", noteSchema);
+
+function sanitizeRole(role) {
+  return role === "admin" ? "admin" : "user";
+}
+
+function sanitizeUserName(userName, role) {
+  const name = String(userName || "").trim().slice(0, 60);
+  if (role === "admin") return "관리자";
+  return name || "고객";
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
+  const updatedByName =
+    updatedByRole === "admin"
+      ? "관리자"
+      : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
+
+  return {
+    noteId: String(note.id || uuidv4()),
+    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
+    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
+    width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.3) : 0.16,
+    height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.1,
+    text: String(note.text || "").slice(0, 500),
+    color: String(note.color || "#fff7c2"),
+    author: sanitizeRole(note.author || fallbackRole),
+    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
+    updatedByRole,
+    updatedByName
+  };
+}
+
+function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const next = {};
+
+  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
+  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
+  if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.3);
+  if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
+  if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
+  if (typeof patch.color === "string") next.color = patch.color;
+
+  next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
+
+  const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
+  next.updatedByRole = updatedByRole;
+  next.updatedByName =
+    updatedByRole === "admin"
+      ? "관리자"
+      : sanitizeUserName(patch.updatedByName || fallbackUserName, updatedByRole);
+
+  return next;
+}
+
+async function ensureMongoConnected() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI 환경변수가 없습니다.");
+  }
+
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  if (mongoose.connection.readyState === 2) {
+    return;
+  }
+
+  await mongoose.connect(uri, {
+    autoIndex: true
+  });
+
+  console.log("[MONGO] connected");
+}
+
+async function getMessageHistory(roomId) {
+  return Message.find({ roomId })
+    .sort({ time: 1 })
+    .limit(300)
+    .lean();
+}
+
+async function appendMessage(roomId, message) {
+  await Message.create({ roomId, ...message });
+
+  const count = await Message.countDocuments({ roomId });
+  if (count > 300) {
+    const overflow = count - 300;
+    const oldDocs = await Message.find({ roomId })
+      .sort({ time: 1 })
+      .limit(overflow)
+      .select("_id")
+      .lean();
+
+    if (oldDocs.length) {
+      await Message.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
+    }
+  }
+}
+
+async function getDrawingHistory(roomId, imageId) {
+  const doc = await Drawing.findOne({ roomId, imageId }).lean();
+  return doc?.strokes || [];
+}
+
+async function replaceDrawingHistory(roomId, imageId, strokes) {
+  const safeStrokes = Array.isArray(strokes) ? strokes.slice(-2000) : [];
+  await Drawing.findOneAndUpdate(
+    { roomId, imageId },
+    { $set: { strokes: safeStrokes } },
+    { upsert: true, new: true }
+  );
+  return safeStrokes;
+}
+
+async function appendDrawStroke(roomId, imageId, stroke) {
+  const current = await getDrawingHistory(roomId, imageId);
+  current.push(stroke);
+  return replaceDrawingHistory(roomId, imageId, current);
+}
+
+async function appendDrawStrokes(roomId, imageId, strokes) {
+  const current = await getDrawingHistory(roomId, imageId);
+  current.push(...strokes);
+  return replaceDrawingHistory(roomId, imageId, current);
+}
+
+async function clearDrawingHistory(roomId, imageId) {
+  await Drawing.findOneAndUpdate(
+    { roomId, imageId },
+    { $set: { strokes: [] } },
+    { upsert: true, new: true }
+  );
+}
+
+async function getNotes(roomId, imageId) {
+  const docs = await Note.find({ roomId, imageId })
+    .sort({ updatedAt: 1 })
+    .lean();
+
+  return docs.map((note) => ({
+    id: note.noteId,
+    x: note.x,
+    y: note.y,
+    width: note.width,
+    height: note.height,
+    text: note.text,
+    color: note.color,
+    author: note.author,
+    updatedAt: note.updatedAt,
+    updatedByRole: note.updatedByRole,
+    updatedByName: note.updatedByName
+  }));
+}
+
+async function addOrGetNote(roomId, imageId, normalized) {
+  const existing = await Note.findOne({
+    roomId,
+    imageId,
+    noteId: normalized.noteId
+  }).lean();
+
+  if (existing) {
+    return {
+      id: existing.noteId,
+      x: existing.x,
+      y: existing.y,
+      width: existing.width,
+      height: existing.height,
+      text: existing.text,
+      color: existing.color,
+      author: existing.author,
+      updatedAt: existing.updatedAt,
+      updatedByRole: existing.updatedByRole,
+      updatedByName: existing.updatedByName
+    };
+  }
+
+  const created = await Note.create({
+    roomId,
+    imageId,
+    ...normalized
+  });
+
+  const count = await Note.countDocuments({ roomId, imageId });
+  if (count > 100) {
+    const overflow = count - 100;
+    const oldDocs = await Note.find({ roomId, imageId })
+      .sort({ updatedAt: 1 })
+      .limit(overflow)
+      .select("_id")
+      .lean();
+
+    if (oldDocs.length) {
+      await Note.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
+    }
+  }
+
+  return {
+    id: created.noteId,
+    x: created.x,
+    y: created.y,
+    width: created.width,
+    height: created.height,
+    text: created.text,
+    color: created.color,
+    author: created.author,
+    updatedAt: created.updatedAt,
+    updatedByRole: created.updatedByRole,
+    updatedByName: created.updatedByName
+  };
+}
+
+async function updateNote(roomId, imageId, noteId, patch) {
+  const updated = await Note.findOneAndUpdate(
+    { roomId, imageId, noteId },
+    { $set: patch },
+    { new: true }
+  ).lean();
+
+  if (!updated) return null;
+
+  return {
+    id: updated.noteId,
+    x: updated.x,
+    y: updated.y,
+    width: updated.width,
+    height: updated.height,
+    text: updated.text,
+    color: updated.color,
+    author: updated.author,
+    updatedAt: updated.updatedAt,
+    updatedByRole: updated.updatedByRole,
+    updatedByName: updated.updatedByName
+  };
+}
+
+async function deleteNote(roomId, imageId, noteId) {
+  await Note.deleteOne({ roomId, imageId, noteId });
+}
 
 app.post(
   "/upload",
@@ -75,22 +401,31 @@ app.post(
       });
     });
   },
-  (req, res) => {
+  async (req, res) => {
     try {
+      if (!hasCloudinaryEnv) {
+        return res.status(500).json({
+          error: "Cloudinary 환경변수가 설정되지 않았습니다."
+        });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: "파일 없음" });
       }
 
-      const originalExt = path.extname(req.file.originalname || "").toLowerCase();
-      const safeExt = originalExt || ".png";
-      const filename = `${Date.now()}-${uuidv4()}${safeExt}`;
-      const filepath = path.join(UPLOAD_DIR, filename);
+      const ext = path.extname(req.file.originalname || "").toLowerCase() || ".png";
+      const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
 
-      fs.writeFileSync(filepath, req.file.buffer);
+      const uploaded = await cloudinary.uploader.upload(dataUri, {
+        folder: "design-chat",
+        public_id: `${Date.now()}-${uuidv4()}`,
+        resource_type: "image"
+      });
 
       return res.json({
         success: true,
-        url: `/uploads/${filename}`
+        url: uploaded.secure_url,
+        ext
       });
     } catch (error) {
       console.error("upload error:", error);
@@ -99,100 +434,10 @@ app.post(
   }
 );
 
-const rooms = Object.create(null);
-
-function sanitizeRole(role) {
-  return role === "admin" ? "admin" : "user";
-}
-
-function sanitizeUserName(userName, role) {
-  const name = String(userName || "").trim().slice(0, 60);
-  if (role === "admin") return "관리자";
-  return name || "고객";
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function getRoom(roomId) {
-  if (!rooms[roomId]) {
-    rooms[roomId] = {
-      messages: [],
-      drawings: Object.create(null),
-      notes: Object.create(null)
-    };
-  }
-  return rooms[roomId];
-}
-
-function trimMessages(room) {
-  if (room.messages.length > 300) {
-    room.messages = room.messages.slice(-300);
-  }
-}
-
-function trimStrokes(room, imageId) {
-  room.drawings[imageId] = room.drawings[imageId] || [];
-  if (room.drawings[imageId].length > 2000) {
-    room.drawings[imageId] = room.drawings[imageId].slice(-2000);
-  }
-}
-
-function trimNotes(room, imageId) {
-  room.notes[imageId] = room.notes[imageId] || [];
-  if (room.notes[imageId].length > 100) {
-    room.notes[imageId] = room.notes[imageId].slice(-100);
-  }
-}
-
-function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
-  const updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
-
-  return {
-    id: String(note.id || uuidv4()),
-    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
-    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
-    width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.30) : 0.16,
-    height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.10,
-    text: String(note.text || "").slice(0, 500),
-    color: String(note.color || "#fff7c2"),
-    author: sanitizeRole(note.author || fallbackRole),
-    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
-    updatedByRole,
-    updatedByName
-  };
-}
-
-function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const next = {};
-
-  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
-  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
-  if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.30);
-  if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
-  if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
-  if (typeof patch.color === "string") next.color = patch.color;
-  next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
-
-  const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
-  next.updatedByRole = updatedByRole;
-  next.updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(patch.updatedByName || fallbackUserName, updatedByRole);
-
-  return next;
-}
-
 io.on("connection", (socket) => {
   console.log("connect:", socket.id);
 
-  socket.on("join", (payload = {}, ack) => {
+  socket.on("join", async (payload = {}, ack) => {
     try {
       const roomId = String(payload.roomId || "").trim();
       if (!roomId) {
@@ -209,8 +454,8 @@ io.on("connection", (socket) => {
       socket.data.role = role;
       socket.data.userName = userName;
 
-      const room = getRoom(roomId);
-      socket.emit("history", room.messages);
+      const history = await getMessageHistory(roomId);
+      socket.emit("history", history);
 
       if (ack) ack({ ok: true, roomId, role, userName });
       socket.emit("joined", { ok: true, roomId, role, userName });
@@ -221,7 +466,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("message", (payload = {}, ack) => {
+  socket.on("message", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       if (!roomId) {
@@ -246,9 +491,7 @@ io.on("connection", (socket) => {
         time: Date.now()
       };
 
-      const room = getRoom(roomId);
-      room.messages.push(message);
-      trimMessages(room);
+      await appendMessage(roomId, message);
       io.to(roomId).emit("message", message);
 
       if (ack) ack({ ok: true });
@@ -258,7 +501,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("image", (payload = {}, ack) => {
+  socket.on("image", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       if (!roomId) {
@@ -285,13 +528,8 @@ io.on("connection", (socket) => {
         time: Date.now()
       };
 
-      const room = getRoom(roomId);
-      room.messages.push(message);
-      trimMessages(room);
-
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.notes[imageId] = room.notes[imageId] || [];
-
+      await appendMessage(roomId, message);
+      await replaceDrawingHistory(roomId, imageId, []);
       io.to(roomId).emit("image", message);
 
       if (ack) ack({ ok: true, imageId, imageUrl });
@@ -301,101 +539,87 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("request-drawing-history", (payload = {}) => {
+  socket.on("request-drawing-history", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       if (!roomId || !imageId) return;
 
-      const room = getRoom(roomId);
-      socket.emit("drawing-history", { imageId, strokes: room.drawings[imageId] || [] });
+      const strokes = await getDrawingHistory(roomId, imageId);
+      socket.emit("drawing-history", { imageId, strokes });
     } catch (error) {
       console.error("request-drawing-history error:", error);
     }
   });
 
-  socket.on("draw-stroke", (payload = {}) => {
+  socket.on("draw-stroke", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       if (!roomId || !imageId) return;
 
-      const room = getRoom(roomId);
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.drawings[imageId].push(payload);
-      trimStrokes(room, imageId);
-
+      await appendDrawStroke(roomId, imageId, payload);
       io.to(roomId).emit("draw-stroke", payload);
     } catch (error) {
       console.error("draw-stroke error:", error);
     }
   });
 
-  socket.on("draw-strokes", (payload = {}) => {
+  socket.on("draw-strokes", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
       if (!roomId || !imageId || !strokes.length) return;
 
-      const room = getRoom(roomId);
-      room.drawings[imageId] = room.drawings[imageId] || [];
-      room.drawings[imageId].push(...strokes);
-      trimStrokes(room, imageId);
-
+      await appendDrawStrokes(roomId, imageId, strokes);
       io.to(roomId).emit("draw-strokes", { imageId, strokes });
     } catch (error) {
       console.error("draw-strokes error:", error);
     }
   });
 
-  socket.on("replace-drawing-history", (payload = {}) => {
+  socket.on("replace-drawing-history", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
       if (!roomId || !imageId) return;
 
-      const room = getRoom(roomId);
-      room.drawings[imageId] = strokes.slice(-2000);
-
-      io.to(roomId).emit("drawing-history", {
-        imageId,
-        strokes: room.drawings[imageId]
-      });
+      const saved = await replaceDrawingHistory(roomId, imageId, strokes);
+      io.to(roomId).emit("drawing-history", { imageId, strokes: saved });
     } catch (error) {
       console.error("replace-drawing-history error:", error);
     }
   });
 
-  socket.on("clear-drawing", (payload = {}) => {
+  socket.on("clear-drawing", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       if (!roomId || !imageId) return;
 
-      const room = getRoom(roomId);
-      room.drawings[imageId] = [];
+      await clearDrawingHistory(roomId, imageId);
       io.to(roomId).emit("clear-drawing", { imageId });
     } catch (error) {
       console.error("clear-drawing error:", error);
     }
   });
 
-  socket.on("request-note-history", (payload = {}) => {
+  socket.on("request-note-history", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       if (!roomId || !imageId) return;
 
-      const room = getRoom(roomId);
-      socket.emit("note-history", { imageId, notes: room.notes[imageId] || [] });
+      const notes = await getNotes(roomId, imageId);
+      socket.emit("note-history", { imageId, notes });
     } catch (error) {
       console.error("request-note-history error:", error);
     }
   });
 
-  socket.on("add-note", (payload = {}) => {
+  socket.on("add-note", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
@@ -404,25 +628,16 @@ io.on("connection", (socket) => {
 
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
       const normalized = normalizeNote(note, role, userName);
-      const exists = room.notes[imageId].some((item) => item.id === normalized.id);
+      const saved = await addOrGetNote(roomId, imageId, normalized);
 
-      if (!exists) {
-        room.notes[imageId].push(normalized);
-        trimNotes(room, imageId);
-      }
-
-      io.to(roomId).emit("note-added", { imageId, note: normalized });
+      io.to(roomId).emit("note-added", { imageId, note: saved });
     } catch (error) {
       console.error("add-note error:", error);
     }
   });
 
-  socket.on("note-live-update", (payload = {}) => {
+  socket.on("note-live-update", async (payload = {}) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
@@ -431,23 +646,32 @@ io.on("connection", (socket) => {
 
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-
-      const note = room.notes[imageId].find((item) => item.id === noteId);
-      if (!note) return;
-
       const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-      Object.assign(note, patch);
 
-      io.to(roomId).emit("note-live-update", { imageId, noteId, patch });
+      const updated = await updateNote(roomId, imageId, noteId, patch);
+      if (!updated) return;
+
+      io.to(roomId).emit("note-live-update", {
+        imageId,
+        noteId,
+        patch: {
+          x: updated.x,
+          y: updated.y,
+          width: updated.width,
+          height: updated.height,
+          text: updated.text,
+          color: updated.color,
+          updatedAt: updated.updatedAt,
+          updatedByRole: updated.updatedByRole,
+          updatedByName: updated.updatedByName
+        }
+      });
     } catch (error) {
       console.error("note-live-update error:", error);
     }
   });
 
-  socket.on("update-note", (payload = {}, ack) => {
+  socket.on("update-note", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
@@ -459,28 +683,24 @@ io.on("connection", (socket) => {
 
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
+      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
 
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-      const note = room.notes[imageId].find((item) => item.id === noteId);
-
-      if (!note) {
-        if (ack) ack({ ok: false, error: "메모 없음" });
+      const updated = await updateNote(roomId, imageId, noteId, patch);
+      if (!updated) {
+        if (ack) ack({ ok: false, error: "노트를 찾을 수 없음" });
         return;
       }
 
-      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-      Object.assign(note, patch);
+      io.to(roomId).emit("note-updated", { imageId, note: updated });
 
-      io.to(roomId).emit("note-updated", { imageId, noteId, patch });
-      if (ack) ack({ ok: true });
+      if (ack) ack({ ok: true, note: updated });
     } catch (error) {
       console.error("update-note error:", error);
-      if (ack) ack({ ok: false, error: "메모 수정 오류" });
+      if (ack) ack({ ok: false, error: "노트 저장 오류" });
     }
   });
 
-  socket.on("delete-note", (payload = {}, ack) => {
+  socket.on("delete-note", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
@@ -490,82 +710,31 @@ io.on("connection", (socket) => {
         return;
       }
 
-      const room = getRoom(roomId);
-      room.notes[imageId] = room.notes[imageId] || [];
-      room.notes[imageId] = room.notes[imageId].filter((item) => item.id !== noteId);
-
+      await deleteNote(roomId, imageId, noteId);
       io.to(roomId).emit("note-deleted", { imageId, noteId });
+
       if (ack) ack({ ok: true });
     } catch (error) {
       console.error("delete-note error:", error);
-      if (ack) ack({ ok: false, error: "삭제 오류" });
+      if (ack) ack({ ok: false, error: "노트 삭제 오류" });
     }
   });
 
-  socket.on("replace-note-history", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const notes = Array.isArray(payload.notes) ? payload.notes : [];
-      if (!roomId || !imageId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = notes.map((note) => normalizeNote(note, role, userName)).slice(-100);
-
-      io.to(roomId).emit("note-history", {
-        imageId,
-        notes: room.notes[imageId]
-      });
-
-      if (ack) ack({ ok: true });
-    } catch (error) {
-      console.error("replace-note-history error:", error);
-      if (ack) ack({ ok: false, error: "노트 이력 교체 오류" });
-    }
-  });
-
-  socket.on("clear-notes", (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const room = getRoom(roomId);
-      room.notes[imageId] = [];
-      io.to(roomId).emit("clear-notes", { imageId });
-
-      if (ack) ack({ ok: true });
-    } catch (error) {
-      console.error("clear-notes error:", error);
-      if (ack) ack({ ok: false, error: "메모 전체 삭제 오류" });
-    }
-  });
-
-  socket.on("disconnect", (reason) => {
-    console.log("disconnect:", socket.id, reason);
+  socket.on("disconnect", () => {
+    console.log("disconnect:", socket.id);
   });
 });
 
-process.on("uncaughtException", (error) => {
-  console.error("uncaught:", error);
-});
+async function bootstrap() {
+  try {
+    await ensureMongoConnected();
+    server.listen(PORT, HOST, () => {
+      console.log(`[SERVER] listening on http://${HOST}:${PORT}`);
+    });
+  } catch (error) {
+    console.error("[BOOT] failed:", error);
+    process.exit(1);
+  }
+}
 
-process.on("unhandledRejection", (error) => {
-  console.error("unhandled:", error);
-});
-
-server.keepAliveTimeout = 120000;
-server.headersTimeout = 121000;
-
-server.listen(PORT, HOST, () => {
-  console.log(`server running: http://${HOST}:${PORT}`);
-});
+bootstrap();
