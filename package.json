@@ -1,6 +1,6 @@
 {
   "name": "realtime-design-chat",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Realtime design consultation chat with collaborative image markup, uploads, socket collaboration, and note editing",
   "main": "server.js",
   "scripts": {
