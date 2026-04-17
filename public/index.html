@@ -11,6 +11,7 @@
   --primary:#2491ff;--primary-soft:#79c7ff;--danger:#ff5b5b;
   --shadow:0 18px 50px rgba(18,36,61,.10);--radius-xl:28px;
   --safe-bottom:max(env(safe-area-inset-bottom),0px);
+  --selected-draw-color:#ff3b30;
 }
 *{box-sizing:border-box}
 html,body{
@@ -114,27 +115,107 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 .noteMarkerText{max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:var(--text)}
 .noteResize{position:absolute;right:-5px;bottom:-5px;width:14px;height:14px;border-radius:5px;background:#2491ff;box-shadow:0 4px 10px rgba(36,145,255,.18)}
 
-#toolbar{flex-shrink:0;border-top:1px solid var(--line);background:#fff;padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px}
-.toolSection{display:flex;flex-direction:column;gap:6px}
-.toolRow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
-#drawControlSide{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap}
-.toolGroup{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-.toolGroup.fill{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.toolBtn{min-width:44px;width:100%;height:44px;padding:0;border-radius:14px;background:#edf4fa;color:#425466;display:inline-flex;align-items:center;justify-content:center;font-weight:800}
-.toolBtn.active{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
-#thicknessWrap{display:flex;align-items:center;gap:8px;color:var(--sub)}
-#thicknessWrap span{font-size:11px;font-weight:800}
-#thicknessRange{width:110px}
-#colorRow{display:flex;gap:8px;flex-wrap:nowrap;align-items:center}
-.colorSwatch,.noteColorSwatch{border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.10);display:inline-flex}
-.colorSwatch{width:24px;height:24px}
+#toolbar{
+  flex-shrink:0;
+  border-top:1px solid var(--line);
+  background:#fff;
+  padding:10px 12px 12px;
+}
+
+#toolbarInline{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+
+#toolbarInline::-webkit-scrollbar{
+  display:none;
+}
+
+.toolBtn{
+  min-width:40px;
+  width:40px;
+  height:40px;
+  padding:0;
+  border-radius:12px;
+  background:#edf4fa;
+  color:#425466;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  flex:0 0 auto;
+}
+
+.toolBtn.active{
+  background:linear-gradient(135deg,var(--primary-soft),var(--primary));
+  color:#fff;
+}
+
+.toolBtnSmall{
+  min-width:32px;
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  font-size:13px;
+}
+
+#thicknessWrap{
+  display:flex;
+  align-items:center;
+  padding:0 8px;
+  height:40px;
+  border-radius:12px;
+  background:#f6faff;
+  border:1px solid var(--line);
+  flex:0 0 auto;
+}
+
+#thicknessRange{
+  width:88px;
+}
+
+#paletteBtn{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.98),rgba(235,241,247,.98)),
+    conic-gradient(from 180deg,#ff3b30,#2491ff,#22c55e,#facc15,#111827,#ffffff,#ff3b30);
+}
+
+#paletteBtn::before{
+  content:"";
+  position:absolute;
+  inset:3px;
+  border-radius:10px;
+  background:var(--selected-draw-color,#ff3b30);
+}
+
+#paletteBtn::after{
+  content:"🎨";
+  position:relative;
+  z-index:1;
+  font-size:14px;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.15));
+}
+
+#paletteInput{
+  position:fixed;
+  left:-9999px;
+  top:-9999px;
+  width:1px;
+  height:1px;
+  opacity:.01;
+  pointer-events:none;
+}
+
+.noteColorSwatch{border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.10);display:inline-flex}
 .noteColorSwatch{width:22px;height:22px}
-.colorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.20)}
 .noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
-#customColorBtn{position:relative;overflow:hidden;width:40px;height:40px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(235,241,247,.98)),conic-gradient(from 180deg,#ff3b30,#2491ff,#22c55e,#facc15,#111827,#ffffff,#ff3b30)}
-#customColorBtn::before{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--custom-color-preview,#ffffff)}
-#customColorBtn::after{content:"";position:absolute;inset:7px;border-radius:50%;border:1.5px dashed rgba(79,101,121,.55)}
-#customColorInput{position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:.01;pointer-events:none}
+
 #viewerRight{display:flex;flex-direction:column;min-height:0}
 #viewerChatBox{flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fbfdff}
 #viewerChatInner{display:flex;flex-direction:column;gap:10px}
@@ -202,7 +283,16 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   #viewerLeft{display:flex!important;flex-direction:column!important;min-height:0!important;flex:3 1 0!important;border-right:none!important}
   #canvasWrap{flex:2 1 0!important;min-height:0!important;padding:8px!important}
   #imageStage{min-height:0!important;height:100%!important;border-radius:16px!important}
-  #toolbar{position:static!important;flex:1 1 0!important;min-height:0!important;padding:8px 10px 10px!important;gap:10px!important;overflow:hidden!important}
+  #toolbar{
+    position:static!important;
+    flex:0 0 auto!important;
+    min-height:auto!important;
+    padding:8px 10px 10px!important;
+    overflow:hidden!important;
+  }
+  #toolbarInline{
+    gap:6px!important;
+  }
   #viewerRight{display:flex!important;flex-direction:column!important;flex:2 1 0!important;min-height:0!important;border-top:1px solid var(--line)!important;border-left:none!important}
   #viewerChatBox{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;padding:12px 12px 8px!important}
   #viewerInputBar{flex-shrink:0!important;border-top:1px solid var(--line)!important;padding:8px 10px calc(10px + var(--safe-bottom))!important;display:flex!important;gap:8px!important}
@@ -287,37 +377,27 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
           <div id="textLayer"></div>
         </div>
       </div>
+
       <div id="toolbar">
-        <div class="toolSection">
-          <div class="toolRow">
-            <div class="toolGroup fill">
-              <button id="penBtn" class="toolBtn active" type="button">✎</button>
-              <button id="eraserBtn" class="toolBtn" type="button">⌫</button>
-              <button id="addTextBtn" class="toolBtn" type="button">▣</button>
-            </div>
-            <div id="drawControlSide">
-              <div id="thicknessWrap"><span>두께</span><input id="thicknessRange" type="range" min="1" max="48" value="3" /></div>
-              <div id="colorRow">
-                <button class="colorSwatch active" type="button" data-color="#ff3b30" style="background:#ff3b30;" aria-label="빨강"></button>
-                <button class="colorSwatch" type="button" data-color="#2491ff" style="background:#2491ff;" aria-label="파랑"></button>
-                <button class="colorSwatch" type="button" data-color="#22c55e" style="background:#22c55e;" aria-label="초록"></button>
-                <button class="colorSwatch" type="button" data-color="#facc15" style="background:#facc15;" aria-label="노랑"></button>
-                <button class="colorSwatch" type="button" data-color="#111827" style="background:#111827;" aria-label="검정"></button>
-                <button id="customColorBtn" class="colorSwatch" type="button" aria-label="다른 색상 선택"></button>
-                <input id="customColorInput" type="color" value="#ffffff" aria-label="사용자 지정 색상" />
-              </div>
-            </div>
+        <div id="toolbarInline">
+          <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">✎</button>
+          <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">⌫</button>
+          <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가">▣</button>
+
+          <div id="thicknessWrap">
+            <input id="thicknessRange" type="range" min="1" max="48" value="3" aria-label="선 두께 조절" />
           </div>
-        </div>
-        <div class="toolSection">
-          <div class="toolGroup">
-            <button id="undoBtn" class="toolBtn" type="button">↶</button>
-            <button id="redoBtn" class="toolBtn" type="button">↷</button>
-            <button id="clearBtn" class="toolBtn" type="button">✕</button>
-          </div>
+
+          <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택"></button>
+          <input id="paletteInput" type="color" value="#ff3b30" aria-label="색상 선택기" />
+
+          <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
+          <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시하기">↷</button>
+          <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 삭제">✕</button>
         </div>
       </div>
     </section>
+
     <section id="viewerRight">
       <div id="viewerChatBox"><div id="viewerChatInner"></div></div>
       <div id="viewerInputBar">
@@ -474,9 +554,8 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     redoBtn: document.getElementById("redoBtn"),
     clearBtn: document.getElementById("clearBtn"),
     thicknessRange: document.getElementById("thicknessRange"),
-    colorSwatches: Array.from(document.querySelectorAll(".colorSwatch[data-color]")),
-    customColorBtn: document.getElementById("customColorBtn"),
-    customColorInput: document.getElementById("customColorInput"),
+    paletteBtn: document.getElementById("paletteBtn"),
+    paletteInput: document.getElementById("paletteInput"),
     downloadSketchBtn: document.getElementById("downloadSketchBtn"),
     viewerChatBox: document.getElementById("viewerChatBox"),
     viewerChatInner: document.getElementById("viewerChatInner"),
@@ -746,10 +825,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
   function setStrokeColor(color) {
     state.color = color;
-    el.colorSwatches.forEach(function (swatch) {
-      swatch.classList.toggle("active", swatch.dataset.color === color);
-    });
-    document.documentElement.style.setProperty("--custom-color-preview", color);
+    document.documentElement.style.setProperty("--selected-draw-color", color);
+    if (el.paletteInput) {
+      el.paletteInput.value = color;
+    }
   }
 
   function setNoteColor(color) {
@@ -1270,18 +1349,12 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       state.width = Number(el.thicknessRange.value || 3);
     });
 
-    el.colorSwatches.forEach(function (swatch) {
-      swatch.addEventListener("click", function () {
-        setStrokeColor(swatch.dataset.color || "#ff3b30");
-      });
+    el.paletteBtn.addEventListener("click", function () {
+      el.paletteInput.click();
     });
 
-    el.customColorBtn.addEventListener("click", function () {
-      el.customColorInput.click();
-    });
-
-    el.customColorInput.addEventListener("input", function () {
-      setStrokeColor(el.customColorInput.value || "#ff3b30");
+    el.paletteInput.addEventListener("input", function () {
+      setStrokeColor(el.paletteInput.value || "#ff3b30");
     });
 
     ["mousedown", "touchstart"].forEach(function (eventName) {
