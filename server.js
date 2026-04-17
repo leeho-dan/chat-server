@@ -177,7 +177,6 @@ function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName 
   if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
   if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
   if (typeof patch.color === "string") next.color = patch.color;
-
   next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
 
   const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
@@ -211,12 +210,9 @@ io.on("connection", (socket) => {
       socket.data.userName = userName;
 
       const room = getRoom(roomId);
-
       socket.emit("history", room.messages);
 
-      if (ack) {
-        ack({ ok: true, roomId, role, userName });
-      }
+      if (ack) ack({ ok: true, roomId, role, userName });
       socket.emit("joined", { ok: true, roomId, role, userName });
     } catch (error) {
       console.error("join error:", error);
@@ -253,7 +249,6 @@ io.on("connection", (socket) => {
       const room = getRoom(roomId);
       room.messages.push(message);
       trimMessages(room);
-
       io.to(roomId).emit("message", message);
 
       if (ack) ack({ ok: true });
@@ -313,10 +308,7 @@ io.on("connection", (socket) => {
       if (!roomId || !imageId) return;
 
       const room = getRoom(roomId);
-      socket.emit("drawing-history", {
-        imageId,
-        strokes: room.drawings[imageId] || []
-      });
+      socket.emit("drawing-history", { imageId, strokes: room.drawings[imageId] || [] });
     } catch (error) {
       console.error("request-drawing-history error:", error);
     }
@@ -384,7 +376,6 @@ io.on("connection", (socket) => {
 
       const room = getRoom(roomId);
       room.drawings[imageId] = [];
-
       io.to(roomId).emit("clear-drawing", { imageId });
     } catch (error) {
       console.error("clear-drawing error:", error);
@@ -398,10 +389,7 @@ io.on("connection", (socket) => {
       if (!roomId || !imageId) return;
 
       const room = getRoom(roomId);
-      socket.emit("note-history", {
-        imageId,
-        notes: room.notes[imageId] || []
-      });
+      socket.emit("note-history", { imageId, notes: room.notes[imageId] || [] });
     } catch (error) {
       console.error("request-note-history error:", error);
     }
@@ -474,8 +462,8 @@ io.on("connection", (socket) => {
 
       const room = getRoom(roomId);
       room.notes[imageId] = room.notes[imageId] || [];
-
       const note = room.notes[imageId].find((item) => item.id === noteId);
+
       if (!note) {
         if (ack) ack({ ok: false, error: "메모 없음" });
         return;
@@ -485,7 +473,6 @@ io.on("connection", (socket) => {
       Object.assign(note, patch);
 
       io.to(roomId).emit("note-updated", { imageId, noteId, patch });
-
       if (ack) ack({ ok: true });
     } catch (error) {
       console.error("update-note error:", error);
@@ -508,7 +495,6 @@ io.on("connection", (socket) => {
       room.notes[imageId] = room.notes[imageId].filter((item) => item.id !== noteId);
 
       io.to(roomId).emit("note-deleted", { imageId, noteId });
-
       if (ack) ack({ ok: true });
     } catch (error) {
       console.error("delete-note error:", error);
@@ -530,9 +516,7 @@ io.on("connection", (socket) => {
       const userName = sanitizeUserName(socket.data.userName, role);
 
       const room = getRoom(roomId);
-      room.notes[imageId] = notes
-        .map((note) => normalizeNote(note, role, userName))
-        .slice(-100);
+      room.notes[imageId] = notes.map((note) => normalizeNote(note, role, userName)).slice(-100);
 
       io.to(roomId).emit("note-history", {
         imageId,
@@ -557,7 +541,6 @@ io.on("connection", (socket) => {
 
       const room = getRoom(roomId);
       room.notes[imageId] = [];
-
       io.to(roomId).emit("clear-notes", { imageId });
 
       if (ack) ack({ ok: true });
