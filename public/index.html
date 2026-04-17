@@ -27,9 +27,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 input,textarea{outline:none}
 #app{width:100%;height:100%;display:flex;align-items:stretch;justify-content:center}
 #chatCard{
-  width:min(1120px,100%);height:100%;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);
-  border:1px solid rgba(255,255,255,.82);border-radius:var(--radius-xl);box-shadow:var(--shadow);
-  overflow:hidden;display:flex;flex-direction:column;
+  width:min(430px,100%);
+  height:100%;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
 #header{height:44px;flex-shrink:0;border-bottom:1px solid var(--line);background:rgba(255,255,255,.96);display:flex;align-items:center;justify-content:space-between;padding:0 14px}
 #title{font-size:14px;font-weight:800;color:var(--text-soft)}
@@ -67,12 +74,12 @@ input,textarea{outline:none}
 .messageRow{display:flex;flex-direction:column;gap:5px}
 .messageRow.me{align-items:flex-end}
 .messageRow.other{align-items:flex-start}
-.bubble{max-width:min(76%,640px);padding:12px 16px;border-radius:22px;font-size:15px;line-height:1.52;letter-spacing:-.02em;word-break:break-word}
+.bubble{max-width:86%;padding:12px 16px;border-radius:22px;font-size:15px;line-height:1.52;letter-spacing:-.02em;word-break:break-word}
 .messageRow.me .bubble{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff;border-bottom-right-radius:8px;box-shadow:0 8px 20px rgba(36,145,255,.16)}
 .messageRow.other .bubble{background:#fff;border:1px solid var(--line);color:var(--text);border-bottom-left-radius:8px}
 .meta{font-size:10px;color:#95a3b1;padding:0 8px}
-.imageBubble{max-width:min(86%,760px);background:#fff;border:1px solid var(--line);border-radius:22px;padding:8px;cursor:pointer;box-shadow:0 8px 18px rgba(18,36,61,.04)}
-.chatImg{display:block;width:100%;max-width:420px;border-radius:14px}
+.imageBubble{max-width:92%;background:#fff;border:1px solid var(--line);border-radius:22px;padding:8px;cursor:pointer;box-shadow:0 8px 18px rgba(18,36,61,.04)}
+.chatImg{display:block;width:100%;max-width:320px;border-radius:14px}
 .imageHint{margin-top:8px;padding:8px 10px;border-radius:12px;background:#f6fbff;color:#557086;font-size:10px;font-weight:800}
 
 #inputArea{flex-shrink:0;border-top:1px solid var(--line);background:rgba(255,255,255,.97);padding:10px 12px calc(12px + var(--safe-bottom));display:flex;flex-direction:column;gap:8px}
@@ -113,7 +120,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 .noteMarker{position:absolute;min-width:56px;height:42px;padding:0 12px;border-radius:14px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.74);backdrop-filter:blur(8px);border:1px solid rgba(36,145,255,.18);box-shadow:0 10px 18px rgba(18,36,61,.08);transform:translate(-50%,-50%);pointer-events:auto;user-select:none}
 .noteMarker.selected{border-color:rgba(255,139,61,.55);box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.10)}
 .noteMarkerText{max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:var(--text)}
-.noteResize{position:absolute;right:-5px;bottom:-5px;width:14px;height:14px;border-radius:5px;background:#2491ff;box-shadow:0 4px 10px rgba(36,145,255,.18)}
 
 #toolbar{
   flex-shrink:0;
@@ -155,6 +161,15 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   border-radius:10px;
   font-size:13px;
 }
+.toolBtn svg{
+  width:18px;
+  height:18px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
 #thicknessWrap{
   display:flex;
   align-items:center;
@@ -185,7 +200,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   position:relative;
   z-index:1;
   font-size:14px;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.15));
 }
 #paletteInput{
   position:fixed;
@@ -236,7 +250,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 #uploadLoadingText{font-size:13px;font-weight:700;color:var(--text-soft)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* 핵심 수정: embed에서도 quickRequestBar/summaryCard를 숨기지 않음 */
 .embed-mode #chatCard{
   width:100%!important;height:100%!important;border-radius:0!important;border:none!important;box-shadow:none!important
 }
@@ -362,9 +375,29 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
       <div id="toolbar">
         <div id="toolbarInline">
-          <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">✎</button>
-          <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">⌫</button>
-          <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가">▣</button>
+          <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+            </svg>
+          </button>
+
+          <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 20H7"/>
+              <path d="M7 16l8.5-8.5a2.1 2.1 0 0 1 3 0l1 1a2.1 2.1 0 0 1 0 3L14 17"/>
+              <path d="M7 16l-3-3a2.1 2.1 0 0 1 0-3l6.5-6.5"/>
+            </svg>
+          </button>
+
+          <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 3h8l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+              <path d="M16 3v5h5"/>
+              <path d="M9 13h6"/>
+              <path d="M9 17h4"/>
+            </svg>
+          </button>
 
           <div id="thicknessWrap">
             <input id="thicknessRange" type="range" min="1" max="48" value="3" aria-label="선 두께 조절" />
@@ -767,7 +800,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       const popup = window.open(
         url.toString(),
         "designViewerWindow",
-        "width=1280,height=900,resizable=yes,scrollbars=yes"
+        "width=1080,height=860,resizable=yes,scrollbars=yes"
       );
 
       if (!popup) {
@@ -858,9 +891,40 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     ctx.restore();
   }
 
+  function addNoteAtPoint(x, y) {
+    if (!state.currentViewerImageId) return;
+
+    const note = {
+      id: createUuid(),
+      x: Math.min(0.94, Math.max(0.06, x)),
+      y: Math.min(0.92, Math.max(0.08, y)),
+      width: 0.16,
+      height: 0.1,
+      text: "",
+      color: state.noteColor,
+      author: state.role,
+      updatedAt: Date.now(),
+      updatedByRole: state.role,
+      updatedByName: state.userName
+    };
+
+    state.notes.push(note);
+    renderNotes();
+
+    if (canUseRealtime()) {
+      socket.emit("add-note", {
+        imageId: state.currentViewerImageId,
+        note: note
+      });
+    }
+
+    openNoteEditor(note.id);
+  }
+
   function startDrawing(event) {
     if (state.mode === "text") return;
     if (!state.currentViewerImageId) return;
+
     state.isDrawing = true;
     state.currentStroke = [{
       x: getPointFromEvent(event).x,
@@ -935,12 +999,9 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       text.className = "noteMarkerText";
       text.textContent = note.text || "메모";
 
-      const resize = document.createElement("div");
-      resize.className = "noteResize";
-
       marker.appendChild(text);
-      marker.appendChild(resize);
       marker.addEventListener("click", function (event) {
+        event.preventDefault();
         event.stopPropagation();
         openNoteEditor(note.id);
       });
@@ -978,6 +1039,12 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     el.noteEditorOverlay.classList.add("open");
     el.noteEditorOverlay.setAttribute("aria-hidden", "false");
     setNoteSaveBadge("ready");
+
+    requestAnimationFrame(function () {
+      el.noteEditorTextarea.focus();
+      el.noteEditorTextarea.setSelectionRange(el.noteEditorTextarea.value.length, el.noteEditorTextarea.value.length);
+    });
+
     renderNotes();
   }
 
@@ -986,36 +1053,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     el.noteEditorOverlay.setAttribute("aria-hidden", "true");
     state.activeNoteId = "";
     renderNotes();
-  }
-
-  function addNoteAtCenter() {
-    if (!state.currentViewerImageId) return;
-
-    const note = {
-      id: createUuid(),
-      x: 0.5,
-      y: 0.5,
-      width: 0.16,
-      height: 0.1,
-      text: "",
-      color: state.noteColor,
-      author: state.role,
-      updatedAt: Date.now(),
-      updatedByRole: state.role,
-      updatedByName: state.userName
-    };
-
-    state.notes.push(note);
-    renderNotes();
-
-    if (canUseRealtime()) {
-      socket.emit("add-note", {
-        imageId: state.currentViewerImageId,
-        note: note
-      });
-    }
-
-    openNoteEditor(note.id);
   }
 
   function queueNoteSave(note, patch) {
@@ -1068,7 +1105,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     if (state.summary.productName) parts.push("제품: " + state.summary.productName);
     if (state.summary.requestTypes.length) parts.push("요청: " + state.summary.requestTypes.join(", "));
     if (state.summary.detailNotes.length) parts.push("상세: " + state.summary.detailNotes.slice(-3).join(" / "));
-    return parts.join("\n");
+    return parts.join("\\n");
   }
 
   function buildQuoteText() {
@@ -1078,7 +1115,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     if (state.summary.requestTypes.length) parts.push("수정 요청: " + state.summary.requestTypes.join(", "));
     if (state.summary.detailNotes.length) parts.push("상세 요청: " + state.summary.detailNotes.slice(-3).join(" / "));
     if (el.phoneInput.value.trim()) parts.push("연락처: " + el.phoneInput.value.trim());
-    return parts.join("\n");
+    return parts.join("\\n");
   }
 
   function bindSocket() {
@@ -1273,10 +1310,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
     el.penBtn.addEventListener("click", function () { setMode("draw"); });
     el.eraserBtn.addEventListener("click", function () { setMode("erase"); });
-    el.addTextBtn.addEventListener("click", function () {
-      setMode("text");
-      addNoteAtCenter();
-    });
+    el.addTextBtn.addEventListener("click", function () { setMode("text"); });
 
     el.undoBtn.addEventListener("click", function () {
       if (!state.strokes.length) return;
@@ -1341,6 +1375,16 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
         if (state.mode === "text") return;
         endDrawing();
       }, { passive: true });
+    });
+
+    el.drawCanvas.addEventListener("click", function (event) {
+      if (state.mode !== "text") return;
+      if (!state.currentViewerImageId) return;
+
+      const rect = el.drawCanvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+      addNoteAtPoint(x, y);
     });
 
     el.noteColorSwatches.forEach(function (swatch) {
