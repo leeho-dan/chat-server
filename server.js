@@ -194,30 +194,15 @@ function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName 
 
 async function ensureMongoConnected() {
   const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error("MONGODB_URI 환경변수가 없습니다.");
-  }
+  if (!uri) throw new Error("MONGODB_URI 환경변수가 없습니다.");
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) return;
 
-  if (mongoose.connection.readyState === 1) {
-    return;
-  }
-
-  if (mongoose.connection.readyState === 2) {
-    return;
-  }
-
-  await mongoose.connect(uri, {
-    autoIndex: true
-  });
-
+  await mongoose.connect(uri, { autoIndex: true });
   console.log("[MONGO] connected");
 }
 
 async function getMessageHistory(roomId) {
-  return Message.find({ roomId })
-    .sort({ time: 1 })
-    .limit(300)
-    .lean();
+  return Message.find({ roomId }).sort({ time: 1 }).limit(300).lean();
 }
 
 async function appendMessage(roomId, message) {
@@ -274,10 +259,7 @@ async function clearDrawingHistory(roomId, imageId) {
 }
 
 async function getNotes(roomId, imageId) {
-  const docs = await Note.find({ roomId, imageId })
-    .sort({ updatedAt: 1 })
-    .lean();
-
+  const docs = await Note.find({ roomId, imageId }).sort({ updatedAt: 1 }).lean();
   return docs.map((note) => ({
     id: note.noteId,
     x: note.x,
@@ -294,12 +276,7 @@ async function getNotes(roomId, imageId) {
 }
 
 async function addOrGetNote(roomId, imageId, normalized) {
-  const existing = await Note.findOne({
-    roomId,
-    imageId,
-    noteId: normalized.noteId
-  }).lean();
-
+  const existing = await Note.findOne({ roomId, imageId, noteId: normalized.noteId }).lean();
   if (existing) {
     return {
       id: existing.noteId,
@@ -316,11 +293,7 @@ async function addOrGetNote(roomId, imageId, normalized) {
     };
   }
 
-  const created = await Note.create({
-    roomId,
-    imageId,
-    ...normalized
-  });
+  const created = await Note.create({ roomId, imageId, ...normalized });
 
   const count = await Note.countDocuments({ roomId, imageId });
   if (count > 100) {
@@ -404,16 +377,13 @@ app.post(
   async (req, res) => {
     try {
       if (!hasCloudinaryEnv) {
-        return res.status(500).json({
-          error: "Cloudinary 환경변수가 설정되지 않았습니다."
-        });
+        return res.status(500).json({ error: "Cloudinary 환경변수가 설정되지 않았습니다." });
       }
 
       if (!req.file) {
         return res.status(400).json({ error: "파일 없음" });
       }
 
-      const ext = path.extname(req.file.originalname || "").toLowerCase() || ".png";
       const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
 
       const uploaded = await cloudinary.uploader.upload(dataUri, {
@@ -424,8 +394,7 @@ app.post(
 
       return res.json({
         success: true,
-        url: uploaded.secure_url,
-        ext
+        url: uploaded.secure_url
       });
     } catch (error) {
       console.error("upload error:", error);
@@ -692,7 +661,6 @@ io.on("connection", (socket) => {
       }
 
       io.to(roomId).emit("note-updated", { imageId, note: updated });
-
       if (ack) ack({ ok: true, note: updated });
     } catch (error) {
       console.error("update-note error:", error);
@@ -712,7 +680,6 @@ io.on("connection", (socket) => {
 
       await deleteNote(roomId, imageId, noteId);
       io.to(roomId).emit("note-deleted", { imageId, noteId });
-
       if (ack) ack({ ok: true });
     } catch (error) {
       console.error("delete-note error:", error);
