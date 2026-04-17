@@ -206,7 +206,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   position:relative;z-index:30
 }
 #viewerTopLeft{min-width:0;display:flex;align-items:center}
-#viewerSubtitle{display:none}
 #viewerActions{display:flex;gap:6px;flex-shrink:0;position:relative;z-index:31}
 .viewerBtn{
   min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
@@ -256,7 +255,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   position:absolute;min-width:56px;height:42px;padding:0 12px;border-radius:14px;display:flex;align-items:center;
   gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
   border:1px solid rgba(36,145,255,.22);box-shadow:0 10px 18px rgba(18,36,61,.10);
-  transform:translate(-50%,-50%);pointer-events:auto;user-select:none;z-index:12
+  transform:translate(-50%,-50%);pointer-events:auto;user-select:none;z-index:12;touch-action:none
 }
 .noteMarker.selected{
   border-color:rgba(255,139,61,.55);
@@ -298,6 +297,12 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   border:1px solid var(--line);flex:0 0 auto;position:relative;z-index:21
 }
 #thicknessRange{width:88px}
+
+#paletteWrap{
+  position:relative;
+  z-index:40;
+  flex:0 0 auto;
+}
 #paletteBtn{
   position:relative;
   overflow:hidden;
@@ -329,8 +334,49 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   z-index:3;
   pointer-events:none;
 }
-#paletteInput{
-  position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:.01;pointer-events:none
+#colorPopover{
+  position:absolute;
+  left:0;
+  bottom:48px;
+  display:none;
+  width:172px;
+  padding:10px;
+  border-radius:16px;
+  background:rgba(255,255,255,.98);
+  border:1px solid #dfe7f0;
+  box-shadow:0 18px 36px rgba(18,36,61,.16);
+  backdrop-filter:blur(10px);
+}
+#colorPopover.open{display:block}
+#colorPopoverGrid{
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:8px;
+}
+.colorChip{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.95);
+  box-shadow:0 0 0 1px rgba(18,36,61,.12);
+}
+.colorChip.active{
+  box-shadow:0 0 0 3px rgba(36,145,255,.20), 0 0 0 1px rgba(18,36,61,.12);
+}
+.colorChip.transparentIcon{
+  background:linear-gradient(135deg,#ffffff 0%,#e9eef4 100%);
+  position:relative;
+}
+.colorChip.transparentIcon::after{
+  content:"+";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#425466;
+  font-size:14px;
+  font-weight:900;
 }
 
 .noteColorSwatch{
@@ -432,7 +478,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     flex:0 0 auto!important;
     min-height:auto!important;
     padding:8px 10px 10px!important;
-    overflow:hidden!important;
+    overflow:visible!important;
   }
   #toolbarInline{gap:6px!important}
   #viewerRight{display:flex!important;flex-direction:column!important;flex:2 1 0!important;min-height:0!important;border-top:1px solid var(--line)!important;border-left:none!important}
@@ -440,6 +486,12 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   #viewerInputBar{flex-shrink:0!important;border-top:1px solid var(--line)!important;padding:8px 10px calc(10px + var(--safe-bottom))!important;display:flex!important;gap:8px!important}
   #viewerMsgInput{flex:1!important;height:44px!important;border-radius:14px!important;padding:0 12px!important;font-size:15px!important}
   #viewerSendBtn{width:44px!important;height:44px!important;border-radius:14px!important;font-size:18px!important}
+  #colorPopover{
+    left:auto;
+    right:0;
+    bottom:46px;
+    width:168px;
+  }
 }
 </style>
 </head>
@@ -503,9 +555,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   <div id="viewerTopbar">
     <div id="viewerTopLeft"></div>
     <div id="viewerActions">
-      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="다운로드">
-        ↓
-      </button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="다운로드">↓</button>
       <button id="viewerTitle" class="viewerBtn" type="button" aria-label="스케치 종료">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M18 6L6 18"></path>
@@ -556,21 +606,44 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
             <input id="thicknessRange" type="range" min="1" max="48" value="3" aria-label="선 두께 조절" />
           </div>
 
-          <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택">
-            <span id="palettePreview"></span>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3a9 9 0 1 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-1a1.4 1.4 0 0 1 0-2.8H15A6 6 0 0 0 15 3h-3z"></path>
-              <circle cx="7.5" cy="10" r="1"></circle>
-              <circle cx="10" cy="7.5" r="1"></circle>
-              <circle cx="14" cy="7.5" r="1"></circle>
-              <circle cx="16.5" cy="10" r="1"></circle>
-            </svg>
-          </button>
-          <input id="paletteInput" type="color" value="#ff3b30" aria-label="색상 선택기" />
+          <div id="paletteWrap">
+            <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택">
+              <span id="palettePreview"></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3a9 9 0 1 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-1a1.4 1.4 0 0 1 0-2.8H15A6 6 0 0 0 15 3h-3z"></path>
+                <circle cx="7.5" cy="10" r="1"></circle>
+                <circle cx="10" cy="7.5" r="1"></circle>
+                <circle cx="14" cy="7.5" r="1"></circle>
+                <circle cx="16.5" cy="10" r="1"></circle>
+              </svg>
+            </button>
+
+            <div id="colorPopover" aria-hidden="true">
+              <div id="colorPopoverGrid">
+                <button class="colorChip" type="button" data-color="#ff3b30" style="background:#ff3b30" aria-label="빨강"></button>
+                <button class="colorChip" type="button" data-color="#ff9500" style="background:#ff9500" aria-label="주황"></button>
+                <button class="colorChip" type="button" data-color="#ffcc00" style="background:#ffcc00" aria-label="노랑"></button>
+                <button class="colorChip" type="button" data-color="#34c759" style="background:#34c759" aria-label="초록"></button>
+                <button class="colorChip" type="button" data-color="#00c7be" style="background:#00c7be" aria-label="민트"></button>
+
+                <button class="colorChip" type="button" data-color="#32ade6" style="background:#32ade6" aria-label="하늘"></button>
+                <button class="colorChip" type="button" data-color="#007aff" style="background:#007aff" aria-label="파랑"></button>
+                <button class="colorChip" type="button" data-color="#5856d6" style="background:#5856d6" aria-label="남색"></button>
+                <button class="colorChip" type="button" data-color="#af52de" style="background:#af52de" aria-label="보라"></button>
+                <button class="colorChip" type="button" data-color="#ff2d55" style="background:#ff2d55" aria-label="핑크"></button>
+
+                <button class="colorChip" type="button" data-color="#8e8e93" style="background:#8e8e93" aria-label="회색"></button>
+                <button class="colorChip" type="button" data-color="#5a5a5a" style="background:#5a5a5a" aria-label="진회색"></button>
+                <button class="colorChip" type="button" data-color="#000000" style="background:#000000" aria-label="검정"></button>
+                <button class="colorChip" type="button" data-color="#ffffff" style="background:#ffffff" aria-label="흰색"></button>
+                <button class="colorChip transparentIcon" type="button" data-color="#6e56cf" aria-label="포인트 보라"></button>
+              </div>
+            </div>
+          </div>
 
           <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
           <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시하기">↷</button>
-          <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 삭제">✕</button>
+          <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 스케치 삭제" title="전체 스케치 삭제">🗑</button>
         </div>
       </div>
     </section>
@@ -675,9 +748,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   const params = new URLSearchParams(location.search);
   const queryRoomId = (params.get("roomId") || params.get("room") || "").trim();
   const queryUserName = (params.get("userName") || params.get("username") || params.get("name") || "").trim();
-  const isEmbed = params.get("embed") === "1";
-  const isPopupViewer = params.get("viewer") === "1";
-  const isStandaloneDesktop = window.top === window.self && window.matchMedia("(min-width: 901px)").matches;
 
   const state = {
     roomId: queryRoomId || safeStorageGet(STORAGE_KEYS.roomId) || createUuid(),
@@ -705,8 +775,18 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     joined: false,
     lastTapAt: 0,
     lastTapX: 0,
-    lastTapY: 0
+    lastTapY: 0,
+    draggingNoteId: "",
+    dragOffsetX: 0,
+    dragOffsetY: 0,
+    colorPopoverOpen: false
   };
+
+  const PRESET_COLORS = [
+    "#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be",
+    "#32ade6","#007aff","#5856d6","#af52de","#ff2d55",
+    "#8e8e93","#5a5a5a","#000000","#ffffff","#6e56cf"
+  ];
 
   safeStorageSet(STORAGE_KEYS.roomId, state.roomId);
   safeStorageSet(STORAGE_KEYS.userName, state.userName);
@@ -750,7 +830,9 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     thicknessRange: document.getElementById("thicknessRange"),
     paletteBtn: document.getElementById("paletteBtn"),
     palettePreview: document.getElementById("palettePreview"),
-    paletteInput: document.getElementById("paletteInput"),
+    paletteWrap: document.getElementById("paletteWrap"),
+    colorPopover: document.getElementById("colorPopover"),
+    colorChips: Array.from(document.querySelectorAll(".colorChip")),
     downloadSketchBtn: document.getElementById("downloadSketchBtn"),
     viewerChatBox: document.getElementById("viewerChatBox"),
     viewerChatInner: document.getElementById("viewerChatInner"),
@@ -967,39 +1049,19 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     state.currentViewerImageUrl = imageUrl;
     el.viewerImage.src = imageUrl;
 
-    const shouldOpenPopup = isEmbed || (!isPopupViewer && !isEmbed && isStandaloneDesktop);
-
-    if (shouldOpenPopup) {
-      const url = new URL(location.href);
-      url.searchParams.set("viewer", "1");
-      url.searchParams.set("imageId", imageId);
-      url.searchParams.set("imageUrl", imageUrl);
-      url.searchParams.set("roomId", state.roomId);
-      url.searchParams.set("userName", state.userName);
-      url.searchParams.set("embed", "0");
-
-      const popup = window.open(
-        url.toString(),
-        "designViewerWindow",
-        "width=1080,height=860,resizable=yes,scrollbars=yes"
-      );
-
-      if (!popup) {
-        alert("팝업이 차단되었습니다. 브라우저에서 팝업을 허용해 주세요.");
-      } else {
-        return;
-      }
-    }
-
     el.viewerOverlay.classList.add("open");
     el.viewerOverlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("viewer-inline-open");
-    resizeCanvas();
-    requestDrawingHistory();
-    requestNoteHistory();
+
+    requestAnimationFrame(function () {
+      resizeCanvas();
+      requestDrawingHistory();
+      requestNoteHistory();
+    });
   }
 
   function closeViewer() {
+    closeColorPopover();
     el.viewerOverlay.classList.remove("open");
     el.viewerOverlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("viewer-inline-open");
@@ -1024,15 +1086,35 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   function setStrokeColor(color) {
     state.color = color;
     document.documentElement.style.setProperty("--selected-draw-color", color);
-    el.paletteInput.value = color;
 
     if (el.palettePreview) {
       el.palettePreview.style.background = color;
     }
 
+    el.colorChips.forEach(function (chip) {
+      chip.classList.toggle("active", chip.dataset.color === color);
+    });
+
     if (el.brushCursor && el.brushCursor.style.display !== "none") {
       updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
     }
+  }
+
+  function openColorPopover() {
+    state.colorPopoverOpen = true;
+    el.colorPopover.classList.add("open");
+    el.colorPopover.setAttribute("aria-hidden", "false");
+  }
+
+  function closeColorPopover() {
+    state.colorPopoverOpen = false;
+    el.colorPopover.classList.remove("open");
+    el.colorPopover.setAttribute("aria-hidden", "true");
+  }
+
+  function toggleColorPopover() {
+    if (state.colorPopoverOpen) closeColorPopover();
+    else openColorPopover();
   }
 
   function setNoteColor(color) {
@@ -1071,10 +1153,12 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
   function getPointFromEvent(event) {
     const rect = el.drawCanvas.getBoundingClientRect();
-    const source = event.touches && event.touches[0] ? event.touches[0] : event;
+    const pointSource = event.touches && event.touches[0]
+      ? event.touches[0]
+      : (event.changedTouches && event.changedTouches[0] ? event.changedTouches[0] : event);
     return {
-      x: source.clientX - rect.left,
-      y: source.clientY - rect.top
+      x: pointSource.clientX - rect.left,
+      y: pointSource.clientY - rect.top
     };
   }
 
@@ -1152,8 +1236,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
         note: note
       });
     }
+  }
 
-    openNoteEditor(note.id);
+  function addNoteAtCenter() {
+    addNoteAtPoint(0.5, 0.5);
   }
 
   function openNoteEditor(noteId) {
@@ -1167,7 +1253,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     el.noteEditorAuthor.textContent = note.updatedByName || "수정자 없음";
     el.noteEditorOverlay.classList.add("open");
     el.noteEditorOverlay.setAttribute("aria-hidden", "false");
-    el.noteEditorOverlay.style.zIndex = "5000";
     setNoteSaveBadge("ready");
 
     requestAnimationFrame(function () {
@@ -1217,6 +1302,58 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
         if (ack && ack.ok) setNoteSaveBadge("saved");
       });
     }, 180);
+  }
+
+  function beginNoteDrag(noteId, clientX, clientY) {
+    const note = state.notes.find(function (item) { return item.id === noteId; });
+    if (!note) return;
+
+    const rect = el.imageStage.getBoundingClientRect();
+    const noteX = note.x * rect.width;
+    const noteY = note.y * rect.height;
+
+    state.draggingNoteId = noteId;
+    state.dragOffsetX = clientX - rect.left - noteX;
+    state.dragOffsetY = clientY - rect.top - noteY;
+  }
+
+  function moveNoteDrag(clientX, clientY) {
+    if (!state.draggingNoteId) return;
+
+    const note = state.notes.find(function (item) { return item.id === state.draggingNoteId; });
+    if (!note) return;
+
+    const rect = el.imageStage.getBoundingClientRect();
+    let nextX = (clientX - rect.left - state.dragOffsetX) / rect.width;
+    let nextY = (clientY - rect.top - state.dragOffsetY) / rect.height;
+
+    nextX = Math.min(0.94, Math.max(0.06, nextX));
+    nextY = Math.min(0.92, Math.max(0.08, nextY));
+
+    note.x = nextX;
+    note.y = nextY;
+    note.updatedAt = Date.now();
+    note.updatedByName = state.userName;
+    note.updatedByRole = state.role;
+
+    renderNotes();
+  }
+
+  function endNoteDrag() {
+    if (!state.draggingNoteId) return;
+
+    const note = state.notes.find(function (item) { return item.id === state.draggingNoteId; });
+    if (note) {
+      queueNoteSave(note, {
+        x: note.x,
+        y: note.y,
+        updatedAt: note.updatedAt,
+        updatedByName: note.updatedByName,
+        updatedByRole: note.updatedByRole
+      });
+    }
+
+    state.draggingNoteId = "";
   }
 
   function startDrawing(event) {
@@ -1299,8 +1436,19 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       const text = document.createElement("div");
       text.className = "noteMarkerText";
       text.textContent = note.text || "메모";
-
       marker.appendChild(text);
+
+      marker.addEventListener("mousedown", function (event) {
+        event.stopPropagation();
+        beginNoteDrag(note.id, event.clientX, event.clientY);
+      });
+
+      marker.addEventListener("touchstart", function (event) {
+        const touch = event.touches && event.touches[0];
+        if (!touch) return;
+        event.stopPropagation();
+        beginNoteDrag(note.id, touch.clientX, touch.clientY);
+      }, { passive: true });
 
       marker.addEventListener("dblclick", function (event) {
         event.preventDefault();
@@ -1571,7 +1719,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
     el.penBtn.addEventListener("click", function () { setMode("draw"); });
     el.eraserBtn.addEventListener("click", function () { setMode("erase"); });
-    el.addTextBtn.addEventListener("click", function () { setMode("text"); });
+    el.addTextBtn.addEventListener("click", function () {
+      setMode("text");
+      addNoteAtCenter();
+    });
 
     el.undoBtn.addEventListener("click", function () {
       if (!state.strokes.length) return;
@@ -1613,11 +1764,22 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     el.paletteBtn.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();
-      el.paletteInput.click();
+      toggleColorPopover();
     });
 
-    el.paletteInput.addEventListener("input", function () {
-      setStrokeColor(el.paletteInput.value || "#ff3b30");
+    el.colorChips.forEach(function (chip) {
+      chip.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        setStrokeColor(chip.dataset.color || "#ff3b30");
+        closeColorPopover();
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!el.paletteWrap.contains(event.target)) {
+        closeColorPopover();
+      }
     });
 
     el.drawCanvas.addEventListener("mouseenter", function () {
@@ -1653,41 +1815,23 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       }, { passive: true });
     });
 
-    el.drawCanvas.addEventListener("dblclick", function (event) {
-      if (state.mode !== "text") return;
-      if (!state.currentViewerImageId) return;
-
-      const rect = el.drawCanvas.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width;
-      const y = (event.clientY - rect.top) / rect.height;
-      addNoteAtPoint(x, y);
+    window.addEventListener("mousemove", function (event) {
+      moveNoteDrag(event.clientX, event.clientY);
     });
 
-    el.drawCanvas.addEventListener("touchend", function (event) {
-      if (state.mode !== "text") return;
-      if (!state.currentViewerImageId) return;
+    window.addEventListener("mouseup", function () {
+      endNoteDrag();
+    });
 
-      const touch = event.changedTouches && event.changedTouches[0];
+    window.addEventListener("touchmove", function (event) {
+      const touch = event.touches && event.touches[0];
       if (!touch) return;
+      moveNoteDrag(touch.clientX, touch.clientY);
+    }, { passive: true });
 
-      const now = Date.now();
-      const dx = Math.abs((touch.clientX || 0) - state.lastTapX);
-      const dy = Math.abs((touch.clientY || 0) - state.lastTapY);
-
-      if (now - state.lastTapAt < DOUBLE_TAP_MS && dx < 24 && dy < 24) {
-        event.preventDefault();
-        const rect = el.drawCanvas.getBoundingClientRect();
-        const x = (touch.clientX - rect.left) / rect.width;
-        const y = (touch.clientY - rect.top) / rect.height;
-        addNoteAtPoint(x, y);
-        state.lastTapAt = 0;
-        return;
-      }
-
-      state.lastTapAt = now;
-      state.lastTapX = touch.clientX || 0;
-      state.lastTapY = touch.clientY || 0;
-    }, { passive: false });
+    window.addEventListener("touchend", function () {
+      endNoteDrag();
+    });
 
     el.noteColorSwatches.forEach(function (swatch) {
       swatch.addEventListener("click", function () {
@@ -1757,32 +1901,12 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     });
   }
 
-  function bootstrapViewerFromQuery() {
-    const imageId = (params.get("imageId") || "").trim();
-    const imageUrl = (params.get("imageUrl") || "").trim();
-    if (!isPopupViewer || !imageId || !imageUrl) return;
-
-    state.currentViewerImageId = imageId;
-    state.currentViewerImageUrl = imageUrl;
-    el.viewerImage.src = imageUrl;
-    el.viewerOverlay.classList.add("open");
-    el.viewerOverlay.setAttribute("aria-hidden", "false");
-    document.body.classList.add("viewer-inline-open");
-
-    requestAnimationFrame(function () {
-      resizeCanvas();
-      requestDrawingHistory();
-      requestNoteHistory();
-    });
-  }
-
   updateSummaryUI();
   setStrokeColor(state.color);
   setNoteColor(state.noteColor);
   syncConnectionUI();
   bindEvents();
   bindSocket();
-  bootstrapViewerFromQuery();
 })();
 </script>
 </body>
