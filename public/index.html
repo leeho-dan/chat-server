@@ -202,23 +202,27 @@ input,textarea{outline:none}
 body.viewer-inline-open{overflow:hidden;touch-action:none}
 #viewerTopbar{
   height:52px;flex-shrink:0;border-bottom:1px solid var(--line);background:rgba(255,255,255,.96);
-  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:0 10px
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:0 10px;
+  position:relative;z-index:30
 }
 #viewerTopLeft{min-width:0;display:flex;align-items:center}
-#viewerTitle{border:none;background:transparent;padding:0;font-size:15px;font-weight:800;color:var(--text);cursor:pointer}
 #viewerSubtitle{display:none}
-#viewerActions{display:flex;gap:6px;flex-shrink:0}
+#viewerActions{display:flex;gap:6px;flex-shrink:0;position:relative;z-index:31}
 .viewerBtn{
   min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
-  display:flex;align-items:center;justify-content:center;font-weight:800
+  display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;z-index:31
 }
+.viewerBtn svg{
+  width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round
+}
+
 #viewerMain{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)}
-#viewerLeft{min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:#f8fbff}
-#canvasWrap{flex:1;min-height:0;padding:10px;display:flex;align-items:center;justify-content:center}
+#viewerLeft{min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:#f8fbff;position:relative;z-index:5}
+#canvasWrap{flex:1;min-height:0;padding:10px;display:flex;align-items:center;justify-content:center;position:relative;z-index:6}
 #imageStage{
   position:relative;width:100%;height:min(100%,760px);min-height:420px;border-radius:18px;
   background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,251,255,.96));
-  border:1px solid #dfe9f3;box-shadow:0 18px 38px rgba(18,36,61,.08);overflow:hidden
+  border:1px solid #dfe9f3;box-shadow:0 18px 38px rgba(18,36,61,.08);overflow:hidden;z-index:7
 }
 #viewerImage{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:84%;max-height:84%;
@@ -250,13 +254,13 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 .noteMarker{
   position:absolute;min-width:56px;height:42px;padding:0 12px;border-radius:14px;display:flex;align-items:center;
-  gap:6px;background:rgba(255,255,255,.74);backdrop-filter:blur(8px);
-  border:1px solid rgba(36,145,255,.18);box-shadow:0 10px 18px rgba(18,36,61,.08);
-  transform:translate(-50%,-50%);pointer-events:auto;user-select:none
+  gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  border:1px solid rgba(36,145,255,.22);box-shadow:0 10px 18px rgba(18,36,61,.10);
+  transform:translate(-50%,-50%);pointer-events:auto;user-select:none;z-index:12
 }
 .noteMarker.selected{
   border-color:rgba(255,139,61,.55);
-  box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.10)
+  box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.12)
 }
 .noteMarkerText{
   max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:var(--text)
@@ -267,6 +271,8 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   border-top:1px solid var(--line);
   background:#fff;
   padding:10px 12px 12px;
+  position:relative;
+  z-index:20;
 }
 #toolbarInline{
   display:flex;
@@ -279,7 +285,8 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 #toolbarInline::-webkit-scrollbar{display:none}
 .toolBtn{
   min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
-  display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;position:relative
+  display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;position:relative;
+  z-index:21
 }
 .toolBtn.active{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
 .toolBtnSmall{min-width:32px;width:32px;height:32px;border-radius:10px;font-size:13px}
@@ -288,7 +295,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 #thicknessWrap{
   display:flex;align-items:center;padding:0 8px;height:40px;border-radius:12px;background:#f6faff;
-  border:1px solid var(--line);flex:0 0 auto
+  border:1px solid var(--line);flex:0 0 auto;position:relative;z-index:21
 }
 #thicknessRange{width:88px}
 #paletteBtn{
@@ -307,6 +314,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   stroke-width:1.8;
   stroke-linecap:round;
   stroke-linejoin:round;
+  pointer-events:none;
 }
 #palettePreview{
   position:absolute;
@@ -319,6 +327,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   border:1px solid rgba(255,255,255,.92);
   box-shadow:0 1px 4px rgba(18,36,61,.16);
   z-index:3;
+  pointer-events:none;
 }
 #paletteInput{
   position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:.01;pointer-events:none
@@ -329,13 +338,13 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 .noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
 
-#viewerRight{display:flex;flex-direction:column;min-height:0}
+#viewerRight{display:flex;flex-direction:column;min-height:0;position:relative;z-index:6}
 #viewerChatBox{flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fbfdff}
 #viewerChatInner{display:flex;flex-direction:column;gap:10px}
 #viewerChatInner .meta{display:none}
 #viewerInputBar{
   flex-shrink:0;border-top:1px solid var(--line);padding:12px 14px calc(14px + var(--safe-bottom));
-  background:#fff;display:flex;gap:10px
+  background:#fff;display:flex;gap:10px;position:relative;z-index:20
 }
 #viewerMsgInput{flex:1;height:46px;border-radius:16px;padding:0 14px;font-size:15px}
 #viewerSendBtn{
@@ -344,7 +353,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 
 #noteEditorOverlay{
-  position:fixed;inset:0;z-index:220;display:none;flex-direction:column;width:100vw;height:100vh;
+  position:fixed;inset:0;z-index:5000;display:none;flex-direction:column;width:100vw;height:100vh;
   background:rgba(245,248,252,.99)
 }
 #noteEditorOverlay.open{display:flex}
@@ -492,13 +501,17 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
 <div id="viewerOverlay" aria-hidden="true">
   <div id="viewerTopbar">
-    <div id="viewerTopLeft">
-      <button id="viewerTitle" type="button" aria-label="스케치 종료">스케치 종료</button>
-      <div id="viewerSubtitle">이미지 검토</div>
-    </div>
-    <div id="viewerStats"></div>
+    <div id="viewerTopLeft"></div>
     <div id="viewerActions">
-      <button id="downloadSketchBtn" class="viewerBtn" type="button">↓</button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="다운로드">
+        ↓
+      </button>
+      <button id="viewerTitle" class="viewerBtn" type="button" aria-label="스케치 종료">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -613,6 +626,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 (function () {
   const STORAGE_KEYS = { roomId: "roomId", userName: "userName", role: "role", phone: "phone" };
   const MAX_NOTE_CHARS = 500;
+  const DOUBLE_TAP_MS = 320;
 
   function safeStorageGet(key) {
     try { return localStorage.getItem(key); } catch (e) { return ""; }
@@ -688,7 +702,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     noteSaveTimer: null,
     uploadBusy: false,
     connected: false,
-    joined: false
+    joined: false,
+    lastTapAt: 0,
+    lastTapX: 0,
+    lastTapY: 0
   };
 
   safeStorageSet(STORAGE_KEYS.roomId, state.roomId);
@@ -719,7 +736,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
     viewerOverlay: document.getElementById("viewerOverlay"),
     viewerTitle: document.getElementById("viewerTitle"),
-    viewerSubtitle: document.getElementById("viewerSubtitle"),
     viewerImage: document.getElementById("viewerImage"),
     imageStage: document.getElementById("imageStage"),
     drawCanvas: document.getElementById("drawCanvas"),
@@ -950,7 +966,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     state.currentViewerImageId = imageId;
     state.currentViewerImageUrl = imageUrl;
     el.viewerImage.src = imageUrl;
-    el.viewerSubtitle.textContent = imageUrl.split("/").pop() || "이미지 검토";
 
     const shouldOpenPopup = isEmbed || (!isPopupViewer && !isEmbed && isStandaloneDesktop);
 
@@ -1141,6 +1156,69 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     openNoteEditor(note.id);
   }
 
+  function openNoteEditor(noteId) {
+    state.activeNoteId = noteId;
+    const note = state.notes.find(function (item) { return item.id === noteId; });
+    if (!note) return;
+
+    setNoteColor(note.color || "#fff7c2");
+    el.noteEditorTextarea.value = note.text || "";
+    el.noteEditorTimestamp.textContent = note.updatedAt ? new Date(note.updatedAt).toLocaleString("ko-KR") : "최종 수정 없음";
+    el.noteEditorAuthor.textContent = note.updatedByName || "수정자 없음";
+    el.noteEditorOverlay.classList.add("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "false");
+    el.noteEditorOverlay.style.zIndex = "5000";
+    setNoteSaveBadge("ready");
+
+    requestAnimationFrame(function () {
+      el.noteEditorTextarea.focus();
+      el.noteEditorTextarea.setSelectionRange(el.noteEditorTextarea.value.length, el.noteEditorTextarea.value.length);
+    });
+
+    renderNotes();
+  }
+
+  function closeNoteEditor() {
+    el.noteEditorOverlay.classList.remove("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "true");
+    state.activeNoteId = "";
+    renderNotes();
+  }
+
+  function setNoteSaveBadge(status) {
+    el.noteEditorSaveBadge.className = "";
+    el.noteEditorSaveBadge.id = "noteEditorSaveBadge";
+    if (status === "pending") {
+      el.noteEditorSaveBadge.classList.add("pending");
+      el.noteEditorSaveBadge.textContent = "저장 중";
+    } else if (status === "saved") {
+      el.noteEditorSaveBadge.classList.add("saved");
+      el.noteEditorSaveBadge.textContent = "저장됨";
+    } else if (status === "offline") {
+      el.noteEditorSaveBadge.classList.add("offline");
+      el.noteEditorSaveBadge.textContent = "오프라인";
+    } else {
+      el.noteEditorSaveBadge.textContent = "준비됨";
+    }
+  }
+
+  function queueNoteSave(note, patch) {
+    clearTimeout(state.noteSaveTimer);
+    setNoteSaveBadge(canUseRealtime() ? "pending" : "offline");
+
+    state.noteSaveTimer = setTimeout(function () {
+      if (!canUseRealtime()) return;
+
+      socket.emit("update-note", {
+        imageId: state.currentViewerImageId,
+        noteId: note.id,
+        patch: patch
+      }, function (ack) {
+        if (ack && ack.ok) setNoteSaveBadge("saved");
+      });
+    }, 180);
+  }
+
   function startDrawing(event) {
     if (state.mode === "text") return;
     if (!state.currentViewerImageId) return;
@@ -1223,76 +1301,36 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       text.textContent = note.text || "메모";
 
       marker.appendChild(text);
-      marker.addEventListener("click", function (event) {
+
+      marker.addEventListener("dblclick", function (event) {
         event.preventDefault();
         event.stopPropagation();
         openNoteEditor(note.id);
       });
 
+      marker.addEventListener("touchend", function (event) {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (!touch) return;
+
+        const now = Date.now();
+        const dx = Math.abs((touch.clientX || 0) - state.lastTapX);
+        const dy = Math.abs((touch.clientY || 0) - state.lastTapY);
+
+        if (now - state.lastTapAt < DOUBLE_TAP_MS && dx < 24 && dy < 24) {
+          event.preventDefault();
+          event.stopPropagation();
+          openNoteEditor(note.id);
+          state.lastTapAt = 0;
+          return;
+        }
+
+        state.lastTapAt = now;
+        state.lastTapX = touch.clientX || 0;
+        state.lastTapY = touch.clientY || 0;
+      }, { passive: false });
+
       el.textLayer.appendChild(marker);
     });
-  }
-
-  function setNoteSaveBadge(status) {
-    el.noteEditorSaveBadge.className = "";
-    el.noteEditorSaveBadge.id = "noteEditorSaveBadge";
-    if (status === "pending") {
-      el.noteEditorSaveBadge.classList.add("pending");
-      el.noteEditorSaveBadge.textContent = "저장 중";
-    } else if (status === "saved") {
-      el.noteEditorSaveBadge.classList.add("saved");
-      el.noteEditorSaveBadge.textContent = "저장됨";
-    } else if (status === "offline") {
-      el.noteEditorSaveBadge.classList.add("offline");
-      el.noteEditorSaveBadge.textContent = "오프라인";
-    } else {
-      el.noteEditorSaveBadge.textContent = "준비됨";
-    }
-  }
-
-  function openNoteEditor(noteId) {
-    state.activeNoteId = noteId;
-    const note = state.notes.find(function (item) { return item.id === noteId; });
-    if (!note) return;
-
-    setNoteColor(note.color || "#fff7c2");
-    el.noteEditorTextarea.value = note.text || "";
-    el.noteEditorTimestamp.textContent = note.updatedAt ? new Date(note.updatedAt).toLocaleString("ko-KR") : "최종 수정 없음";
-    el.noteEditorAuthor.textContent = note.updatedByName || "수정자 없음";
-    el.noteEditorOverlay.classList.add("open");
-    el.noteEditorOverlay.setAttribute("aria-hidden", "false");
-    setNoteSaveBadge("ready");
-
-    requestAnimationFrame(function () {
-      el.noteEditorTextarea.focus();
-      el.noteEditorTextarea.setSelectionRange(el.noteEditorTextarea.value.length, el.noteEditorTextarea.value.length);
-    });
-
-    renderNotes();
-  }
-
-  function closeNoteEditor() {
-    el.noteEditorOverlay.classList.remove("open");
-    el.noteEditorOverlay.setAttribute("aria-hidden", "true");
-    state.activeNoteId = "";
-    renderNotes();
-  }
-
-  function queueNoteSave(note, patch) {
-    clearTimeout(state.noteSaveTimer);
-    setNoteSaveBadge(canUseRealtime() ? "pending" : "offline");
-
-    state.noteSaveTimer = setTimeout(function () {
-      if (!canUseRealtime()) return;
-
-      socket.emit("update-note", {
-        imageId: state.currentViewerImageId,
-        noteId: note.id,
-        patch: patch
-      }, function (ack) {
-        if (ack && ack.ok) setNoteSaveBadge("saved");
-      });
-    }, 180);
   }
 
   function downloadSketch() {
@@ -1572,7 +1610,9 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
     });
 
-    el.paletteBtn.addEventListener("click", function () {
+    el.paletteBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
       el.paletteInput.click();
     });
 
@@ -1613,7 +1653,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       }, { passive: true });
     });
 
-    el.drawCanvas.addEventListener("click", function (event) {
+    el.drawCanvas.addEventListener("dblclick", function (event) {
       if (state.mode !== "text") return;
       if (!state.currentViewerImageId) return;
 
@@ -1622,6 +1662,32 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       const y = (event.clientY - rect.top) / rect.height;
       addNoteAtPoint(x, y);
     });
+
+    el.drawCanvas.addEventListener("touchend", function (event) {
+      if (state.mode !== "text") return;
+      if (!state.currentViewerImageId) return;
+
+      const touch = event.changedTouches && event.changedTouches[0];
+      if (!touch) return;
+
+      const now = Date.now();
+      const dx = Math.abs((touch.clientX || 0) - state.lastTapX);
+      const dy = Math.abs((touch.clientY || 0) - state.lastTapY);
+
+      if (now - state.lastTapAt < DOUBLE_TAP_MS && dx < 24 && dy < 24) {
+        event.preventDefault();
+        const rect = el.drawCanvas.getBoundingClientRect();
+        const x = (touch.clientX - rect.left) / rect.width;
+        const y = (touch.clientY - rect.top) / rect.height;
+        addNoteAtPoint(x, y);
+        state.lastTapAt = 0;
+        return;
+      }
+
+      state.lastTapAt = now;
+      state.lastTapX = touch.clientX || 0;
+      state.lastTapY = touch.clientY || 0;
+    }, { passive: false });
 
     el.noteColorSwatches.forEach(function (swatch) {
       swatch.addEventListener("click", function () {
@@ -1699,7 +1765,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     state.currentViewerImageId = imageId;
     state.currentViewerImageUrl = imageUrl;
     el.viewerImage.src = imageUrl;
-    el.viewerSubtitle.textContent = imageUrl.split("/").pop() || "이미지 검토";
     el.viewerOverlay.classList.add("open");
     el.viewerOverlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("viewer-inline-open");
