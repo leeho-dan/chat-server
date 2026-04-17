@@ -121,7 +121,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   background:#fff;
   padding:10px 12px 12px;
 }
-
 #toolbarInline{
   display:flex;
   align-items:center;
@@ -130,11 +129,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   overflow-x:auto;
   scrollbar-width:none;
 }
-
-#toolbarInline::-webkit-scrollbar{
-  display:none;
-}
-
+#toolbarInline::-webkit-scrollbar{display:none}
 .toolBtn{
   min-width:40px;
   width:40px;
@@ -149,12 +144,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   font-weight:800;
   flex:0 0 auto;
 }
-
 .toolBtn.active{
   background:linear-gradient(135deg,var(--primary-soft),var(--primary));
   color:#fff;
 }
-
 .toolBtnSmall{
   min-width:32px;
   width:32px;
@@ -162,7 +155,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   border-radius:10px;
   font-size:13px;
 }
-
 #thicknessWrap{
   display:flex;
   align-items:center;
@@ -173,11 +165,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   border:1px solid var(--line);
   flex:0 0 auto;
 }
-
-#thicknessRange{
-  width:88px;
-}
-
+#thicknessRange{width:88px}
 #paletteBtn{
   position:relative;
   overflow:hidden;
@@ -185,7 +173,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     linear-gradient(135deg,rgba(255,255,255,.98),rgba(235,241,247,.98)),
     conic-gradient(from 180deg,#ff3b30,#2491ff,#22c55e,#facc15,#111827,#ffffff,#ff3b30);
 }
-
 #paletteBtn::before{
   content:"";
   position:absolute;
@@ -193,7 +180,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   border-radius:10px;
   background:var(--selected-draw-color,#ff3b30);
 }
-
 #paletteBtn::after{
   content:"🎨";
   position:relative;
@@ -201,7 +187,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   font-size:14px;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.15));
 }
-
 #paletteInput{
   position:fixed;
   left:-9999px;
@@ -251,12 +236,11 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 #uploadLoadingText{font-size:13px;font-weight:700;color:var(--text-soft)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.embed-mode #header,.embed-mode #quickRequestBar,.embed-mode #summaryCard{display:none!important}
-.embed-mode #chatCard{width:100%!important;height:100%!important;border-radius:0!important;border:none!important;box-shadow:none!important}
-
-@media (min-width:901px){
-  .popup-viewer-only #viewerOverlay{display:flex!important}
+/* 핵심 수정: embed에서도 quickRequestBar/summaryCard를 숨기지 않음 */
+.embed-mode #chatCard{
+  width:100%!important;height:100%!important;border-radius:0!important;border:none!important;box-shadow:none!important
 }
+
 @media (max-width:900px){
   #chatCard{width:100%;border-radius:0}
   #header{height:40px}
@@ -290,9 +274,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     padding:8px 10px 10px!important;
     overflow:hidden!important;
   }
-  #toolbarInline{
-    gap:6px!important;
-  }
+  #toolbarInline{gap:6px!important}
   #viewerRight{display:flex!important;flex-direction:column!important;flex:2 1 0!important;min-height:0!important;border-top:1px solid var(--line)!important;border-left:none!important}
   #viewerChatBox{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;padding:12px 12px 8px!important}
   #viewerInputBar{flex-shrink:0!important;border-top:1px solid var(--line)!important;padding:8px 10px calc(10px + var(--safe-bottom))!important;display:flex!important;gap:8px!important}
@@ -348,8 +330,8 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       </div>
       <div id="messageRowBar">
         <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
-        <button id="sendBtn" type="button" aria-label="메시지 전송"><span class="btnIcon">➤</span></button>
-        <label id="fileLabel" for="fileInput" aria-label="이미지 첨부"><span class="btnIcon">📎</span></label>
+        <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
+        <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
         <input id="fileInput" type="file" accept="image/*" />
       </div>
       <div id="phoneStatus" aria-live="polite"></div>
@@ -365,7 +347,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     </div>
     <div id="viewerStats"></div>
     <div id="viewerActions">
-      <button id="downloadSketchBtn" class="viewerBtn" type="button"><span class="btnIcon">↓</span></button>
+      <button id="downloadSketchBtn" class="viewerBtn" type="button">↓</button>
     </div>
   </div>
   <div id="viewerMain">
@@ -516,8 +498,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   safeStorageSet(STORAGE_KEYS.userName, state.userName);
   safeStorageSet(STORAGE_KEYS.role, state.role);
 
-  if (isEmbed) document.body.classList.add("embed-mode");
-
   const el = {
     connectionBadge: document.getElementById("connectionBadge"),
     quickChips: Array.from(document.querySelectorAll(".quickChip")),
@@ -592,7 +572,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
   function syncConnectionUI() {
     const enabled = canUseRealtime() && !state.uploadBusy;
-
     el.sendBtn.disabled = !enabled;
     el.viewerSendBtn.disabled = !enabled;
     el.fileLabel.classList.toggle("disabled", !enabled);
@@ -655,7 +634,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
     const isViewerTarget = target === el.viewerChatInner;
     const isImageMessage = message.type === "image";
-
     if (isViewerTarget && isImageMessage && message.imageId !== state.currentViewerImageId) return;
 
     const row = document.createElement("div");
@@ -674,7 +652,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       bubbleHolder.innerHTML =
         '<img class="chatImg" alt="상담 이미지" src="' + escapeHtml(message.imageUrl || "") + '">' +
         '<div class="imageHint">이미지를 클릭하면 협업창이 열립니다</div>';
-
       bubbleHolder.addEventListener("click", function () {
         openViewer(message.imageId, message.imageUrl);
       });
@@ -707,7 +684,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   function sendText(text, after) {
     const trimmed = String(text || "").trim();
     if (!trimmed) return;
-
     if (!canUseRealtime()) {
       alert("실시간 연결을 확인해 주세요.");
       return;
@@ -745,7 +721,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   async function handleImageSelect(file) {
     try {
       if (!file) return;
-
       if (!canUseRealtime()) {
         alert("실시간 연결을 확인해 주세요.");
         return;
@@ -826,9 +801,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   function setStrokeColor(color) {
     state.color = color;
     document.documentElement.style.setProperty("--selected-draw-color", color);
-    if (el.paletteInput) {
-      el.paletteInput.value = color;
-    }
+    el.paletteInput.value = color;
   }
 
   function setNoteColor(color) {
@@ -862,7 +835,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   function redrawCanvas() {
     const rect = el.drawCanvas.getBoundingClientRect();
     canvasCtx.clearRect(0, 0, rect.width, rect.height);
-
     state.strokes.forEach(function (stroke) {
       if (!stroke || !stroke.points || !stroke.points.length) return;
       drawStrokeOnContext(canvasCtx, stroke);
@@ -889,7 +861,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   function startDrawing(event) {
     if (state.mode === "text") return;
     if (!state.currentViewerImageId) return;
-
     state.isDrawing = true;
     state.currentStroke = [{
       x: getPointFromEvent(event).x,
@@ -935,9 +906,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     state.currentStroke = [];
     redrawCanvas();
 
-    if (canUseRealtime()) {
-      socket.emit("draw-stroke", stroke);
-    }
+    if (canUseRealtime()) socket.emit("draw-stroke", stroke);
   }
 
   function requestDrawingHistory() {
@@ -971,7 +940,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
       marker.appendChild(text);
       marker.appendChild(resize);
-
       marker.addEventListener("click", function (event) {
         event.stopPropagation();
         openNoteEditor(note.id);
@@ -1136,7 +1104,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     socket.on("joined", function () {
       state.joined = true;
       syncConnectionUI();
-
       if (state.currentViewerImageId) {
         requestDrawingHistory();
         requestNoteHistory();
@@ -1340,9 +1307,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       state.strokes = [];
       state.redoStrokes = [];
       redrawCanvas();
-      if (canUseRealtime()) {
-        socket.emit("clear-drawing", { imageId: state.currentViewerImageId });
-      }
+      if (canUseRealtime()) socket.emit("clear-drawing", { imageId: state.currentViewerImageId });
     });
 
     el.thicknessRange.addEventListener("input", function () {
@@ -1429,6 +1394,14 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
     el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
 
+    el.noteEditorOverlay.addEventListener("click", function (event) {
+      if (event.target === el.noteEditorOverlay) closeNoteEditor();
+    });
+
+    el.viewerOverlay.addEventListener("click", function (event) {
+      if (event.target === el.viewerOverlay) closeViewer();
+    });
+
     window.addEventListener("resize", function () {
       if (state.currentViewerImageId) resizeCanvas();
     });
@@ -1443,7 +1416,19 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     const imageUrl = (params.get("imageUrl") || "").trim();
     if (!isPopupViewer || !imageId || !imageUrl) return;
 
-    openViewer(imageId, imageUrl);
+    state.currentViewerImageId = imageId;
+    state.currentViewerImageUrl = imageUrl;
+    el.viewerImage.src = imageUrl;
+    el.viewerSubtitle.textContent = imageUrl.split("/").pop() || "이미지 검토";
+    el.viewerOverlay.classList.add("open");
+    el.viewerOverlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("viewer-inline-open");
+
+    requestAnimationFrame(function () {
+      resizeCanvas();
+      requestDrawingHistory();
+      requestNoteHistory();
+    });
   }
 
   updateSummaryUI();
