@@ -48,8 +48,6 @@ app.get("/health", (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 
-/* ---------------- upload ---------------- */
-
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }
@@ -100,8 +98,6 @@ app.post(
     }
   }
 );
-
-/* ---------------- in-memory room state ---------------- */
 
 const rooms = Object.create(null);
 
@@ -193,8 +189,6 @@ function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName 
 
   return next;
 }
-
-/* ---------------- socket ---------------- */
 
 io.on("connection", (socket) => {
   console.log("connect:", socket.id);
