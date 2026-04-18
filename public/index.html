@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>디자인 상담</title>
+<title>디자인 상담 · RENDER v20260418-3</title>
 <style>
 :root{
   --bg:#f4f8fc;--bg-soft:#f8fbff;--line:#e3ebf3;--line-strong:#d6e0ea;
@@ -206,7 +206,6 @@ input,textarea{outline:none}
 #fileLabel{background:#f2f6fa;color:#7b8d9f;border:1px solid #e5edf4}
 #fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 
-/* 내부 협업창: 모바일 또는 standalone viewer에서 사용 */
 #viewerOverlay{
   position:fixed;
   inset:0;
@@ -358,7 +357,6 @@ body.viewer-inline-open{
   gap:8px;
   flex-wrap:nowrap;
   overflow-x:auto;
-  overflow-y:visible;
   scrollbar-width:none;
 }
 #toolbarInline::-webkit-scrollbar{display:none}
@@ -379,16 +377,15 @@ body.viewer-inline-open{
 
 #paletteWrap{
   position:relative;
-  z-index:200;
+  z-index:60;
   flex:0 0 auto;
-  overflow:visible;
 }
 #paletteBtn{
   position:relative;
   overflow:visible;
   background:#edf4fa;
   color:#425466;
-  z-index:201;
+  z-index:61;
 }
 #paletteBtn svg{
   position:relative;
@@ -415,11 +412,11 @@ body.viewer-inline-open{
   z-index:3;
   pointer-events:none;
 }
+
 #colorPopover{
-  position:absolute;
-  left:50%;
-  bottom:calc(100% + 10px);
-  transform:translateX(-50%);
+  position:fixed;
+  left:0;
+  top:0;
   display:none;
   width:172px;
   padding:10px;
@@ -428,7 +425,7 @@ body.viewer-inline-open{
   border:1px solid #dfe7f0;
   box-shadow:0 18px 36px rgba(18,36,61,.18);
   backdrop-filter:blur(10px);
-  z-index:999;
+  z-index:999999;
 }
 #colorPopover.open{display:block}
 #colorPopoverGrid{
@@ -645,15 +642,6 @@ body.viewer-inline-open{
     border-radius:14px!important;
     font-size:18px!important
   }
-
-  #paletteWrap{z-index:300}
-  #colorPopover{
-    left:auto;
-    right:0;
-    transform:none;
-    bottom:calc(100% + 8px);
-    width:168px;
-  }
 }
 </style>
 </head>
@@ -661,7 +649,7 @@ body.viewer-inline-open{
 <div id="app">
   <section id="chatCard">
     <div id="header">
-      <div id="title">디자인 상담</div>
+      <div id="title">디자인 상담 · RENDER v20260418-3</div>
       <div id="connectionBadge" aria-live="polite">연결 중</div>
     </div>
 
@@ -779,28 +767,6 @@ body.viewer-inline-open{
                 <circle cx="16.5" cy="10" r="1"></circle>
               </svg>
             </button>
-
-            <div id="colorPopover" aria-hidden="true">
-              <div id="colorPopoverGrid">
-                <button class="colorChip" type="button" data-color="#ff3b30" style="background:#ff3b30" aria-label="빨강"></button>
-                <button class="colorChip" type="button" data-color="#ff9500" style="background:#ff9500" aria-label="주황"></button>
-                <button class="colorChip" type="button" data-color="#ffcc00" style="background:#ffcc00" aria-label="노랑"></button>
-                <button class="colorChip" type="button" data-color="#34c759" style="background:#34c759" aria-label="초록"></button>
-                <button class="colorChip" type="button" data-color="#00c7be" style="background:#00c7be" aria-label="민트"></button>
-
-                <button class="colorChip" type="button" data-color="#32ade6" style="background:#32ade6" aria-label="하늘"></button>
-                <button class="colorChip" type="button" data-color="#007aff" style="background:#007aff" aria-label="파랑"></button>
-                <button class="colorChip" type="button" data-color="#5856d6" style="background:#5856d6" aria-label="남색"></button>
-                <button class="colorChip" type="button" data-color="#af52de" style="background:#af52de" aria-label="보라"></button>
-                <button class="colorChip" type="button" data-color="#ff2d55" style="background:#ff2d55" aria-label="핑크"></button>
-
-                <button class="colorChip" type="button" data-color="#8e8e93" style="background:#8e8e93" aria-label="회색"></button>
-                <button class="colorChip" type="button" data-color="#5a5a5a" style="background:#5a5a5a" aria-label="진회색"></button>
-                <button class="colorChip" type="button" data-color="#000000" style="background:#000000" aria-label="검정"></button>
-                <button class="colorChip" type="button" data-color="#ffffff" style="background:#ffffff" aria-label="흰색"></button>
-                <button class="colorChip transparentIcon" type="button" data-color="#6e56cf" aria-label="포인트 보라"></button>
-              </div>
-            </div>
           </div>
 
           <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
@@ -853,6 +819,29 @@ body.viewer-inline-open{
   <div id="uploadLoadingCard">
     <div class="uploadSpinner" aria-hidden="true"></div>
     <div id="uploadLoadingText">이미지 업로드 중…</div>
+  </div>
+</div>
+
+<!-- body 직속 팔레트 -->
+<div id="colorPopover" aria-hidden="true">
+  <div id="colorPopoverGrid">
+    <button class="colorChip" type="button" data-color="#ff3b30" style="background:#ff3b30" aria-label="빨강"></button>
+    <button class="colorChip" type="button" data-color="#ff9500" style="background:#ff9500" aria-label="주황"></button>
+    <button class="colorChip" type="button" data-color="#ffcc00" style="background:#ffcc00" aria-label="노랑"></button>
+    <button class="colorChip" type="button" data-color="#34c759" style="background:#34c759" aria-label="초록"></button>
+    <button class="colorChip" type="button" data-color="#00c7be" style="background:#00c7be" aria-label="민트"></button>
+
+    <button class="colorChip" type="button" data-color="#32ade6" style="background:#32ade6" aria-label="하늘"></button>
+    <button class="colorChip" type="button" data-color="#007aff" style="background:#007aff" aria-label="파랑"></button>
+    <button class="colorChip" type="button" data-color="#5856d6" style="background:#5856d6" aria-label="남색"></button>
+    <button class="colorChip" type="button" data-color="#af52de" style="background:#af52de" aria-label="보라"></button>
+    <button class="colorChip" type="button" data-color="#ff2d55" style="background:#ff2d55" aria-label="핑크"></button>
+
+    <button class="colorChip" type="button" data-color="#8e8e93" style="background:#8e8e93" aria-label="회색"></button>
+    <button class="colorChip" type="button" data-color="#5a5a5a" style="background:#5a5a5a" aria-label="진회색"></button>
+    <button class="colorChip" type="button" data-color="#000000" style="background:#000000" aria-label="검정"></button>
+    <button class="colorChip" type="button" data-color="#ffffff" style="background:#ffffff" aria-label="흰색"></button>
+    <button class="colorChip transparentIcon" type="button" data-color="#6e56cf" aria-label="포인트 보라"></button>
   </div>
 </div>
 
@@ -1208,7 +1197,6 @@ body.viewer-inline-open{
     }
   }
 
-  /* 핵심: 웹 + embed 상태면 부모(카페24)에게 협업창 popup 요청 */
   function openViewer(imageId, imageUrl) {
     if (!imageId || !imageUrl) return;
 
@@ -1280,16 +1268,48 @@ body.viewer-inline-open{
     }
   }
 
+  function positionColorPopover() {
+    const btnRect = el.paletteBtn.getBoundingClientRect();
+    const pop = el.colorPopover;
+    const popWidth = 172;
+    const gap = 10;
+
+    let left = btnRect.left + (btnRect.width / 2) - (popWidth / 2);
+    let top = btnRect.top - gap;
+
+    if (left < 8) left = 8;
+    if (left + popWidth > window.innerWidth - 8) {
+      left = window.innerWidth - popWidth - 8;
+    }
+
+    pop.style.left = left + "px";
+    pop.style.top = "0px";
+    pop.style.visibility = "hidden";
+    pop.classList.add("open");
+
+    const popHeight = pop.offsetHeight || 120;
+    top = btnRect.top - popHeight - gap;
+
+    if (top < 8) {
+      top = btnRect.bottom + gap;
+    }
+
+    pop.style.top = top + "px";
+    pop.style.visibility = "visible";
+  }
+
   function openColorPopover() {
     state.colorPopoverOpen = true;
     el.colorPopover.classList.add("open");
     el.colorPopover.setAttribute("aria-hidden", "false");
+    positionColorPopover();
   }
 
   function closeColorPopover() {
     state.colorPopoverOpen = false;
     el.colorPopover.classList.remove("open");
     el.colorPopover.setAttribute("aria-hidden", "true");
+    el.colorPopover.style.visibility = "";
   }
 
   function toggleColorPopover() {
@@ -1896,7 +1916,10 @@ body.viewer-inline-open{
     });
 
     document.addEventListener("click", function (event) {
-      if (!el.paletteWrap.contains(event.target)) {
+      const clickedInsideButton = el.paletteWrap.contains(event.target);
+      const clickedInsidePopover = el.colorPopover.contains(event.target);
+
+      if (!clickedInsideButton && !clickedInsidePopover) {
         closeColorPopover();
       }
     });
@@ -1965,6 +1988,15 @@ body.viewer-inline-open{
       endNoteDrag();
     });
 
+    window.addEventListener("resize", function () {
+      if (state.currentViewerImageId) resizeCanvas();
+      if (state.colorPopoverOpen) positionColorPopover();
+    });
+
+    el.viewerImage.addEventListener("load", function () {
+      if (state.currentViewerImageId) resizeCanvas();
+    });
+
     el.noteColorSwatches.forEach(function (swatch) {
       swatch.addEventListener("click", function () {
         setNoteColor(swatch.dataset.noteColor || "#fff7c2");
@@ -2022,14 +2054,6 @@ body.viewer-inline-open{
 
     el.viewerOverlay.addEventListener("click", function (event) {
       if (event.target === el.viewerOverlay) closeViewer();
-    });
-
-    window.addEventListener("resize", function () {
-      if (state.currentViewerImageId) resizeCanvas();
-    });
-
-    el.viewerImage.addEventListener("load", function () {
-      if (state.currentViewerImageId) resizeCanvas();
     });
   }
 
