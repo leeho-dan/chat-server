@@ -1,707 +1,2183 @@
-const express = require("express");
-const http = require("http");
-const path = require("path");
-const cors = require("cors");
-const multer = require("multer");
-const mongoose = require("mongoose");
-const { Server } = require("socket.io");
-const { v4: uuidv4 } = require("uuid");
-const { v2: cloudinary } = require("cloudinary");
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>디자인 상담 · RENDER v20260418-3</title>
+<style>
+:root{
+  --bg:#f4f8fc;--bg-soft:#f8fbff;--line:#e3ebf3;--line-strong:#d6e0ea;
+  --text:#17212b;--text-soft:#24313f;--sub:#728292;
+  --primary:#2491ff;--primary-soft:#79c7ff;--danger:#ff5b5b;
+  --shadow:0 18px 50px rgba(18,36,61,.10);--radius-xl:28px;
+  --safe-bottom:max(env(safe-area-inset-bottom),0px);
+  --selected-draw-color:#ff3b30;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;width:100%;height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  color:var(--text);
+  background:radial-gradient(circle at top left,rgba(36,145,255,.08),transparent 24%),linear-gradient(180deg,#f9fbff 0%,#edf4fa 100%);
+}
+body{overflow:hidden;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+button,input,textarea,label{font:inherit}
+button{border:none;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea{outline:none}
 
-const app = express();
-const server = http.createServer(app);
-
-const PORT = Number(process.env.PORT || 3000);
-const HOST = "0.0.0.0";
-const PUBLIC_DIR = path.join(__dirname, "public");
-
-const ALLOWED_ORIGINS = String(process.env.CLIENT_ORIGIN || "")
-  .split(",")
-  .map((value) => value.trim())
-  .filter(Boolean);
-
-const corsOriginHandler = (origin, callback) => {
-  if (!origin) return callback(null, true);
-  if (ALLOWED_ORIGINS.length === 0) return callback(null, true);
-  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-  return callback(new Error("CORS not allowed"));
-};
-
-app.use(cors({ origin: corsOriginHandler, credentials: false }));
-app.use(express.json({ limit: "20mb" }));
-app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  console.log("[REQ]", req.method, req.url);
-  next();
-});
-
-const io = new Server(server, {
-  cors: {
-    origin: ALLOWED_ORIGINS.length ? ALLOWED_ORIGINS : true,
-    methods: ["GET", "POST"]
-  },
-  transports: ["websocket", "polling"]
-});
-
-app.use(express.static(PUBLIC_DIR));
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-});
-
-app.get("/health", async (req, res) => {
-  const mongoReady = mongoose.connection.readyState === 1;
-  res.json({
-    ok: true,
-    uptime: process.uptime(),
-    mongoReady
-  });
-});
-
-const hasCloudinaryEnv =
-  process.env.CLOUD_NAME &&
-  process.env.CLOUD_KEY &&
-  process.env.CLOUD_SECRET;
-
-if (hasCloudinaryEnv) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.CLOUD_KEY,
-    api_secret: process.env.CLOUD_SECRET,
-    secure: true
-  });
+#app{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
 }
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (!file || !file.mimetype || !file.mimetype.startsWith("image/")) {
-      return cb(new Error("이미지 파일만 업로드할 수 있습니다."));
-    }
-    cb(null, true);
+#chatCard{
+  width:min(430px,100%);
+  height:100%;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:28px;
+  box-shadow:0 18px 50px rgba(18,36,61,.10);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+#header{
+  height:44px;
+  flex-shrink:0;
+  border-bottom:1px solid #e3ebf3;
+  background:rgba(255,255,255,.96);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 14px;
+}
+#title{font-size:14px;font-weight:800;color:#24313f}
+#connectionBadge{
+  height:28px;padding:0 10px;border-radius:999px;background:#edf4fa;color:#53687a;
+  display:inline-flex;align-items:center;font-size:11px;font-weight:800
+}
+
+#quickRequestBar{
+  flex-shrink:0;
+  padding:10px 14px 8px;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid #e3ebf3;
+  display:flex;
+  flex-direction:column;
+  gap:8px
+}
+#quickRequestTitle{font-size:13px;font-weight:700;color:#24313f}
+#quickRequestButtons{display:flex;gap:6px;flex-wrap:wrap}
+.quickChip{
+  height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  background:#edf4fa;
+  color:#425466;
+  font-size:12px;
+  font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center
+}
+.quickChip.active{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
+
+#summaryCard{
+  flex-shrink:0;
+  margin:0 12px 6px;
+  padding:8px 10px;
+  border:1px solid #e3ebf3;
+  border-radius:16px;
+  background:linear-gradient(180deg,#fbfdff,#f5f9fd);
+  display:flex;
+  flex-direction:column;
+  gap:6px
+}
+#summaryHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#summaryHeaderLeft{min-width:0;display:flex;align-items:center;gap:8px;flex:1}
+#summaryTitle{font-size:12px;font-weight:800;color:#24313f}
+#summaryToggleBtn{
+  width:26px;min-width:26px;height:26px;border-radius:999px;
+  background:#edf4fa;color:#4f6579;font-size:13px;font-weight:900;
+  display:flex;align-items:center;justify-content:center
+}
+#summaryToggleBtn::before{content:"⌃"}
+#summaryCard.collapsed #summaryToggleBtn::before{content:"⌄"}
+#summaryPreview{
+  min-width:0;flex:1;display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap
+}
+.summaryInlineChip{
+  height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;
+  background:#f5f9fd;color:#53687a;font-size:11px;font-weight:800;max-width:160px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0
+}
+.summaryInlineChip.empty{max-width:none}
+#summaryRows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.summaryItem{
+  min-width:0;padding:10px;border-radius:14px;background:#fff;border:1px solid #e9eff5;
+  display:flex;flex-direction:column;gap:4px
+}
+.summaryLabel{
+  font-size:10px;font-weight:800;color:#91a0af;text-transform:uppercase;letter-spacing:.04em
+}
+.summaryValue{
+  min-height:18px;font-size:13px;font-weight:700;line-height:1.45;color:#17212b;word-break:break-word
+}
+#summaryActions{display:flex;gap:8px;flex-wrap:wrap}
+.summaryActionBtn{
+  height:36px;padding:0 12px;border-radius:12px;background:#edf4fa;color:#425466;
+  font-size:12px;font-weight:800
+}
+.summaryActionBtn.primary{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
+#summaryCard.collapsed #summaryRows,
+#summaryCard.collapsed #summaryActions{display:none}
+
+#chatBox{
+  flex:1;min-height:0;overflow-y:auto;padding:0 14px 8px;background:#f8fbff
+}
+#chatInner{display:flex;flex-direction:column;gap:14px;min-height:100%}
+.messageRow{display:flex;flex-direction:column;gap:5px}
+.messageRow.me{align-items:flex-end}
+.messageRow.other{align-items:flex-start}
+.bubble{
+  max-width:86%;
+  padding:12px 16px;
+  border-radius:22px;
+  font-size:15px;
+  line-height:1.52;
+  letter-spacing:-.02em;
+  word-break:break-word
+}
+.messageRow.me .bubble{
+  background:linear-gradient(135deg,#79c7ff,#2491ff);
+  color:#fff;border-bottom-right-radius:8px;box-shadow:0 8px 20px rgba(36,145,255,.16)
+}
+.messageRow.other .bubble{
+  background:#fff;border:1px solid #e3ebf3;color:#17212b;border-bottom-left-radius:8px
+}
+.meta{font-size:10px;color:#95a3b1;padding:0 8px}
+.imageBubble{
+  max-width:92%;
+  background:#fff;
+  border:1px solid #e3ebf3;
+  border-radius:22px;
+  padding:8px;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(18,36,61,.04)
+}
+.chatImg{display:block;width:100%;max-width:320px;border-radius:14px}
+.imageHint{
+  margin-top:8px;padding:8px 10px;border-radius:12px;background:#f6fbff;color:#557086;
+  font-size:10px;font-weight:800
+}
+
+#inputArea{
+  flex-shrink:0;border-top:1px solid #e3ebf3;background:rgba(255,255,255,.97);
+  padding:10px 12px calc(12px + var(--safe-bottom));display:flex;flex-direction:column;gap:8px
+}
+#phoneRow,#messageRowBar{
+  display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #e3ebf3;
+  border-radius:16px;background:#fbfdff
+}
+#phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
+#phoneStatus.show{display:block}
+#phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
+  border:1px solid #d6e0ea;background:#f8fbff
+}
+#phoneInput{width:180px;height:34px;border-radius:10px;padding:0 10px;font-size:12px}
+#savePhoneBtn,#deletePhoneBtn{
+  height:34px;min-width:48px;padding:0 10px;border-radius:10px;font-size:12px;font-weight:800
+}
+#savePhoneBtn{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
+#deletePhoneBtn{background:#edf4fa;color:#425466}
+#msgInput{flex:1;min-width:0;height:36px;border-radius:12px;padding:0 12px;font-size:13px}
+#sendBtn,#fileLabel{
+  width:34px;height:34px;min-width:34px;border-radius:11px;font-size:15px;display:flex;
+  align-items:center;justify-content:center
+}
+#sendBtn{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
+#fileInput{display:none}
+#fileLabel{background:#f2f6fa;color:#7b8d9f;border:1px solid #e5edf4}
+#fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+#viewerOverlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  flex-direction:column;
+  width:100vw;
+  height:100dvh;
+  min-height:100dvh;
+  background:rgba(245,248,252,.985);
+}
+#viewerOverlay.open{display:flex}
+body.viewer-inline-open{
+  overflow:hidden;
+  touch-action:none;
+}
+
+#viewerTopbar{
+  height:52px;
+  flex-shrink:0;
+  border-bottom:1px solid #e3ebf3;
+  background:rgba(255,255,255,.96);
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:8px;
+  padding:0 10px;
+  position:relative;
+  z-index:40
+}
+#viewerTopLeft{min-width:0;display:flex;align-items:center}
+#viewerActions{display:flex;gap:6px;flex-shrink:0;position:relative;z-index:41}
+.viewerBtn{
+  min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
+  display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;z-index:41
+}
+.viewerBtn svg{
+  width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round
+}
+
+#viewerMain{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)
+}
+#viewerLeft{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid #e3ebf3;
+  background:#f8fbff;
+  position:relative;
+  z-index:10
+}
+#canvasWrap{
+  flex:1;
+  min-height:0;
+  padding:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  z-index:11
+}
+#imageStage{
+  position:relative;
+  width:100%;
+  height:min(100%,760px);
+  min-height:420px;
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,251,255,.96));
+  border:1px solid #dfe9f3;
+  box-shadow:0 18px 38px rgba(18,36,61,.08);
+  overflow:hidden;
+  z-index:12
+}
+#viewerImage{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  max-width:84%;max-height:84%;
+  border-radius:18px;box-shadow:0 14px 32px rgba(18,36,61,.12);
+  pointer-events:none;user-select:none;-webkit-user-drag:none;z-index:1
+}
+#drawCanvas{
+  position:absolute;inset:0;width:100%;height:100%;border-radius:22px;touch-action:none;z-index:2
+}
+#textLayer{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+}
+#brushCursor{
+  position:absolute;
+  pointer-events:none;
+  border-radius:50%;
+  background:rgba(36,145,255,0.16);
+  border:1.5px solid rgba(36,145,255,0.7);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.45) inset, 0 2px 10px rgba(18,36,61,0.10);
+  transform:translate(-50%, -50%);
+  display:none;
+  z-index:10;
+  backdrop-filter:blur(1px);
+  transition:width .08s linear,height .08s linear,background-color .08s linear,border-color .08s linear;
+}
+
+.noteMarker{
+  position:absolute;
+  min-width:56px;
+  height:42px;
+  padding:0 12px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(36,145,255,.22);
+  box-shadow:0 10px 18px rgba(18,36,61,.10);
+  transform:translate(-50%,-50%);
+  pointer-events:auto;
+  user-select:none;
+  z-index:20;
+  touch-action:none;
+}
+.noteMarker.selected{
+  border-color:rgba(255,139,61,.55);
+  box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.12)
+}
+.noteMarker.moveTarget{
+  box-shadow:0 0 0 4px rgba(36,145,255,.18),0 10px 18px rgba(18,36,61,.12);
+}
+.noteMarkerText{
+  max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:#17212b
+}
+
+#toolbar{
+  flex-shrink:0;
+  border-top:1px solid #e3ebf3;
+  background:#fff;
+  padding:10px 12px 12px;
+  position:relative;
+  z-index:50;
+  overflow:visible;
+}
+#toolbarInline{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+#toolbarInline::-webkit-scrollbar{display:none}
+.toolBtn{
+  min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
+  display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;position:relative;z-index:51
+}
+.toolBtn.active{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
+.toolBtnSmall{min-width:32px;width:32px;height:32px;border-radius:10px;font-size:13px}
+.toolBtn svg{
+  width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:2
+}
+#thicknessWrap{
+  display:flex;align-items:center;padding:0 8px;height:40px;border-radius:12px;background:#f6faff;
+  border:1px solid #e3ebf3;flex:0 0 auto;position:relative;z-index:51
+}
+#thicknessRange{width:88px}
+
+#paletteWrap{
+  position:relative;
+  z-index:60;
+  flex:0 0 auto;
+}
+#paletteBtn{
+  position:relative;
+  overflow:visible;
+  background:#edf4fa;
+  color:#425466;
+  z-index:61;
+}
+#paletteBtn svg{
+  position:relative;
+  z-index:2;
+  width:18px;
+  height:18px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
+}
+#palettePreview{
+  position:absolute;
+  right:4px;
+  bottom:4px;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:var(--selected-draw-color,#ff3b30);
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:0 1px 4px rgba(18,36,61,.16);
+  z-index:3;
+  pointer-events:none;
+}
+
+#colorPopover{
+  position:fixed;
+  left:0;
+  top:0;
+  display:none;
+  width:172px;
+  padding:10px;
+  border-radius:16px;
+  background:rgba(255,255,255,.99);
+  border:1px solid #dfe7f0;
+  box-shadow:0 18px 36px rgba(18,36,61,.18);
+  backdrop-filter:blur(10px);
+  z-index:999999;
+}
+#colorPopover.open{display:block}
+#colorPopoverGrid{
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:8px;
+}
+.colorChip{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.95);
+  box-shadow:0 0 0 1px rgba(18,36,61,.12);
+}
+.colorChip.active{
+  box-shadow:0 0 0 3px rgba(36,145,255,.20), 0 0 0 1px rgba(18,36,61,.12);
+}
+.colorChip.transparentIcon{
+  background:linear-gradient(135deg,#ffffff 0%,#e9eef4 100%);
+  position:relative;
+}
+.colorChip.transparentIcon::after{
+  content:"+";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#425466;
+  font-size:14px;
+  font-weight:900;
+}
+
+.noteColorSwatch{
+  border-radius:50%;
+  box-shadow:0 0 0 1px rgba(0,0,0,.10);
+  display:inline-flex;
+  width:22px;
+  height:22px
+}
+.noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
+
+#viewerRight{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  position:relative;
+  z-index:10
+}
+#viewerChatBox{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:12px;
+  background:#fbfdff
+}
+#viewerChatInner{display:flex;flex-direction:column;gap:10px}
+#viewerChatInner .meta{display:none}
+#viewerInputBar{
+  flex-shrink:0;border-top:1px solid #e3ebf3;padding:12px 14px calc(14px + var(--safe-bottom));
+  background:#fff;display:flex;gap:10px;position:relative;z-index:50
+}
+#viewerMsgInput{flex:1;height:46px;border-radius:16px;padding:0 14px;font-size:15px}
+#viewerSendBtn{
+  width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,#79c7ff,#2491ff);
+  color:#fff;font-size:18px;font-weight:800
+}
+
+#noteEditorOverlay{
+  position:fixed;
+  inset:0;
+  z-index:50000;
+  display:none;
+  flex-direction:column;
+  width:100vw;
+  height:100vh;
+  background:rgba(245,248,252,.99)
+}
+#noteEditorOverlay.open{display:flex}
+#noteEditorHeader{
+  min-height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-bottom:1px solid #e3ebf3;background:#fff
+}
+#noteEditorTitleWrap{min-width:0;display:flex;flex-direction:column;gap:4px}
+#noteEditorTitle{font-size:17px;font-weight:800}
+#noteEditorMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#noteEditorSaveBadge{
+  height:24px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;background:#eef4fa;
+  color:#587085;font-size:11px;font-weight:800
+}
+#noteEditorSaveBadge.pending{background:#fff7ea;color:#9a6500}
+#noteEditorSaveBadge.saved{background:#ebf9ee;color:#2f7b42}
+#noteEditorSaveBadge.offline{background:#fff3f3;color:#c74242}
+#noteEditorActions{display:flex;align-items:center;gap:8px}
+.noteEditorDangerBtn,#noteEditorDoneBtn{height:38px;padding:0 12px;border-radius:12px;font-weight:800}
+.noteEditorDangerBtn{background:#fff1f1;color:#c74242}
+#noteEditorDoneBtn{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
+#noteEditorBody{flex:1;min-height:0;padding:14px;background:#f7fbff;display:flex;flex-direction:column;gap:10px}
+#noteEditorTools{display:flex;flex-direction:column;gap:8px}
+#noteEditorColorRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#noteEditorMetaLine{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#728292;font-size:12px;font-weight:700}
+#noteEditorTextarea{
+  width:100%;
+  height:100%;
+  border-radius:20px;
+  resize:none;
+  padding:16px;
+  font-size:16px;
+  line-height:1.55;
+  color:#17212b
+}
+
+#uploadLoading{
+  position:fixed;inset:0;z-index:260;display:none;align-items:center;justify-content:center;
+  background:rgba(245,248,252,.72);backdrop-filter:blur(4px)
+}
+#uploadLoading.show{display:flex}
+#uploadLoadingCard{
+  min-width:180px;padding:18px 20px;border-radius:18px;background:rgba(255,255,255,.96);
+  border:1px solid #e3ebf3;box-shadow:0 18px 40px rgba(18,36,61,.12);display:flex;align-items:center;gap:12px
+}
+.uploadSpinner{
+  width:22px;height:22px;border-radius:50%;border:2px solid rgba(36,145,255,.18);
+  border-top-color:#2491ff;animation:spin .85s linear infinite
+}
+#uploadLoadingText{font-size:13px;font-weight:700;color:#24313f}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media (max-width:900px){
+  #chatCard{width:100%;border-radius:0}
+  #header{height:40px}
+  #quickRequestBar{padding:8px 10px 6px;gap:6px}
+  #quickRequestButtons{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #quickRequestButtons::-webkit-scrollbar{display:none}
+  .quickChip{flex:0 0 auto}
+  #summaryCard{margin:0 8px 4px;gap:4px}
+  #summaryHeaderLeft{gap:6px}
+  #summaryPreview{gap:4px}
+  .summaryInlineChip{max-width:110px;font-size:10px;padding:0 8px}
+  #summaryRows{grid-template-columns:1fr 1fr;gap:6px}
+  #chatBox{padding:0 10px 6px}
+  .bubble{max-width:86%;font-size:14px;padding:11px 14px}
+  .chatImg{max-width:220px}
+  #inputArea{padding:8px 8px calc(10px + var(--safe-bottom));gap:6px}
+  #phoneRow,#messageRowBar{gap:6px;padding:6px;border-radius:14px}
+  #phoneInput{width:100%;max-width:140px;height:30px;padding:0 8px;font-size:11px}
+  #savePhoneBtn,#deletePhoneBtn{height:30px;min-width:40px;padding:0 8px;border-radius:9px;font-size:11px}
+  #msgInput{height:32px;border-radius:10px;padding:0 10px;font-size:12px}
+  #sendBtn,#fileLabel{width:30px;height:30px;min-width:30px;border-radius:9px}
+
+  #viewerMain{
+    display:flex!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    height:calc(100dvh - 52px)!important;
+    flex:1!important
   }
-});
-
-const messageSchema = new mongoose.Schema(
-  {
-    roomId: { type: String, required: true, index: true },
-    type: { type: String, enum: ["text", "image"], required: true },
-    text: { type: String, default: "" },
-    imageId: { type: String, default: "" },
-    imageUrl: { type: String, default: "" },
-    sender: { type: String, enum: ["user", "admin"], required: true },
-    senderName: { type: String, required: true },
-    time: { type: Number, required: true, index: true }
-  },
-  { versionKey: false }
-);
-
-const drawingSchema = new mongoose.Schema(
-  {
-    roomId: { type: String, required: true, index: true },
-    imageId: { type: String, required: true, index: true },
-    strokes: { type: Array, default: [] }
-  },
-  { versionKey: false }
-);
-
-drawingSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
-
-const noteSchema = new mongoose.Schema(
-  {
-    roomId: { type: String, required: true, index: true },
-    imageId: { type: String, required: true, index: true },
-    noteId: { type: String, required: true },
-    x: { type: Number, default: 0.14 },
-    y: { type: Number, default: 0.16 },
-    width: { type: Number, default: 0.16 },
-    height: { type: Number, default: 0.1 },
-    text: { type: String, default: "" },
-    color: { type: String, default: "#fff7c2" },
-    author: { type: String, enum: ["user", "admin"], default: "user" },
-    updatedAt: { type: Number, default: Date.now },
-    updatedByRole: { type: String, enum: ["user", "admin"], default: "user" },
-    updatedByName: { type: String, default: "고객" }
-  },
-  { versionKey: false }
-);
-
-noteSchema.index({ roomId: 1, imageId: 1, noteId: 1 }, { unique: true });
-
-const Message = mongoose.model("Message", messageSchema);
-const Drawing = mongoose.model("Drawing", drawingSchema);
-const Note = mongoose.model("Note", noteSchema);
-
-function sanitizeRole(role) {
-  return role === "admin" ? "admin" : "user";
+  #viewerLeft{
+    display:flex!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    flex:3 1 0!important;
+    border-right:none!important
+  }
+  #canvasWrap{
+    flex:2 1 0!important;
+    min-height:0!important;
+    padding:8px!important
+  }
+  #imageStage{
+    min-height:0!important;
+    height:100%!important;
+    border-radius:16px!important
+  }
+  #toolbar{
+    position:static!important;
+    flex:0 0 auto!important;
+    min-height:auto!important;
+    padding:8px 10px 10px!important;
+    overflow:visible!important;
+  }
+  #toolbarInline{gap:6px!important}
+  #viewerRight{
+    display:flex!important;
+    flex-direction:column!important;
+    flex:2 1 0!important;
+    min-height:0!important;
+    border-top:1px solid #e3ebf3!important;
+    border-left:none!important
+  }
+  #viewerChatBox{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    padding:12px 12px 8px!important
+  }
+  #viewerInputBar{
+    flex-shrink:0!important;
+    border-top:1px solid #e3ebf3!important;
+    padding:8px 10px calc(10px + var(--safe-bottom))!important;
+    display:flex!important;
+    gap:8px!important
+  }
+  #viewerMsgInput{
+    flex:1!important;
+    height:44px!important;
+    border-radius:14px!important;
+    padding:0 12px!important;
+    font-size:15px!important
+  }
+  #viewerSendBtn{
+    width:44px!important;
+    height:44px!important;
+    border-radius:14px!important;
+    font-size:18px!important
+  }
 }
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="chatCard">
+    <div id="header">
+      <div id="title">디자인 상담 · RENDER v20260418-3</div>
+      <div id="connectionBadge" aria-live="polite">연결 중</div>
+    </div>
 
-function sanitizeUserName(userName, role) {
-  const name = String(userName || "").trim().slice(0, 60);
-  if (role === "admin") return "관리자";
-  return name || "고객";
-}
+    <div id="quickRequestBar">
+      <div id="quickRequestTitle">커스텀 내용을 선택해주세요.</div>
+      <div id="quickRequestButtons">
+        <button class="quickChip" type="button" data-request="색상 변경" data-draft="색상을 변경하고 싶어요.">색상 변경</button>
+        <button class="quickChip" type="button" data-request="문구 추가" data-draft="문구를 추가하고 싶어요.">문구 추가</button>
+        <button class="quickChip" type="button" data-request="사이즈 조정" data-draft="사이즈를 조정하고 싶어요.">사이즈 조정</button>
+        <button class="quickChip" type="button" data-request="디자인 수정" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정</button>
+        <button class="quickChip" type="button" data-request="추천 요청" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 요청</button>
+      </div>
+    </div>
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
+    <div id="summaryCard" class="collapsed">
+      <div id="summaryHeader">
+        <div id="summaryHeaderLeft">
+          <div id="summaryTitle">현재 요청</div>
+          <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 펼치기"></button>
+          <div id="summaryPreview" aria-live="polite"></div>
+        </div>
+      </div>
+      <div id="summaryRows">
+        <div class="summaryItem"><div class="summaryLabel">제품</div><div class="summaryValue" id="summaryProductValue">선택 대기</div></div>
+        <div class="summaryItem"><div class="summaryLabel">상세</div><div class="summaryValue" id="summaryDetailValue">상담 시작</div></div>
+      </div>
+      <div id="summaryActions">
+        <button id="summaryComposeBtn" class="summaryActionBtn" type="button">요청 정리하기</button>
+        <button id="summaryQuoteBtn" class="summaryActionBtn primary" type="button">견적 요청 문구 만들기</button>
+      </div>
+    </div>
 
-function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
-  const updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
+    <div id="chatBox"><div id="chatInner"></div></div>
 
-  return {
-    noteId: String(note.id || uuidv4()),
-    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
-    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
-    width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.3) : 0.16,
-    height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.1,
-    text: String(note.text || "").slice(0, 500),
-    color: String(note.color || "#fff7c2"),
-    author: sanitizeRole(note.author || fallbackRole),
-    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
-    updatedByRole,
-    updatedByName
+    <div id="inputArea">
+      <div id="phoneRow">
+        <input id="phoneInput" type="tel" placeholder="연락처를 남겨주세요" />
+        <button id="savePhoneBtn" type="button">등록</button>
+        <button id="deletePhoneBtn" type="button">삭제</button>
+      </div>
+      <div id="messageRowBar">
+        <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
+        <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
+        <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
+        <input id="fileInput" type="file" accept="image/*" />
+      </div>
+      <div id="phoneStatus" aria-live="polite"></div>
+    </div>
+  </section>
+</div>
+
+<div id="viewerOverlay" aria-hidden="true">
+  <div id="viewerTopbar">
+    <div id="viewerTopLeft"></div>
+    <div id="viewerActions">
+      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="다운로드">↓</button>
+      <button id="viewerTitle" class="viewerBtn" type="button" aria-label="스케치 종료">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6L6 18"></path>
+          <path d="M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="viewerMain">
+    <section id="viewerLeft">
+      <div id="canvasWrap">
+        <div id="imageStage">
+          <img id="viewerImage" alt="상담 이미지" />
+          <canvas id="drawCanvas"></canvas>
+          <div id="textLayer"></div>
+          <div id="brushCursor"></div>
+        </div>
+      </div>
+
+      <div id="toolbar">
+        <div id="toolbarInline">
+          <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+            </svg>
+          </button>
+
+          <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 20H7"></path>
+              <path d="M7 16l8.5-8.5a2.1 2.1 0 0 1 3 0l1 1a2.1 2.1 0 0 1 0 3L14 17"></path>
+              <path d="M7 16l-3-3a2.1 2.1 0 0 1 0-3l6.5-6.5"></path>
+            </svg>
+          </button>
+
+          <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 3h8l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path>
+              <path d="M16 3v5h5"></path>
+              <path d="M9 13h6"></path>
+              <path d="M9 17h4"></path>
+            </svg>
+          </button>
+
+          <div id="thicknessWrap">
+            <input id="thicknessRange" type="range" min="1" max="48" value="3" aria-label="선 두께 조절" />
+          </div>
+
+          <div id="paletteWrap">
+            <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택">
+              <span id="palettePreview"></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3a9 9 0 1 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-1a1.4 1.4 0 0 1 0-2.8H15A6 6 0 0 0 15 3h-3z"></path>
+                <circle cx="7.5" cy="10" r="1"></circle>
+                <circle cx="10" cy="7.5" r="1"></circle>
+                <circle cx="14" cy="7.5" r="1"></circle>
+                <circle cx="16.5" cy="10" r="1"></circle>
+              </svg>
+            </button>
+          </div>
+
+          <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
+          <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시하기">↷</button>
+          <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 스케치 삭제" title="전체 스케치 삭제">🗑</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewerRight">
+      <div id="viewerChatBox"><div id="viewerChatInner"></div></div>
+      <div id="viewerInputBar">
+        <input id="viewerMsgInput" type="text" placeholder="수정 위치나 요청을 바로 남겨주세요" autocomplete="off" />
+        <button id="viewerSendBtn" type="button">➤</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="noteEditorOverlay" aria-hidden="true">
+  <div id="noteEditorHeader">
+    <div id="noteEditorTitleWrap">
+      <div id="noteEditorTitle">메모 편집 중</div>
+      <div id="noteEditorMeta"><span id="noteEditorSaveBadge">준비됨</span></div>
+    </div>
+    <div id="noteEditorActions">
+      <button id="noteDeleteBtn" class="noteEditorDangerBtn" type="button">삭제</button>
+      <button id="noteEditorDoneBtn" type="button">완료</button>
+    </div>
+  </div>
+  <div id="noteEditorBody">
+    <div id="noteEditorTools">
+      <div id="noteEditorColorRow" aria-label="메모 색상">
+        <button class="noteColorSwatch active" type="button" data-note-color="#fff7c2" style="background:#fff7c2;" aria-label="노랑"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#dff5ff" style="background:#dff5ff;" aria-label="파랑"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#e8ffd9" style="background:#e8ffd9;" aria-label="초록"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#ffe4ef" style="background:#ffe4ef;" aria-label="분홍"></button>
+        <button class="noteColorSwatch" type="button" data-note-color="#efe7ff" style="background:#efe7ff;" aria-label="보라"></button>
+      </div>
+      <div id="noteEditorMetaLine">
+        <span id="noteEditorTimestamp">최종 수정 없음</span>
+        <span id="noteEditorAuthor">수정자 없음</span>
+      </div>
+    </div>
+    <textarea id="noteEditorTextarea" maxlength="500" placeholder="메모를 입력해 주세요."></textarea>
+  </div>
+</div>
+
+<div id="uploadLoading" aria-hidden="true">
+  <div id="uploadLoadingCard">
+    <div class="uploadSpinner" aria-hidden="true"></div>
+    <div id="uploadLoadingText">이미지 업로드 중…</div>
+  </div>
+</div>
+
+<!-- body 직속 팔레트 -->
+<div id="colorPopover" aria-hidden="true">
+  <div id="colorPopoverGrid">
+    <button class="colorChip" type="button" data-color="#ff3b30" style="background:#ff3b30" aria-label="빨강"></button>
+    <button class="colorChip" type="button" data-color="#ff9500" style="background:#ff9500" aria-label="주황"></button>
+    <button class="colorChip" type="button" data-color="#ffcc00" style="background:#ffcc00" aria-label="노랑"></button>
+    <button class="colorChip" type="button" data-color="#34c759" style="background:#34c759" aria-label="초록"></button>
+    <button class="colorChip" type="button" data-color="#00c7be" style="background:#00c7be" aria-label="민트"></button>
+
+    <button class="colorChip" type="button" data-color="#32ade6" style="background:#32ade6" aria-label="하늘"></button>
+    <button class="colorChip" type="button" data-color="#007aff" style="background:#007aff" aria-label="파랑"></button>
+    <button class="colorChip" type="button" data-color="#5856d6" style="background:#5856d6" aria-label="남색"></button>
+    <button class="colorChip" type="button" data-color="#af52de" style="background:#af52de" aria-label="보라"></button>
+    <button class="colorChip" type="button" data-color="#ff2d55" style="background:#ff2d55" aria-label="핑크"></button>
+
+    <button class="colorChip" type="button" data-color="#8e8e93" style="background:#8e8e93" aria-label="회색"></button>
+    <button class="colorChip" type="button" data-color="#5a5a5a" style="background:#5a5a5a" aria-label="진회색"></button>
+    <button class="colorChip" type="button" data-color="#000000" style="background:#000000" aria-label="검정"></button>
+    <button class="colorChip" type="button" data-color="#ffffff" style="background:#ffffff" aria-label="흰색"></button>
+    <button class="colorChip transparentIcon" type="button" data-color="#6e56cf" aria-label="포인트 보라"></button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const STORAGE_KEYS = { roomId: "roomId", userName: "userName", role: "role", phone: "phone" };
+  const MAX_NOTE_CHARS = 500;
+  const DOUBLE_TAP_MS = 320;
+
+  function safeStorageGet(key) {
+    try { return localStorage.getItem(key); } catch (e) { return ""; }
+  }
+
+  function safeStorageSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) {}
+  }
+
+  function createUuid() {
+    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+    return "room-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function formatTime(timestamp) {
+    try {
+      const date = new Date(timestamp || Date.now());
+      return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function hexToRgba(hex, alpha) {
+    const safe = String(hex || "#2491ff").replace("#", "");
+    const full = safe.length === 3
+      ? safe.split("").map(function (c) { return c + c; }).join("")
+      : safe;
+
+    const r = parseInt(full.slice(0, 2), 16) || 36;
+    const g = parseInt(full.slice(2, 4), 16) || 145;
+    const b = parseInt(full.slice(4, 6), 16) || 255;
+
+    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+  }
+
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 900px)").matches;
+  }
+
+  const params = new URLSearchParams(location.search);
+  const queryRoomId = (params.get("roomId") || params.get("room") || "").trim();
+  const queryUserName = (params.get("userName") || params.get("username") || params.get("name") || "").trim();
+  const isEmbed = params.get("embed") === "1";
+  const isViewerWindow = params.get("viewer") === "1";
+  const bootImageId = (params.get("imageId") || "").trim();
+  const bootImageUrl = (params.get("imageUrl") || "").trim();
+
+  const state = {
+    roomId: queryRoomId || safeStorageGet(STORAGE_KEYS.roomId) || createUuid(),
+    userName: queryUserName || safeStorageGet(STORAGE_KEYS.userName) || "고객",
+    role: safeStorageGet(STORAGE_KEYS.role) === "admin" ? "admin" : "user",
+    summaryCollapsed: true,
+    summary: { productName: "", requestTypes: [], detailNotes: [] },
+    currentViewerImageId: "",
+    currentViewerImageUrl: "",
+    mode: "draw",
+    color: "#ff3b30",
+    width: 3,
+    cursorX: 0,
+    cursorY: 0,
+    isDrawing: false,
+    currentStroke: [],
+    strokes: [],
+    redoStrokes: [],
+    notes: [],
+    activeNoteId: "",
+    noteColor: "#fff7c2",
+    noteSaveTimer: null,
+    uploadBusy: false,
+    connected: false,
+    joined: false,
+    lastTapAt: 0,
+    lastTapX: 0,
+    lastTapY: 0,
+    draggingNoteId: "",
+    dragOffsetX: 0,
+    dragOffsetY: 0,
+    selectedNoteForMoveId: "",
+    isMobileNoteMoveMode: false,
+    colorPopoverOpen: false
   };
-}
 
-function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
-  const next = {};
+  safeStorageSet(STORAGE_KEYS.roomId, state.roomId);
+  safeStorageSet(STORAGE_KEYS.userName, state.userName);
+  safeStorageSet(STORAGE_KEYS.role, state.role);
 
-  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
-  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
-  if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.3);
-  if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
-  if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
-  if (typeof patch.color === "string") next.color = patch.color;
+  const el = {
+    connectionBadge: document.getElementById("connectionBadge"),
+    quickChips: Array.from(document.querySelectorAll(".quickChip")),
+    summaryCard: document.getElementById("summaryCard"),
+    summaryToggleBtn: document.getElementById("summaryToggleBtn"),
+    summaryProductValue: document.getElementById("summaryProductValue"),
+    summaryDetailValue: document.getElementById("summaryDetailValue"),
+    summaryPreview: document.getElementById("summaryPreview"),
+    summaryComposeBtn: document.getElementById("summaryComposeBtn"),
+    summaryQuoteBtn: document.getElementById("summaryQuoteBtn"),
+    chatInner: document.getElementById("chatInner"),
+    chatBox: document.getElementById("chatBox"),
+    msgInput: document.getElementById("msgInput"),
+    sendBtn: document.getElementById("sendBtn"),
+    fileInput: document.getElementById("fileInput"),
+    fileLabel: document.getElementById("fileLabel"),
+    uploadLoading: document.getElementById("uploadLoading"),
+    phoneInput: document.getElementById("phoneInput"),
+    savePhoneBtn: document.getElementById("savePhoneBtn"),
+    deletePhoneBtn: document.getElementById("deletePhoneBtn"),
+    phoneStatus: document.getElementById("phoneStatus"),
 
-  next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
+    viewerOverlay: document.getElementById("viewerOverlay"),
+    viewerTitle: document.getElementById("viewerTitle"),
+    viewerImage: document.getElementById("viewerImage"),
+    imageStage: document.getElementById("imageStage"),
+    drawCanvas: document.getElementById("drawCanvas"),
+    textLayer: document.getElementById("textLayer"),
+    brushCursor: document.getElementById("brushCursor"),
+    penBtn: document.getElementById("penBtn"),
+    eraserBtn: document.getElementById("eraserBtn"),
+    addTextBtn: document.getElementById("addTextBtn"),
+    undoBtn: document.getElementById("undoBtn"),
+    redoBtn: document.getElementById("redoBtn"),
+    clearBtn: document.getElementById("clearBtn"),
+    thicknessRange: document.getElementById("thicknessRange"),
+    paletteBtn: document.getElementById("paletteBtn"),
+    palettePreview: document.getElementById("palettePreview"),
+    paletteWrap: document.getElementById("paletteWrap"),
+    colorPopover: document.getElementById("colorPopover"),
+    colorChips: Array.from(document.querySelectorAll(".colorChip")),
+    downloadSketchBtn: document.getElementById("downloadSketchBtn"),
+    viewerChatBox: document.getElementById("viewerChatBox"),
+    viewerChatInner: document.getElementById("viewerChatInner"),
+    viewerMsgInput: document.getElementById("viewerMsgInput"),
+    viewerSendBtn: document.getElementById("viewerSendBtn"),
 
-  const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
-  next.updatedByRole = updatedByRole;
-  next.updatedByName =
-    updatedByRole === "admin"
-      ? "관리자"
-      : sanitizeUserName(patch.updatedByName || fallbackUserName, updatedByRole);
+    noteEditorOverlay: document.getElementById("noteEditorOverlay"),
+    noteEditorSaveBadge: document.getElementById("noteEditorSaveBadge"),
+    noteEditorTextarea: document.getElementById("noteEditorTextarea"),
+    noteEditorDoneBtn: document.getElementById("noteEditorDoneBtn"),
+    noteDeleteBtn: document.getElementById("noteDeleteBtn"),
+    noteEditorTimestamp: document.getElementById("noteEditorTimestamp"),
+    noteEditorAuthor: document.getElementById("noteEditorAuthor"),
+    noteColorSwatches: Array.from(document.querySelectorAll(".noteColorSwatch"))
+  };
 
-  return next;
-}
+  const canvasCtx = el.drawCanvas.getContext("2d");
+  let socket = null;
 
-async function ensureMongoConnected() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) throw new Error("MONGODB_URI 환경변수가 없습니다.");
-  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) return;
+  if (safeStorageGet(STORAGE_KEYS.phone)) {
+    el.phoneInput.value = safeStorageGet(STORAGE_KEYS.phone);
+  }
 
-  await mongoose.connect(uri, { autoIndex: true });
-  console.log("[MONGO] connected");
-}
+  function canUseRealtime() {
+    return Boolean(socket && state.connected && state.joined);
+  }
 
-async function getMessageHistory(roomId) {
-  return Message.find({ roomId }).sort({ time: 1 }).limit(300).lean();
-}
+  function setUploadLoading(visible) {
+    state.uploadBusy = Boolean(visible);
+    el.uploadLoading.classList.toggle("show", state.uploadBusy);
+    el.uploadLoading.setAttribute("aria-hidden", String(!state.uploadBusy));
+    syncConnectionUI();
+  }
 
-async function appendMessage(roomId, message) {
-  await Message.create({ roomId, ...message });
+  function syncConnectionUI() {
+    const enabled = canUseRealtime() && !state.uploadBusy;
+    el.sendBtn.disabled = !enabled;
+    el.viewerSendBtn.disabled = !enabled;
+    el.fileLabel.classList.toggle("disabled", !enabled);
+    el.fileLabel.setAttribute("aria-disabled", String(!enabled));
 
-  const count = await Message.countDocuments({ roomId });
-  if (count > 300) {
-    const overflow = count - 300;
-    const oldDocs = await Message.find({ roomId })
-      .sort({ time: 1 })
-      .limit(overflow)
-      .select("_id")
-      .lean();
-
-    if (oldDocs.length) {
-      await Message.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
+    if (state.connected && state.joined) {
+      el.connectionBadge.textContent = "실시간 연결됨";
+      el.phoneStatus.textContent = "실시간 연결됨";
+      el.phoneStatus.className = "show";
+    } else if (state.connected && !state.joined) {
+      el.connectionBadge.textContent = "상담방 연결 중";
+      el.phoneStatus.textContent = "상담방 연결 중";
+      el.phoneStatus.className = "show";
+    } else {
+      el.connectionBadge.textContent = "재연결 중";
+      el.phoneStatus.textContent = "연결이 끊겼습니다. 다시 연결 중입니다.";
+      el.phoneStatus.className = "show";
     }
   }
-}
 
-async function getDrawingHistory(roomId, imageId) {
-  const doc = await Drawing.findOne({ roomId, imageId }).lean();
-  return doc?.strokes || [];
-}
+  function updateSummaryUI() {
+    el.summaryCard.classList.toggle("collapsed", state.summaryCollapsed);
+    el.summaryProductValue.textContent = state.summary.productName || "선택 대기";
 
-async function replaceDrawingHistory(roomId, imageId, strokes) {
-  const safeStrokes = Array.isArray(strokes) ? strokes.slice(-2000) : [];
-  await Drawing.findOneAndUpdate(
-    { roomId, imageId },
-    { $set: { strokes: safeStrokes } },
-    { upsert: true, new: true }
-  );
-  return safeStrokes;
-}
+    const summaryDetailText = []
+      .concat(state.summary.requestTypes)
+      .concat(state.summary.detailNotes.slice(-2))
+      .filter(Boolean)
+      .join(" · ");
 
-async function appendDrawStroke(roomId, imageId, stroke) {
-  const current = await getDrawingHistory(roomId, imageId);
-  current.push(stroke);
-  return replaceDrawingHistory(roomId, imageId, current);
-}
+    el.summaryDetailValue.textContent = summaryDetailText || "상담 시작";
+    el.summaryPreview.innerHTML = "";
 
-async function appendDrawStrokes(roomId, imageId, strokes) {
-  const current = await getDrawingHistory(roomId, imageId);
-  current.push(...strokes);
-  return replaceDrawingHistory(roomId, imageId, current);
-}
+    const chips = []
+      .concat(state.summary.requestTypes.slice(0, 2))
+      .concat((state.summary.productName ? [state.summary.productName] : []).slice(0, 1));
 
-async function clearDrawingHistory(roomId, imageId) {
-  await Drawing.findOneAndUpdate(
-    { roomId, imageId },
-    { $set: { strokes: [] } },
-    { upsert: true, new: true }
-  );
-}
+    if (!chips.length) {
+      const emptyChip = document.createElement("span");
+      emptyChip.className = "summaryInlineChip empty";
+      emptyChip.textContent = "요청이 정리되면 여기에 표시됩니다";
+      el.summaryPreview.appendChild(emptyChip);
+    } else {
+      chips.forEach(function (text) {
+        const chip = document.createElement("span");
+        chip.className = "summaryInlineChip";
+        chip.textContent = text;
+        el.summaryPreview.appendChild(chip);
+      });
+    }
 
-async function getNotes(roomId, imageId) {
-  const docs = await Note.find({ roomId, imageId }).sort({ updatedAt: 1 }).lean();
-  return docs.map((note) => ({
-    id: note.noteId,
-    x: note.x,
-    y: note.y,
-    width: note.width,
-    height: note.height,
-    text: note.text,
-    color: note.color,
-    author: note.author,
-    updatedAt: note.updatedAt,
-    updatedByRole: note.updatedByRole,
-    updatedByName: note.updatedByName
-  }));
-}
+    el.quickChips.forEach(function (button) {
+      const request = button.dataset.request;
+      button.classList.toggle("active", state.summary.requestTypes.indexOf(request) >= 0);
+    });
+  }
 
-async function addOrGetNote(roomId, imageId, normalized) {
-  const existing = await Note.findOne({ roomId, imageId, noteId: normalized.noteId }).lean();
-  if (existing) {
+  function renderMessage(target, message) {
+    if (!target || !message) return;
+
+    const isViewerTarget = target === el.viewerChatInner;
+    const isImageMessage = message.type === "image";
+    if (isViewerTarget && isImageMessage && message.imageId !== state.currentViewerImageId) return;
+
+    const row = document.createElement("div");
+    row.className = "messageRow " + (message.sender === "admin" ? "other" : "me");
+
+    const bubbleHolder = document.createElement("div");
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = (message.senderName || "") + " · " + formatTime(message.time);
+
+    if (message.type === "text") {
+      bubbleHolder.className = "bubble";
+      bubbleHolder.textContent = message.text || "";
+    } else if (message.type === "image") {
+      bubbleHolder.className = "imageBubble";
+      bubbleHolder.innerHTML =
+        '<img class="chatImg" alt="상담 이미지" src="' + escapeHtml(message.imageUrl || "") + '">' +
+        '<div class="imageHint">이미지를 클릭하면 협업창이 열립니다</div>';
+      bubbleHolder.addEventListener("click", function () {
+        openViewer(message.imageId, message.imageUrl);
+      });
+    } else {
+      return;
+    }
+
+    row.appendChild(bubbleHolder);
+    row.appendChild(meta);
+    target.appendChild(row);
+  }
+
+  function appendMessage(message) {
+    renderMessage(el.chatInner, message);
+    renderMessage(el.viewerChatInner, message);
+    requestAnimationFrame(function () {
+      el.chatBox.scrollTop = el.chatBox.scrollHeight;
+      el.viewerChatBox.scrollTop = el.viewerChatBox.scrollHeight;
+    });
+  }
+
+  function resetLayoutAfterSend() {
+    requestAnimationFrame(function () {
+      el.chatBox.scrollTop = el.chatBox.scrollHeight;
+      el.viewerChatBox.scrollTop = el.viewerChatBox.scrollHeight;
+      if (state.currentViewerImageId) resizeCanvas();
+    });
+  }
+
+  function sendText(text, after) {
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return;
+    if (!canUseRealtime()) {
+      alert("실시간 연결을 확인해 주세요.");
+      return;
+    }
+
+    socket.emit("message", { text: trimmed }, function (ack) {
+      if (!ack || ack.ok) {
+        state.summary.detailNotes.push(trimmed);
+        if (state.summary.detailNotes.length > 12) {
+          state.summary.detailNotes = state.summary.detailNotes.slice(-12);
+        }
+        updateSummaryUI();
+        if (typeof after === "function") after();
+      } else {
+        alert("메시지 전송 중 오류가 발생했습니다.");
+      }
+    });
+  }
+
+  async function uploadImage(file) {
+    const form = new FormData();
+    form.append("image", file);
+    const res = await fetch("/upload", { method: "POST", body: form });
+    if (!res.ok) {
+      let message = "업로드 실패";
+      try {
+        const data = await res.json();
+        if (data && data.error) message = data.error;
+      } catch (e) {}
+      throw new Error(message);
+    }
+    return res.json();
+  }
+
+  async function handleImageSelect(file) {
+    try {
+      if (!file) return;
+      if (!canUseRealtime()) {
+        alert("실시간 연결을 확인해 주세요.");
+        return;
+      }
+
+      setUploadLoading(true);
+      const uploaded = await uploadImage(file);
+
+      socket.emit("image", { url: uploaded.url }, function (ack) {
+        setUploadLoading(false);
+        if (ack && ack.ok) {
+          openViewer(ack.imageId, uploaded.url);
+        } else {
+          alert("이미지 첨부 중 오류가 발생했습니다.");
+        }
+      });
+    } catch (e) {
+      setUploadLoading(false);
+      alert(e.message || "이미지 첨부 중 오류가 발생했습니다.");
+    } finally {
+      el.fileInput.value = "";
+    }
+  }
+
+  function openViewer(imageId, imageUrl) {
+    if (!imageId || !imageUrl) return;
+
+    if (isEmbed && !isMobileViewport() && window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: "DH_OPEN_COLLAB",
+        roomId: state.roomId,
+        userName: state.userName,
+        imageId: imageId,
+        imageUrl: imageUrl
+      }, "*");
+      return;
+    }
+
+    state.currentViewerImageId = imageId;
+    state.currentViewerImageUrl = imageUrl;
+    el.viewerImage.src = imageUrl;
+
+    el.viewerOverlay.classList.add("open");
+    el.viewerOverlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("viewer-inline-open");
+
+    requestAnimationFrame(function () {
+      resizeCanvas();
+      requestDrawingHistory();
+      requestNoteHistory();
+    });
+  }
+
+  function closeViewer() {
+    closeColorPopover();
+    state.selectedNoteForMoveId = "";
+    state.isMobileNoteMoveMode = false;
+    el.viewerOverlay.classList.remove("open");
+    el.viewerOverlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("viewer-inline-open");
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    el.penBtn.classList.toggle("active", mode === "draw");
+    el.eraserBtn.classList.toggle("active", mode === "erase");
+    el.addTextBtn.classList.toggle("active", mode === "text");
+
+    if (mode === "text") {
+      el.brushCursor.style.display = "none";
+      el.drawCanvas.style.cursor = "crosshair";
+    } else {
+      state.selectedNoteForMoveId = "";
+      state.isMobileNoteMoveMode = false;
+      el.brushCursor.style.display = "block";
+      el.drawCanvas.style.cursor = "none";
+      updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
+      renderNotes();
+    }
+  }
+
+  function setStrokeColor(color) {
+    state.color = color;
+    document.documentElement.style.setProperty("--selected-draw-color", color);
+    el.palettePreview.style.background = color;
+
+    el.colorChips.forEach(function (chip) {
+      chip.classList.toggle("active", chip.dataset.color === color);
+    });
+
+    if (el.brushCursor.style.display !== "none") {
+      updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
+    }
+  }
+
+  function positionColorPopover() {
+    const btnRect = el.paletteBtn.getBoundingClientRect();
+    const pop = el.colorPopover;
+    const popWidth = 172;
+    const gap = 10;
+
+    let left = btnRect.left + (btnRect.width / 2) - (popWidth / 2);
+    let top = btnRect.top - gap;
+
+    if (left < 8) left = 8;
+    if (left + popWidth > window.innerWidth - 8) {
+      left = window.innerWidth - popWidth - 8;
+    }
+
+    pop.style.left = left + "px";
+    pop.style.top = "0px";
+    pop.style.visibility = "hidden";
+    pop.classList.add("open");
+
+    const popHeight = pop.offsetHeight || 120;
+    top = btnRect.top - popHeight - gap;
+
+    if (top < 8) {
+      top = btnRect.bottom + gap;
+    }
+
+    pop.style.top = top + "px";
+    pop.style.visibility = "visible";
+  }
+
+  function openColorPopover() {
+    state.colorPopoverOpen = true;
+    el.colorPopover.classList.add("open");
+    el.colorPopover.setAttribute("aria-hidden", "false");
+    positionColorPopover();
+  }
+
+  function closeColorPopover() {
+    state.colorPopoverOpen = false;
+    el.colorPopover.classList.remove("open");
+    el.colorPopover.setAttribute("aria-hidden", "true");
+    el.colorPopover.style.visibility = "";
+  }
+
+  function toggleColorPopover() {
+    if (state.colorPopoverOpen) closeColorPopover();
+    else openColorPopover();
+  }
+
+  function setNoteColor(color) {
+    state.noteColor = color;
+    el.noteColorSwatches.forEach(function (swatch) {
+      swatch.classList.toggle("active", swatch.dataset.noteColor === color);
+    });
+  }
+
+  function updateBrushCursor(x, y) {
+    state.cursorX = x;
+    state.cursorY = y;
+
+    const size = Math.max(6, Number(state.width || 3));
+    const color = state.mode === "erase" ? "#94a3b8" : state.color;
+
+    el.brushCursor.style.width = size + "px";
+    el.brushCursor.style.height = size + "px";
+    el.brushCursor.style.left = x + "px";
+    el.brushCursor.style.top = y + "px";
+    el.brushCursor.style.background = hexToRgba(color, state.mode === "erase" ? 0.10 : 0.18);
+    el.brushCursor.style.borderColor = hexToRgba(color, state.mode === "erase" ? 0.55 : 0.78);
+  }
+
+  function resizeCanvas() {
+    const rect = el.imageStage.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    el.drawCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
+    el.drawCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
+    el.drawCanvas.style.width = rect.width + "px";
+    el.drawCanvas.style.height = rect.height + "px";
+    canvasCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    redrawCanvas();
+    renderNotes();
+  }
+
+  function getPointFromEvent(event) {
+    const rect = el.drawCanvas.getBoundingClientRect();
+    const pointSource = event.touches && event.touches[0]
+      ? event.touches[0]
+      : (event.changedTouches && event.changedTouches[0] ? event.changedTouches[0] : event);
     return {
-      id: existing.noteId,
-      x: existing.x,
-      y: existing.y,
-      width: existing.width,
-      height: existing.height,
-      text: existing.text,
-      color: existing.color,
-      author: existing.author,
-      updatedAt: existing.updatedAt,
-      updatedByRole: existing.updatedByRole,
-      updatedByName: existing.updatedByName
+      x: pointSource.clientX - rect.left,
+      y: pointSource.clientY - rect.top
     };
   }
 
-  const created = await Note.create({ roomId, imageId, ...normalized });
+  function redrawCanvas() {
+    const rect = el.drawCanvas.getBoundingClientRect();
+    canvasCtx.clearRect(0, 0, rect.width, rect.height);
+    state.strokes.forEach(function (stroke) {
+      if (!stroke || !stroke.points || !stroke.points.length) return;
+      drawStrokeOnContext(canvasCtx, stroke);
+    });
+  }
 
-  const count = await Note.countDocuments({ roomId, imageId });
-  if (count > 100) {
-    const overflow = count - 100;
-    const oldDocs = await Note.find({ roomId, imageId })
-      .sort({ updatedAt: 1 })
-      .limit(overflow)
-      .select("_id")
-      .lean();
+  function drawStrokeOnContext(ctx, stroke) {
+    if (!stroke.points || !stroke.points.length) return;
 
-    if (oldDocs.length) {
-      await Note.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
+    const points = stroke.points;
+    const width = Math.max(1, Number(stroke.width || 3));
+
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = stroke.color || "#ff3b30";
+    ctx.lineWidth = width;
+    ctx.globalCompositeOperation = stroke.mode === "erase" ? "destination-out" : "source-over";
+
+    if (points.length === 1) {
+      ctx.beginPath();
+      ctx.arc(points[0].x, points[0].y, width / 2, 0, Math.PI * 2);
+      ctx.fillStyle = stroke.mode === "erase" ? "rgba(0,0,0,1)" : (stroke.color || "#ff3b30");
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+
+    for (let i = 1; i < points.length - 1; i += 1) {
+      const current = points[i];
+      const next = points[i + 1];
+      const midX = (current.x + next.x) / 2;
+      const midY = (current.y + next.y) / 2;
+      ctx.quadraticCurveTo(current.x, current.y, midX, midY);
+    }
+
+    const last = points[points.length - 1];
+    ctx.lineTo(last.x, last.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function addNoteAtPoint(x, y) {
+    if (!state.currentViewerImageId) return;
+
+    const note = {
+      id: createUuid(),
+      x: Math.min(0.94, Math.max(0.06, x)),
+      y: Math.min(0.92, Math.max(0.08, y)),
+      width: 0.16,
+      height: 0.1,
+      text: "",
+      color: state.noteColor,
+      author: state.role,
+      updatedAt: Date.now(),
+      updatedByRole: state.role,
+      updatedByName: state.userName
+    };
+
+    state.notes.push(note);
+    renderNotes();
+
+    if (canUseRealtime()) {
+      socket.emit("add-note", {
+        imageId: state.currentViewerImageId,
+        note: note
+      });
     }
   }
 
-  return {
-    id: created.noteId,
-    x: created.x,
-    y: created.y,
-    width: created.width,
-    height: created.height,
-    text: created.text,
-    color: created.color,
-    author: created.author,
-    updatedAt: created.updatedAt,
-    updatedByRole: created.updatedByRole,
-    updatedByName: created.updatedByName
-  };
-}
+  function addNoteAtCenter() {
+    addNoteAtPoint(0.5, 0.5);
+  }
 
-async function updateNote(roomId, imageId, noteId, patch) {
-  const updated = await Note.findOneAndUpdate(
-    { roomId, imageId, noteId },
-    { $set: patch },
-    { new: true }
-  ).lean();
+  function openNoteEditor(noteId) {
+    state.activeNoteId = noteId;
+    const note = state.notes.find(function (item) { return item.id === noteId; });
+    if (!note) return;
 
-  if (!updated) return null;
+    setNoteColor(note.color || "#fff7c2");
+    el.noteEditorTextarea.value = note.text || "";
+    el.noteEditorTimestamp.textContent = note.updatedAt ? new Date(note.updatedAt).toLocaleString("ko-KR") : "최종 수정 없음";
+    el.noteEditorAuthor.textContent = note.updatedByName || "수정자 없음";
+    el.noteEditorOverlay.classList.add("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "false");
+    setNoteSaveBadge("ready");
 
-  return {
-    id: updated.noteId,
-    x: updated.x,
-    y: updated.y,
-    width: updated.width,
-    height: updated.height,
-    text: updated.text,
-    color: updated.color,
-    author: updated.author,
-    updatedAt: updated.updatedAt,
-    updatedByRole: updated.updatedByRole,
-    updatedByName: updated.updatedByName
-  };
-}
+    requestAnimationFrame(function () {
+      el.noteEditorTextarea.focus();
+      el.noteEditorTextarea.setSelectionRange(el.noteEditorTextarea.value.length, el.noteEditorTextarea.value.length);
+    });
 
-async function deleteNote(roomId, imageId, noteId) {
-  await Note.deleteOne({ roomId, imageId, noteId });
-}
+    renderNotes();
+  }
 
-app.post(
-  "/upload",
-  (req, res, next) => {
-    upload.single("image")(req, res, (err) => {
-      if (!err) return next();
+  function closeNoteEditor() {
+    el.noteEditorOverlay.classList.remove("open");
+    el.noteEditorOverlay.setAttribute("aria-hidden", "true");
+    state.activeNoteId = "";
+    renderNotes();
+  }
 
-      if (err instanceof multer.MulterError) {
-        if (err.code === "LIMIT_FILE_SIZE") {
-          return res.status(400).json({
-            error: "이미지 용량이 너무 큽니다. 20MB 이하만 가능합니다."
-          });
+  function setNoteSaveBadge(status) {
+    el.noteEditorSaveBadge.className = "";
+    el.noteEditorSaveBadge.id = "noteEditorSaveBadge";
+    if (status === "pending") {
+      el.noteEditorSaveBadge.classList.add("pending");
+      el.noteEditorSaveBadge.textContent = "저장 중";
+    } else if (status === "saved") {
+      el.noteEditorSaveBadge.classList.add("saved");
+      el.noteEditorSaveBadge.textContent = "저장됨";
+    } else if (status === "offline") {
+      el.noteEditorSaveBadge.classList.add("offline");
+      el.noteEditorSaveBadge.textContent = "오프라인";
+    } else {
+      el.noteEditorSaveBadge.textContent = "준비됨";
+    }
+  }
+
+  function queueNoteSave(note, patch) {
+    clearTimeout(state.noteSaveTimer);
+    setNoteSaveBadge(canUseRealtime() ? "pending" : "offline");
+
+    state.noteSaveTimer = setTimeout(function () {
+      if (!canUseRealtime()) return;
+
+      socket.emit("update-note", {
+        imageId: state.currentViewerImageId,
+        noteId: note.id,
+        patch: patch
+      }, function (ack) {
+        if (ack && ack.ok) setNoteSaveBadge("saved");
+      });
+    }, 180);
+  }
+
+  function beginNoteDrag(noteId, clientX, clientY) {
+    const note = state.notes.find(function (item) { return item.id === noteId; });
+    if (!note) return;
+
+    const rect = el.imageStage.getBoundingClientRect();
+    const noteX = note.x * rect.width;
+    const noteY = note.y * rect.height;
+
+    state.draggingNoteId = noteId;
+    state.dragOffsetX = clientX - rect.left - noteX;
+    state.dragOffsetY = clientY - rect.top - noteY;
+  }
+
+  function moveNoteDrag(clientX, clientY) {
+    if (!state.draggingNoteId) return;
+
+    const note = state.notes.find(function (item) { return item.id === state.draggingNoteId; });
+    if (!note) return;
+
+    const rect = el.imageStage.getBoundingClientRect();
+    let nextX = (clientX - rect.left - state.dragOffsetX) / rect.width;
+    let nextY = (clientY - rect.top - state.dragOffsetY) / rect.height;
+
+    nextX = Math.min(0.94, Math.max(0.06, nextX));
+    nextY = Math.min(0.92, Math.max(0.08, nextY));
+
+    note.x = nextX;
+    note.y = nextY;
+    note.updatedAt = Date.now();
+    note.updatedByName = state.userName;
+    note.updatedByRole = state.role;
+
+    renderNotes();
+  }
+
+  function endNoteDrag() {
+    if (!state.draggingNoteId) return;
+
+    const note = state.notes.find(function (item) { return item.id === state.draggingNoteId; });
+    if (note) {
+      queueNoteSave(note, {
+        x: note.x,
+        y: note.y,
+        updatedAt: note.updatedAt,
+        updatedByName: note.updatedByName,
+        updatedByRole: note.updatedByRole
+      });
+    }
+
+    state.draggingNoteId = "";
+  }
+
+  function moveSelectedNoteToPoint(clientX, clientY) {
+    if (!state.selectedNoteForMoveId) return;
+
+    const note = state.notes.find(function (item) { return item.id === state.selectedNoteForMoveId; });
+    if (!note) return;
+
+    const rect = el.drawCanvas.getBoundingClientRect();
+    let nextX = (clientX - rect.left) / rect.width;
+    let nextY = (clientY - rect.top) / rect.height;
+
+    nextX = Math.min(0.94, Math.max(0.06, nextX));
+    nextY = Math.min(0.92, Math.max(0.08, nextY));
+
+    note.x = nextX;
+    note.y = nextY;
+    note.updatedAt = Date.now();
+    note.updatedByName = state.userName;
+    note.updatedByRole = state.role;
+
+    renderNotes();
+    queueNoteSave(note, {
+      x: note.x,
+      y: note.y,
+      updatedAt: note.updatedAt,
+      updatedByName: note.updatedByName,
+      updatedByRole: note.updatedByRole
+    });
+
+    state.selectedNoteForMoveId = "";
+    state.isMobileNoteMoveMode = false;
+  }
+
+  function startDrawing(event) {
+    if (state.mode === "text") return;
+    if (!state.currentViewerImageId) return;
+
+    const point = getPointFromEvent(event);
+    updateBrushCursor(point.x, point.y);
+
+    state.isDrawing = true;
+    state.currentStroke = [point];
+  }
+
+  function moveDrawing(event) {
+    const point = getPointFromEvent(event);
+    updateBrushCursor(point.x, point.y);
+
+    if (!state.isDrawing) return;
+
+    state.currentStroke.push(point);
+
+    const stroke = {
+      imageId: state.currentViewerImageId,
+      color: state.mode === "erase" ? "#ffffff" : state.color,
+      width: Number(state.width || 3),
+      mode: state.mode === "erase" ? "erase" : "draw",
+      points: state.currentStroke.slice()
+    };
+
+    redrawCanvas();
+    drawStrokeOnContext(canvasCtx, stroke);
+  }
+
+  function endDrawing() {
+    if (!state.isDrawing || state.currentStroke.length < 2) {
+      state.isDrawing = false;
+      state.currentStroke = [];
+      return;
+    }
+
+    const stroke = {
+      imageId: state.currentViewerImageId,
+      color: state.mode === "erase" ? "#ffffff" : state.color,
+      width: Number(state.width || 3),
+      mode: state.mode === "erase" ? "erase" : "draw",
+      points: state.currentStroke.slice()
+    };
+
+    state.strokes.push(stroke);
+    state.redoStrokes = [];
+    state.isDrawing = false;
+    state.currentStroke = [];
+    redrawCanvas();
+
+    if (canUseRealtime()) socket.emit("draw-stroke", stroke);
+  }
+
+  function requestDrawingHistory() {
+    if (canUseRealtime() && state.currentViewerImageId) {
+      socket.emit("request-drawing-history", { imageId: state.currentViewerImageId });
+    }
+  }
+
+  function requestNoteHistory() {
+    if (canUseRealtime() && state.currentViewerImageId) {
+      socket.emit("request-note-history", { imageId: state.currentViewerImageId });
+    }
+  }
+
+  function renderNotes() {
+    el.textLayer.innerHTML = "";
+
+    state.notes.forEach(function (note) {
+      const marker = document.createElement("div");
+      marker.className =
+        "noteMarker" +
+        (state.activeNoteId === note.id ? " selected" : "") +
+        (state.selectedNoteForMoveId === note.id ? " moveTarget" : "");
+
+      marker.style.left = (note.x * 100) + "%";
+      marker.style.top = (note.y * 100) + "%";
+      marker.style.background = note.color || "#fff7c2";
+      marker.dataset.noteId = note.id;
+
+      const text = document.createElement("div");
+      text.className = "noteMarkerText";
+      text.textContent = note.text || "메모";
+      marker.appendChild(text);
+
+      marker.addEventListener("mousedown", function (event) {
+        if (isMobileViewport()) return;
+        event.stopPropagation();
+        beginNoteDrag(note.id, event.clientX, event.clientY);
+      });
+
+      marker.addEventListener("touchstart", function (event) {
+        const touch = event.touches && event.touches[0];
+        if (!touch) return;
+        event.stopPropagation();
+
+        if (isMobileViewport()) {
+          state.selectedNoteForMoveId = note.id;
+          state.isMobileNoteMoveMode = true;
+          state.activeNoteId = note.id;
+          renderNotes();
+          return;
         }
-        return res.status(400).json({
-          error: "업로드 처리 중 오류가 발생했습니다."
+
+        beginNoteDrag(note.id, touch.clientX, touch.clientY);
+      }, { passive: true });
+
+      marker.addEventListener("dblclick", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openNoteEditor(note.id);
+      });
+
+      marker.addEventListener("touchend", function (event) {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (!touch) return;
+
+        const now = Date.now();
+        const dx = Math.abs((touch.clientX || 0) - state.lastTapX);
+        const dy = Math.abs((touch.clientY || 0) - state.lastTapY);
+
+        if (now - state.lastTapAt < DOUBLE_TAP_MS && dx < 24 && dy < 24) {
+          event.preventDefault();
+          event.stopPropagation();
+          openNoteEditor(note.id);
+          state.lastTapAt = 0;
+          return;
+        }
+
+        state.lastTapAt = now;
+        state.lastTapX = touch.clientX || 0;
+        state.lastTapY = touch.clientY || 0;
+      }, { passive: false });
+
+      el.textLayer.appendChild(marker);
+    });
+  }
+
+  function downloadSketch() {
+    const exportCanvas = document.createElement("canvas");
+    const rect = el.imageStage.getBoundingClientRect();
+    exportCanvas.width = rect.width;
+    exportCanvas.height = rect.height;
+    const ectx = exportCanvas.getContext("2d");
+    const img = el.viewerImage;
+
+    if (img && img.complete && img.naturalWidth) {
+      const scale = Math.min((rect.width * 0.84) / img.naturalWidth, (rect.height * 0.84) / img.naturalHeight);
+      const w = img.naturalWidth * scale;
+      const h = img.naturalHeight * scale;
+      const x = (rect.width - w) / 2;
+      const y = (rect.height - h) / 2;
+      ectx.drawImage(img, x, y, w, h);
+    }
+
+    state.strokes.forEach(function (stroke) {
+      if (!stroke || !stroke.points || !stroke.points.length) return;
+      drawStrokeOnContext(ectx, stroke);
+    });
+
+    const link = document.createElement("a");
+    link.href = exportCanvas.toDataURL("image/png");
+    link.download = "design-consultation.png";
+    link.click();
+  }
+
+  function buildSummaryComposeText() {
+    const parts = [];
+    if (state.summary.productName) parts.push("제품: " + state.summary.productName);
+    if (state.summary.requestTypes.length) parts.push("요청: " + state.summary.requestTypes.join(", "));
+    if (state.summary.detailNotes.length) parts.push("상세: " + state.summary.detailNotes.slice(-3).join(" / "));
+    return parts.join("\\n");
+  }
+
+  function buildQuoteText() {
+    const parts = [];
+    parts.push("안녕하세요. 아래 내용으로 견적 요청드립니다.");
+    if (state.summary.productName) parts.push("제품명: " + state.summary.productName);
+    if (state.summary.requestTypes.length) parts.push("수정 요청: " + state.summary.requestTypes.join(", "));
+    if (state.summary.detailNotes.length) parts.push("상세 요청: " + state.summary.detailNotes.slice(-3).join(" / "));
+    if (el.phoneInput.value.trim()) parts.push("연락처: " + el.phoneInput.value.trim());
+    return parts.join("\\n");
+  }
+
+  function bindEvents() {
+    el.summaryToggleBtn.addEventListener("click", function () {
+      state.summaryCollapsed = !state.summaryCollapsed;
+      updateSummaryUI();
+    });
+
+    el.quickChips.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const request = button.dataset.request;
+        const draft = button.dataset.draft;
+        if (!request) return;
+
+        if (state.summary.requestTypes.indexOf(request) >= 0) {
+          state.summary.requestTypes = state.summary.requestTypes.filter(function (v) { return v !== request; });
+        } else {
+          state.summary.requestTypes.push(request);
+          if (!state.summary.productName) state.summary.productName = "디자인 상담";
+          if (draft && !el.msgInput.value.trim()) el.msgInput.value = draft;
+        }
+        updateSummaryUI();
+      });
+    });
+
+    el.summaryComposeBtn.addEventListener("click", function () {
+      const text = buildSummaryComposeText();
+      if (text) el.msgInput.value = text;
+    });
+
+    el.summaryQuoteBtn.addEventListener("click", function () {
+      const text = buildQuoteText();
+      if (text) el.msgInput.value = text;
+    });
+
+    el.sendBtn.addEventListener("click", function () {
+      sendText(el.msgInput.value, function () {
+        el.msgInput.value = "";
+        resetLayoutAfterSend();
+      });
+    });
+
+    el.msgInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        el.sendBtn.click();
+      }
+    });
+
+    el.viewerSendBtn.addEventListener("click", function () {
+      sendText(el.viewerMsgInput.value, function () {
+        el.viewerMsgInput.value = "";
+        resetLayoutAfterSend();
+      });
+    });
+
+    el.viewerMsgInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        el.viewerSendBtn.click();
+      }
+    });
+
+    el.fileInput.addEventListener("change", function () {
+      handleImageSelect(el.fileInput.files && el.fileInput.files[0]);
+    });
+
+    el.savePhoneBtn.addEventListener("click", function () {
+      const phone = el.phoneInput.value.trim();
+      safeStorageSet(STORAGE_KEYS.phone, phone);
+      el.phoneStatus.textContent = phone ? "연락처가 저장되었습니다." : "연락처를 입력해 주세요.";
+      el.phoneStatus.className = "show";
+    });
+
+    el.deletePhoneBtn.addEventListener("click", function () {
+      el.phoneInput.value = "";
+      safeStorageSet(STORAGE_KEYS.phone, "");
+      el.phoneStatus.textContent = "연락처가 삭제되었습니다.";
+      el.phoneStatus.className = "show";
+    });
+
+    el.viewerTitle.addEventListener("click", closeViewer);
+    el.downloadSketchBtn.addEventListener("click", downloadSketch);
+
+    el.penBtn.addEventListener("click", function () { setMode("draw"); });
+    el.eraserBtn.addEventListener("click", function () { setMode("erase"); });
+    el.addTextBtn.addEventListener("click", function () {
+      setMode("text");
+      addNoteAtCenter();
+    });
+
+    el.undoBtn.addEventListener("click", function () {
+      if (!state.strokes.length) return;
+      state.redoStrokes.push(state.strokes.pop());
+      redrawCanvas();
+      if (canUseRealtime() && state.currentViewerImageId) {
+        socket.emit("replace-drawing-history", {
+          imageId: state.currentViewerImageId,
+          strokes: state.strokes
+        });
+      }
+    });
+
+    el.redoBtn.addEventListener("click", function () {
+      if (!state.redoStrokes.length) return;
+      state.strokes.push(state.redoStrokes.pop());
+      redrawCanvas();
+      if (canUseRealtime() && state.currentViewerImageId) {
+        socket.emit("replace-drawing-history", {
+          imageId: state.currentViewerImageId,
+          strokes: state.strokes
+        });
+      }
+    });
+
+    el.clearBtn.addEventListener("click", function () {
+      if (!state.currentViewerImageId) return;
+      state.strokes = [];
+      state.redoStrokes = [];
+      redrawCanvas();
+      if (canUseRealtime()) socket.emit("clear-drawing", { imageId: state.currentViewerImageId });
+    });
+
+    el.thicknessRange.addEventListener("input", function () {
+      state.width = Number(el.thicknessRange.value || 3);
+      updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
+    });
+
+    el.paletteBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleColorPopover();
+    });
+
+    el.colorChips.forEach(function (chip) {
+      chip.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        setStrokeColor(chip.dataset.color || "#ff3b30");
+        closeColorPopover();
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      const clickedInsideButton = el.paletteWrap.contains(event.target);
+      const clickedInsidePopover = el.colorPopover.contains(event.target);
+
+      if (!clickedInsideButton && !clickedInsidePopover) {
+        closeColorPopover();
+      }
+    });
+
+    el.drawCanvas.addEventListener("mouseenter", function () {
+      if (state.mode !== "text") {
+        el.brushCursor.style.display = "block";
+        el.drawCanvas.style.cursor = "none";
+        updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
+      }
+    });
+
+    el.drawCanvas.addEventListener("mouseleave", function () {
+      el.brushCursor.style.display = "none";
+      el.drawCanvas.style.cursor = state.mode === "text" ? "crosshair" : "default";
+    });
+
+    ["mousedown", "touchstart"].forEach(function (eventName) {
+      el.drawCanvas.addEventListener(eventName, function (event) {
+        if (state.mode === "text") return;
+        startDrawing(event);
+      }, { passive: true });
+    });
+
+    ["mousemove", "touchmove"].forEach(function (eventName) {
+      el.drawCanvas.addEventListener(eventName, function (event) {
+        moveDrawing(event);
+      }, { passive: true });
+    });
+
+    ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(function (eventName) {
+      el.drawCanvas.addEventListener(eventName, function () {
+        if (state.mode === "text") return;
+        endDrawing();
+      }, { passive: true });
+    });
+
+    el.drawCanvas.addEventListener("touchend", function (event) {
+      if (!isMobileViewport()) return;
+      if (!state.isMobileNoteMoveMode) return;
+      if (!state.selectedNoteForMoveId) return;
+
+      const touch = event.changedTouches && event.changedTouches[0];
+      if (!touch) return;
+
+      moveSelectedNoteToPoint(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    window.addEventListener("mousemove", function (event) {
+      moveNoteDrag(event.clientX, event.clientY);
+    });
+
+    window.addEventListener("mouseup", function () {
+      endNoteDrag();
+    });
+
+    window.addEventListener("touchmove", function (event) {
+      if (isMobileViewport()) return;
+      const touch = event.touches && event.touches[0];
+      if (!touch) return;
+      moveNoteDrag(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    window.addEventListener("touchend", function () {
+      if (isMobileViewport()) return;
+      endNoteDrag();
+    });
+
+    window.addEventListener("resize", function () {
+      if (state.currentViewerImageId) resizeCanvas();
+      if (state.colorPopoverOpen) positionColorPopover();
+    });
+
+    el.viewerImage.addEventListener("load", function () {
+      if (state.currentViewerImageId) resizeCanvas();
+    });
+
+    el.noteColorSwatches.forEach(function (swatch) {
+      swatch.addEventListener("click", function () {
+        setNoteColor(swatch.dataset.noteColor || "#fff7c2");
+        const note = state.notes.find(function (item) { return item.id === state.activeNoteId; });
+        if (!note) return;
+        note.color = state.noteColor;
+        renderNotes();
+        queueNoteSave(note, { color: state.noteColor });
+      });
+    });
+
+    el.noteEditorTextarea.addEventListener("input", function () {
+      const note = state.notes.find(function (item) { return item.id === state.activeNoteId; });
+      if (!note) return;
+
+      note.text = el.noteEditorTextarea.value.slice(0, MAX_NOTE_CHARS);
+      note.updatedAt = Date.now();
+      note.updatedByName = state.userName;
+      note.updatedByRole = state.role;
+
+      el.noteEditorTimestamp.textContent = new Date(note.updatedAt).toLocaleString("ko-KR");
+      el.noteEditorAuthor.textContent = note.updatedByName || "수정자 없음";
+
+      renderNotes();
+      queueNoteSave(note, {
+        text: note.text,
+        updatedAt: note.updatedAt,
+        updatedByName: note.updatedByName,
+        updatedByRole: note.updatedByRole
+      });
+    });
+
+    el.noteDeleteBtn.addEventListener("click", function () {
+      const noteId = state.activeNoteId;
+      if (!noteId || !state.currentViewerImageId) return;
+
+      state.notes = state.notes.filter(function (note) { return note.id !== noteId; });
+      renderNotes();
+
+      if (canUseRealtime()) {
+        socket.emit("delete-note", {
+          imageId: state.currentViewerImageId,
+          noteId: noteId
         });
       }
 
-      return res.status(400).json({
-        error: err.message || "업로드 실패"
+      closeNoteEditor();
+    });
+
+    el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
+
+    el.noteEditorOverlay.addEventListener("click", function (event) {
+      if (event.target === el.noteEditorOverlay) closeNoteEditor();
+    });
+
+    el.viewerOverlay.addEventListener("click", function (event) {
+      if (event.target === el.viewerOverlay) closeViewer();
+    });
+  }
+
+  function bindSocket() {
+    socket = io({ transports: ["websocket", "polling"] });
+
+    socket.on("connect", function () {
+      state.connected = true;
+      state.joined = false;
+      syncConnectionUI();
+      socket.emit("join", {
+        roomId: state.roomId,
+        userName: state.userName,
+        role: state.role
       });
     });
-  },
-  async (req, res) => {
-    try {
-      if (!hasCloudinaryEnv) {
-        return res.status(500).json({ error: "Cloudinary 환경변수가 설정되지 않았습니다." });
-      }
 
-      if (!req.file) {
-        return res.status(400).json({ error: "파일 없음" });
-      }
-
-      const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-
-      const uploaded = await cloudinary.uploader.upload(dataUri, {
-        folder: "design-chat",
-        public_id: `${Date.now()}-${uuidv4()}`,
-        resource_type: "image"
-      });
-
-      return res.json({
-        success: true,
-        url: uploaded.secure_url
-      });
-    } catch (error) {
-      console.error("upload error:", error);
-      return res.status(500).json({ error: "업로드 실패" });
-    }
-  }
-);
-
-io.on("connection", (socket) => {
-  console.log("connect:", socket.id);
-
-  socket.on("join", async (payload = {}, ack) => {
-    try {
-      const roomId = String(payload.roomId || "").trim();
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "roomId 없음" });
-        socket.emit("join-error", { ok: false, error: "roomId 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(payload.role);
-      const userName = sanitizeUserName(payload.userName, role);
-
-      socket.join(roomId);
-      socket.data.roomId = roomId;
-      socket.data.role = role;
-      socket.data.userName = userName;
-
-      const history = await getMessageHistory(roomId);
-      socket.emit("history", history);
-
-      if (ack) ack({ ok: true, roomId, role, userName });
-      socket.emit("joined", { ok: true, roomId, role, userName });
-    } catch (error) {
-      console.error("join error:", error);
-      if (ack) ack({ ok: false, error: "join 오류" });
-      socket.emit("join-error", { ok: false, error: "join 오류" });
-    }
-  });
-
-  socket.on("message", async (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
-
-      const text = String(payload.text || "").trim();
-      if (!text) {
-        if (ack) ack({ ok: false, error: "메시지 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const message = {
-        type: "text",
-        text,
-        sender: role,
-        senderName: userName,
-        time: Date.now()
-      };
-
-      await appendMessage(roomId, message);
-      io.to(roomId).emit("message", message);
-
-      if (ack) ack({ ok: true });
-    } catch (error) {
-      console.error("message error:", error);
-      if (ack) ack({ ok: false, error: "메시지 오류" });
-    }
-  });
-
-  socket.on("image", async (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
-
-      const imageUrl = String(payload.url || "").trim();
-      if (!imageUrl) {
-        if (ack) ack({ ok: false, error: "imageUrl 없음" });
-        return;
-      }
-
-      const imageId = uuidv4();
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-
-      const message = {
-        type: "image",
-        imageId,
-        imageUrl,
-        sender: role,
-        senderName: userName,
-        time: Date.now()
-      };
-
-      await appendMessage(roomId, message);
-      await replaceDrawingHistory(roomId, imageId, []);
-      io.to(roomId).emit("image", message);
-
-      if (ack) ack({ ok: true, imageId, imageUrl });
-    } catch (error) {
-      console.error("image error:", error);
-      if (ack) ack({ ok: false, error: "이미지 오류" });
-    }
-  });
-
-  socket.on("request-drawing-history", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const strokes = await getDrawingHistory(roomId, imageId);
-      socket.emit("drawing-history", { imageId, strokes });
-    } catch (error) {
-      console.error("request-drawing-history error:", error);
-    }
-  });
-
-  socket.on("draw-stroke", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      await appendDrawStroke(roomId, imageId, payload);
-      io.to(roomId).emit("draw-stroke", payload);
-    } catch (error) {
-      console.error("draw-stroke error:", error);
-    }
-  });
-
-  socket.on("draw-strokes", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId || !strokes.length) return;
-
-      await appendDrawStrokes(roomId, imageId, strokes);
-      io.to(roomId).emit("draw-strokes", { imageId, strokes });
-    } catch (error) {
-      console.error("draw-strokes error:", error);
-    }
-  });
-
-  socket.on("replace-drawing-history", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId) return;
-
-      const saved = await replaceDrawingHistory(roomId, imageId, strokes);
-      io.to(roomId).emit("drawing-history", { imageId, strokes: saved });
-    } catch (error) {
-      console.error("replace-drawing-history error:", error);
-    }
-  });
-
-  socket.on("clear-drawing", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      await clearDrawingHistory(roomId, imageId);
-      io.to(roomId).emit("clear-drawing", { imageId });
-    } catch (error) {
-      console.error("clear-drawing error:", error);
-    }
-  });
-
-  socket.on("request-note-history", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
-
-      const notes = await getNotes(roomId, imageId);
-      socket.emit("note-history", { imageId, notes });
-    } catch (error) {
-      console.error("request-note-history error:", error);
-    }
-  });
-
-  socket.on("add-note", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const note = payload.note;
-      if (!roomId || !imageId || !note) return;
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-      const normalized = normalizeNote(note, role, userName);
-      const saved = await addOrGetNote(roomId, imageId, normalized);
-
-      io.to(roomId).emit("note-added", { imageId, note: saved });
-    } catch (error) {
-      console.error("add-note error:", error);
-    }
-  });
-
-  socket.on("note-live-update", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) return;
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-
-      const updated = await updateNote(roomId, imageId, noteId, patch);
-      if (!updated) return;
-
-      io.to(roomId).emit("note-live-update", {
-        imageId,
-        noteId,
-        patch: {
-          x: updated.x,
-          y: updated.y,
-          width: updated.width,
-          height: updated.height,
-          text: updated.text,
-          color: updated.color,
-          updatedAt: updated.updatedAt,
-          updatedByRole: updated.updatedByRole,
-          updatedByName: updated.updatedByName
-        }
-      });
-    } catch (error) {
-      console.error("note-live-update error:", error);
-    }
-  });
-
-  socket.on("update-note", async (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      const role = sanitizeRole(socket.data.role);
-      const userName = sanitizeUserName(socket.data.userName, role);
-      const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-
-      const updated = await updateNote(roomId, imageId, noteId, patch);
-      if (!updated) {
-        if (ack) ack({ ok: false, error: "노트를 찾을 수 없음" });
-        return;
-      }
-
-      io.to(roomId).emit("note-updated", { imageId, note: updated });
-      if (ack) ack({ ok: true, note: updated });
-    } catch (error) {
-      console.error("update-note error:", error);
-      if (ack) ack({ ok: false, error: "노트 저장 오류" });
-    }
-  });
-
-  socket.on("delete-note", async (payload = {}, ack) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
-
-      await deleteNote(roomId, imageId, noteId);
-      io.to(roomId).emit("note-deleted", { imageId, noteId });
-      if (ack) ack({ ok: true });
-    } catch (error) {
-      console.error("delete-note error:", error);
-      if (ack) ack({ ok: false, error: "노트 삭제 오류" });
-    }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("disconnect:", socket.id);
-  });
-});
-
-async function bootstrap() {
-  try {
-    await ensureMongoConnected();
-    server.listen(PORT, HOST, () => {
-      console.log(`[SERVER] listening on http://${HOST}:${PORT}`);
+    socket.on("disconnect", function () {
+      state.connected = false;
+      state.joined = false;
+      syncConnectionUI();
     });
-  } catch (error) {
-    console.error("[BOOT] failed:", error);
-    process.exit(1);
-  }
-}
 
-bootstrap();
+    socket.on("joined", function () {
+      state.joined = true;
+      syncConnectionUI();
+      if (state.currentViewerImageId) {
+        requestDrawingHistory();
+        requestNoteHistory();
+      }
+    });
+
+    socket.on("join-error", function () {
+      state.joined = false;
+      syncConnectionUI();
+    });
+
+    socket.on("history", function (messages) {
+      const list = Array.isArray(messages) ? messages : [];
+      el.chatInner.innerHTML = "";
+      el.viewerChatInner.innerHTML = "";
+      list.forEach(appendMessage);
+      syncConnectionUI();
+    });
+
+    socket.on("message", appendMessage);
+    socket.on("image", appendMessage);
+
+    socket.on("drawing-history", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.strokes = Array.isArray(payload.strokes) ? payload.strokes.slice() : [];
+      state.redoStrokes = [];
+      redrawCanvas();
+    });
+
+    socket.on("draw-stroke", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.strokes.push(payload);
+      redrawCanvas();
+    });
+
+    socket.on("draw-strokes", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+      state.strokes = state.strokes.concat(strokes);
+      redrawCanvas();
+    });
+
+    socket.on("clear-drawing", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.strokes = [];
+      state.redoStrokes = [];
+      redrawCanvas();
+    });
+
+    socket.on("note-history", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.notes = Array.isArray(payload.notes) ? payload.notes.slice() : [];
+      renderNotes();
+    });
+
+    socket.on("note-added", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
+      const exists = state.notes.some(function (note) { return note.id === payload.note.id; });
+      if (!exists) state.notes.push(payload.note);
+      renderNotes();
+    });
+
+    socket.on("note-live-update", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      const note = state.notes.find(function (item) { return item.id === payload.noteId; });
+      if (!note) return;
+      Object.assign(note, payload.patch || {});
+      renderNotes();
+    });
+
+    socket.on("note-updated", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
+      const idx = state.notes.findIndex(function (item) { return item.id === payload.note.id; });
+      if (idx >= 0) state.notes[idx] = payload.note;
+      renderNotes();
+    });
+
+    socket.on("note-deleted", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.notes = state.notes.filter(function (note) { return note.id !== payload.noteId; });
+      renderNotes();
+      if (state.activeNoteId === payload.noteId) closeNoteEditor();
+    });
+  }
+
+  function bootstrapViewerWindow() {
+    if (!isViewerWindow || !bootImageId || !bootImageUrl) return;
+    openViewer(bootImageId, bootImageUrl);
+  }
+
+  updateSummaryUI();
+  setStrokeColor(state.color);
+  setNoteColor(state.noteColor);
+  syncConnectionUI();
+  bindEvents();
+  bindSocket();
+  bootstrapViewerWindow();
+})();
+</script>
+</body>
+</html>
