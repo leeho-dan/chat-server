@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>디자인 상담 · RENDER v20260418-4</title>
+<title>디자인 상담 · RENDER v20260418-5</title>
 <style>
 :root{
   --bg:#f4f8fc;--bg-soft:#f8fbff;--line:#e3ebf3;--line-strong:#d6e0ea;
@@ -555,7 +555,12 @@ body.viewer-inline-open{
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media (max-width:900px){
-  #chatCard{width:100%;border-radius:0}
+  #chatCard{
+    width:100vw !important;
+    height:100dvh !important;
+    max-width:none !important;
+    border-radius:0 !important;
+  }
   #header{height:40px}
   #quickRequestBar{padding:8px 10px 6px;gap:6px}
   #quickRequestButtons{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -576,6 +581,11 @@ body.viewer-inline-open{
   #msgInput{height:32px;border-radius:10px;padding:0 10px;font-size:12px}
   #sendBtn,#fileLabel{width:30px;height:30px;min-width:30px;border-radius:9px}
 
+  #viewerOverlay{
+    width:100vw !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+  }
   #viewerMain{
     display:flex!important;
     flex-direction:column!important;
@@ -649,7 +659,7 @@ body.viewer-inline-open{
 <div id="app">
   <section id="chatCard">
     <div id="header">
-      <div id="title">디자인 상담 · RENDER v20260418-4</div>
+      <div id="title">디자인 상담 · RENDER v20260418-5</div>
       <div id="connectionBadge" aria-live="polite">연결 중</div>
     </div>
 
@@ -1207,9 +1217,11 @@ body.viewer-inline-open{
         "&viewer=1" +
         "&imageId=" + encodeURIComponent(imageId) +
         "&imageUrl=" + encodeURIComponent(imageUrl) +
-        "&v=20260418-4";
+        "&v=20260418-5";
 
-      const popup = window.open(
+      const popupHost = (window.top && window.top !== window) ? window.top : window;
+
+      const popup = popupHost.open(
         collabUrl,
         "designCollabWindow",
         "width=1180,height=860,resizable=yes,scrollbars=yes"
@@ -1438,6 +1450,10 @@ body.viewer-inline-open{
     };
 
     state.notes.push(note);
+    state.activeNoteId = note.id;
+    state.selectedNoteForMoveId = note.id;
+    state.isMobileNoteMoveMode = isMobileViewport();
+
     renderNotes();
 
     if (canUseRealtime()) {
@@ -1594,6 +1610,7 @@ body.viewer-inline-open{
       updatedByRole: note.updatedByRole
     });
 
+    state.activeNoteId = note.id;
     state.selectedNoteForMoveId = "";
     state.isMobileNoteMoveMode = false;
   }
@@ -1682,13 +1699,21 @@ body.viewer-inline-open{
 
       const text = document.createElement("div");
       text.className = "noteMarkerText";
-      text.textContent = note.text || "메모";
+      const previewText = (note.text || "").trim();
+      if (!previewText) {
+        text.textContent = "메모";
+      } else {
+        text.textContent = previewText.length > 5 ? previewText.slice(0, 5) + "…" : previewText;
+      }
       marker.appendChild(text);
 
       marker.addEventListener("mousedown", function (event) {
         if (isMobileViewport()) return;
         event.stopPropagation();
+        state.activeNoteId = note.id;
+        state.selectedNoteForMoveId = note.id;
         beginNoteDrag(note.id, event.clientX, event.clientY);
+        renderNotes();
       });
 
       marker.addEventListener("touchstart", function (event) {
@@ -1696,15 +1721,17 @@ body.viewer-inline-open{
         if (!touch) return;
         event.stopPropagation();
 
+        state.activeNoteId = note.id;
+        state.selectedNoteForMoveId = note.id;
+
         if (isMobileViewport()) {
-          state.selectedNoteForMoveId = note.id;
           state.isMobileNoteMoveMode = true;
-          state.activeNoteId = note.id;
           renderNotes();
           return;
         }
 
         beginNoteDrag(note.id, touch.clientX, touch.clientY);
+        renderNotes();
       }, { passive: true });
 
       marker.addEventListener("dblclick", function (event) {
@@ -2146,7 +2173,9 @@ body.viewer-inline-open{
     });
 
     socket.on("note-added", function (payload) {
-      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
+      if (!payload || !payload.note) return;
+      if (payload.imageId !== state.currentViewerImageId) return;
+
       const exists = state.notes.some(function (note) { return note.id === payload.note.id; });
       if (!exists) state.notes.push(payload.note);
       renderNotes();
