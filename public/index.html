@@ -25,7 +25,15 @@ button,input,textarea,label{font:inherit}
 button{border:none;cursor:pointer}
 button:disabled{opacity:.45;cursor:not-allowed}
 input,textarea{outline:none}
-#app{width:100%;height:100%;display:flex;align-items:stretch;justify-content:center}
+
+#app{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+}
+
 #chatCard{
   width:min(430px,100%);
   height:100%;
@@ -38,6 +46,7 @@ input,textarea{outline:none}
   display:flex;
   flex-direction:column;
 }
+
 #header{
   height:44px;
   flex-shrink:0;
@@ -53,6 +62,7 @@ input,textarea{outline:none}
   height:28px;padding:0 10px;border-radius:999px;background:#edf4fa;color:#53687a;
   display:inline-flex;align-items:center;font-size:11px;font-weight:800
 }
+
 #quickRequestBar{
   flex-shrink:0;
   padding:10px 14px 8px;
@@ -128,7 +138,13 @@ input,textarea{outline:none}
 #summaryCard.collapsed #summaryRows,
 #summaryCard.collapsed #summaryActions{display:none}
 
-#chatBox{flex:1;min-height:0;overflow-y:auto;padding:0 14px 8px;background:var(--bg-soft)}
+#chatBox{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:0 14px 8px;
+  background:var(--bg-soft)
+}
 #chatInner{display:flex;flex-direction:column;gap:14px;min-height:100%}
 .messageRow{display:flex;flex-direction:column;gap:5px}
 .messageRow.me{align-items:flex-end}
@@ -194,72 +210,138 @@ input,textarea{outline:none}
 #fileLabel{background:#f2f6fa;color:#7b8d9f;border:1px solid #e5edf4}
 #fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 
+/* 협업창: 웹에서는 반드시 채팅창 외부 전체 오버레이 */
 #viewerOverlay{
-  position:fixed;inset:0;z-index:1200;display:none;flex-direction:column;
-  width:100vw;height:100vh;min-height:100dvh;background:rgba(245,248,252,.985)
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  flex-direction:column;
+  width:100vw;
+  height:100dvh;
+  min-height:100dvh;
+  background:rgba(245,248,252,.985);
 }
 #viewerOverlay.open{display:flex}
-body.viewer-inline-open{overflow:hidden;touch-action:none}
+body.viewer-inline-open{
+  overflow:hidden;
+  touch-action:none;
+}
+
 #viewerTopbar{
-  height:52px;flex-shrink:0;border-bottom:1px solid var(--line);background:rgba(255,255,255,.96);
-  display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:0 10px;
-  position:relative;z-index:30
+  height:52px;
+  flex-shrink:0;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.96);
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:8px;
+  padding:0 10px;
+  position:relative;
+  z-index:40
 }
 #viewerTopLeft{min-width:0;display:flex;align-items:center}
-#viewerActions{display:flex;gap:6px;flex-shrink:0;position:relative;z-index:31}
+#viewerActions{display:flex;gap:6px;flex-shrink:0;position:relative;z-index:41}
 .viewerBtn{
   min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
-  display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;z-index:31
+  display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;z-index:41
 }
 .viewerBtn svg{
   width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round
 }
 
-#viewerMain{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)}
-#viewerLeft{min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:#f8fbff;position:relative;z-index:5}
-#canvasWrap{flex:1;min-height:0;padding:10px;display:flex;align-items:center;justify-content:center;position:relative;z-index:6}
+#viewerMain{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)
+}
+#viewerLeft{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid var(--line);
+  background:#f8fbff;
+  position:relative;
+  z-index:10
+}
+#canvasWrap{
+  flex:1;
+  min-height:0;
+  padding:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  z-index:11
+}
 #imageStage{
-  position:relative;width:100%;height:min(100%,760px);min-height:420px;border-radius:18px;
+  position:relative;
+  width:100%;
+  height:min(100%,760px);
+  min-height:420px;
+  border-radius:18px;
   background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,251,255,.96));
-  border:1px solid #dfe9f3;box-shadow:0 18px 38px rgba(18,36,61,.08);overflow:hidden;z-index:7
+  border:1px solid #dfe9f3;
+  box-shadow:0 18px 38px rgba(18,36,61,.08);
+  overflow:hidden;
+  z-index:12
 }
 #viewerImage{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:84%;max-height:84%;
-  border-radius:18px;box-shadow:0 14px 32px rgba(18,36,61,.12);pointer-events:none;user-select:none;
-  -webkit-user-drag:none;z-index:1
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  max-width:84%;max-height:84%;
+  border-radius:18px;box-shadow:0 14px 32px rgba(18,36,61,.12);
+  pointer-events:none;user-select:none;-webkit-user-drag:none;z-index:1
 }
 #drawCanvas{
   position:absolute;inset:0;width:100%;height:100%;border-radius:22px;touch-action:none;z-index:2
 }
-#textLayer{position:absolute;inset:0;z-index:3;pointer-events:none}
+#textLayer{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+}
 #brushCursor{
   position:absolute;
   pointer-events:none;
   border-radius:50%;
   background:rgba(36,145,255,0.16);
   border:1.5px solid rgba(36,145,255,0.7);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.45) inset,
-    0 2px 10px rgba(18,36,61,0.10);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.45) inset, 0 2px 10px rgba(18,36,61,0.10);
   transform:translate(-50%, -50%);
   display:none;
   z-index:10;
   backdrop-filter:blur(1px);
-  transition:
-    width .08s linear,
-    height .08s linear,
-    background-color .08s linear,
-    border-color .08s linear;
+  transition:width .08s linear,height .08s linear,background-color .08s linear,border-color .08s linear;
 }
+
 .noteMarker{
-  position:absolute;min-width:56px;height:42px;padding:0 12px;border-radius:14px;display:flex;align-items:center;
-  gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
-  border:1px solid rgba(36,145,255,.22);box-shadow:0 10px 18px rgba(18,36,61,.10);
-  transform:translate(-50%,-50%);pointer-events:auto;user-select:none;z-index:12;touch-action:none
+  position:absolute;
+  min-width:56px;
+  height:42px;
+  padding:0 12px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(36,145,255,.22);
+  box-shadow:0 10px 18px rgba(18,36,61,.10);
+  transform:translate(-50%,-50%);
+  pointer-events:auto;
+  user-select:none;
+  z-index:20;
+  touch-action:none;
 }
 .noteMarker.selected{
   border-color:rgba(255,139,61,.55);
   box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.12)
+}
+.noteMarker.moveTarget{
+  box-shadow:0 0 0 4px rgba(36,145,255,.18),0 10px 18px rgba(18,36,61,.12);
 }
 .noteMarkerText{
   max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:var(--text)
@@ -271,7 +353,8 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   background:#fff;
   padding:10px 12px 12px;
   position:relative;
-  z-index:20;
+  z-index:50;
+  overflow:visible;
 }
 #toolbarInline{
   display:flex;
@@ -279,13 +362,13 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   gap:8px;
   flex-wrap:nowrap;
   overflow-x:auto;
+  overflow-y:visible;
   scrollbar-width:none;
 }
 #toolbarInline::-webkit-scrollbar{display:none}
 .toolBtn{
   min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;
-  display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;position:relative;
-  z-index:21
+  display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;position:relative;z-index:51
 }
 .toolBtn.active{background:linear-gradient(135deg,var(--primary-soft),var(--primary));color:#fff}
 .toolBtnSmall{min-width:32px;width:32px;height:32px;border-radius:10px;font-size:13px}
@@ -294,20 +377,23 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 #thicknessWrap{
   display:flex;align-items:center;padding:0 8px;height:40px;border-radius:12px;background:#f6faff;
-  border:1px solid var(--line);flex:0 0 auto;position:relative;z-index:21
+  border:1px solid var(--line);flex:0 0 auto;position:relative;z-index:51
 }
 #thicknessRange{width:88px}
 
+/* 팔레트: 버튼 앞 + 버튼 위쪽 */
 #paletteWrap{
   position:relative;
-  z-index:40;
+  z-index:200;
   flex:0 0 auto;
+  overflow:visible;
 }
 #paletteBtn{
   position:relative;
-  overflow:hidden;
+  overflow:visible;
   background:#edf4fa;
   color:#425466;
+  z-index:201;
 }
 #paletteBtn svg{
   position:relative;
@@ -336,16 +422,18 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 #colorPopover{
   position:absolute;
-  left:0;
-  bottom:48px;
+  left:50%;
+  bottom:calc(100% + 10px);
+  transform:translateX(-50%);
   display:none;
   width:172px;
   padding:10px;
   border-radius:16px;
-  background:rgba(255,255,255,.98);
+  background:rgba(255,255,255,.99);
   border:1px solid #dfe7f0;
-  box-shadow:0 18px 36px rgba(18,36,61,.16);
+  box-shadow:0 18px 36px rgba(18,36,61,.18);
   backdrop-filter:blur(10px);
+  z-index:999;
 }
 #colorPopover.open{display:block}
 #colorPopoverGrid{
@@ -380,17 +468,33 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 
 .noteColorSwatch{
-  border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.10);display:inline-flex;width:22px;height:22px
+  border-radius:50%;
+  box-shadow:0 0 0 1px rgba(0,0,0,.10);
+  display:inline-flex;
+  width:22px;
+  height:22px
 }
 .noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
 
-#viewerRight{display:flex;flex-direction:column;min-height:0;position:relative;z-index:6}
-#viewerChatBox{flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fbfdff}
+#viewerRight{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  position:relative;
+  z-index:10
+}
+#viewerChatBox{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:12px;
+  background:#fbfdff
+}
 #viewerChatInner{display:flex;flex-direction:column;gap:10px}
 #viewerChatInner .meta{display:none}
 #viewerInputBar{
   flex-shrink:0;border-top:1px solid var(--line);padding:12px 14px calc(14px + var(--safe-bottom));
-  background:#fff;display:flex;gap:10px;position:relative;z-index:20
+  background:#fff;display:flex;gap:10px;position:relative;z-index:50
 }
 #viewerMsgInput{flex:1;height:46px;border-radius:16px;padding:0 14px;font-size:15px}
 #viewerSendBtn{
@@ -399,7 +503,13 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 
 #noteEditorOverlay{
-  position:fixed;inset:0;z-index:5000;display:none;flex-direction:column;width:100vw;height:100vh;
+  position:fixed;
+  inset:0;
+  z-index:50000;
+  display:none;
+  flex-direction:column;
+  width:100vw;
+  height:100vh;
   background:rgba(245,248,252,.99)
 }
 #noteEditorOverlay.open{display:flex}
@@ -425,7 +535,16 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 #noteEditorTools{display:flex;flex-direction:column;gap:8px}
 #noteEditorColorRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 #noteEditorMetaLine{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--sub);font-size:12px;font-weight:700}
-#noteEditorTextarea{width:100%;height:100%;border-radius:20px;resize:none;padding:16px;font-size:16px;line-height:1.55;color:var(--text)}
+#noteEditorTextarea{
+  width:100%;
+  height:100%;
+  border-radius:20px;
+  resize:none;
+  padding:16px;
+  font-size:16px;
+  line-height:1.55;
+  color:var(--text)
+}
 
 #uploadLoading{
   position:fixed;inset:0;z-index:260;display:none;align-items:center;justify-content:center;
@@ -442,10 +561,6 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 }
 #uploadLoadingText{font-size:13px;font-weight:700;color:var(--text-soft)}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.embed-mode #chatCard{
-  width:100%!important;height:100%!important;border-radius:0!important;border:none!important;box-shadow:none!important
-}
 
 @media (max-width:900px){
   #chatCard{width:100%;border-radius:0}
@@ -468,11 +583,36 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
   #savePhoneBtn,#deletePhoneBtn{height:30px;min-width:40px;padding:0 8px;border-radius:9px;font-size:11px}
   #msgInput{height:32px;border-radius:10px;padding:0 10px;font-size:12px}
   #sendBtn,#fileLabel{width:30px;height:30px;min-width:30px;border-radius:9px}
-  #viewerOverlay{width:100vw!important;height:100dvh!important;min-height:100dvh!important}
-  #viewerMain{display:flex!important;flex-direction:column!important;min-height:0!important;height:calc(100dvh - 52px)!important;flex:1!important}
-  #viewerLeft{display:flex!important;flex-direction:column!important;min-height:0!important;flex:3 1 0!important;border-right:none!important}
-  #canvasWrap{flex:2 1 0!important;min-height:0!important;padding:8px!important}
-  #imageStage{min-height:0!important;height:100%!important;border-radius:16px!important}
+
+  #viewerOverlay{
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:100dvh!important
+  }
+  #viewerMain{
+    display:flex!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    height:calc(100dvh - 52px)!important;
+    flex:1!important
+  }
+  #viewerLeft{
+    display:flex!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    flex:3 1 0!important;
+    border-right:none!important
+  }
+  #canvasWrap{
+    flex:2 1 0!important;
+    min-height:0!important;
+    padding:8px!important
+  }
+  #imageStage{
+    min-height:0!important;
+    height:100%!important;
+    border-radius:16px!important
+  }
   #toolbar{
     position:static!important;
     flex:0 0 auto!important;
@@ -481,15 +621,47 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     overflow:visible!important;
   }
   #toolbarInline{gap:6px!important}
-  #viewerRight{display:flex!important;flex-direction:column!important;flex:2 1 0!important;min-height:0!important;border-top:1px solid var(--line)!important;border-left:none!important}
-  #viewerChatBox{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;padding:12px 12px 8px!important}
-  #viewerInputBar{flex-shrink:0!important;border-top:1px solid var(--line)!important;padding:8px 10px calc(10px + var(--safe-bottom))!important;display:flex!important;gap:8px!important}
-  #viewerMsgInput{flex:1!important;height:44px!important;border-radius:14px!important;padding:0 12px!important;font-size:15px!important}
-  #viewerSendBtn{width:44px!important;height:44px!important;border-radius:14px!important;font-size:18px!important}
+  #viewerRight{
+    display:flex!important;
+    flex-direction:column!important;
+    flex:2 1 0!important;
+    min-height:0!important;
+    border-top:1px solid var(--line)!important;
+    border-left:none!important
+  }
+  #viewerChatBox{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    padding:12px 12px 8px!important
+  }
+  #viewerInputBar{
+    flex-shrink:0!important;
+    border-top:1px solid var(--line)!important;
+    padding:8px 10px calc(10px + var(--safe-bottom))!important;
+    display:flex!important;
+    gap:8px!important
+  }
+  #viewerMsgInput{
+    flex:1!important;
+    height:44px!important;
+    border-radius:14px!important;
+    padding:0 12px!important;
+    font-size:15px!important
+  }
+  #viewerSendBtn{
+    width:44px!important;
+    height:44px!important;
+    border-radius:14px!important;
+    font-size:18px!important
+  }
+
+  #paletteWrap{z-index:300}
   #colorPopover{
     left:auto;
     right:0;
-    bottom:46px;
+    transform:none;
+    bottom:calc(100% + 8px);
     width:168px;
   }
 }
@@ -745,6 +917,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
   }
 
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 900px)").matches;
+  }
+
   const params = new URLSearchParams(location.search);
   const queryRoomId = (params.get("roomId") || params.get("room") || "").trim();
   const queryUserName = (params.get("userName") || params.get("username") || params.get("name") || "").trim();
@@ -779,14 +955,10 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     draggingNoteId: "",
     dragOffsetX: 0,
     dragOffsetY: 0,
+    selectedNoteForMoveId: "",
+    isMobileNoteMoveMode: false,
     colorPopoverOpen: false
   };
-
-  const PRESET_COLORS = [
-    "#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be",
-    "#32ade6","#007aff","#5856d6","#af52de","#ff2d55",
-    "#8e8e93","#5a5a5a","#000000","#ffffff","#6e56cf"
-  ];
 
   safeStorageSet(STORAGE_KEYS.roomId, state.roomId);
   safeStorageSet(STORAGE_KEYS.userName, state.userName);
@@ -1062,6 +1234,8 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
   function closeViewer() {
     closeColorPopover();
+    state.selectedNoteForMoveId = "";
+    state.isMobileNoteMoveMode = false;
     el.viewerOverlay.classList.remove("open");
     el.viewerOverlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("viewer-inline-open");
@@ -1077,25 +1251,25 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       el.brushCursor.style.display = "none";
       el.drawCanvas.style.cursor = "crosshair";
     } else {
+      state.selectedNoteForMoveId = "";
+      state.isMobileNoteMoveMode = false;
       el.brushCursor.style.display = "block";
       el.drawCanvas.style.cursor = "none";
       updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
+      renderNotes();
     }
   }
 
   function setStrokeColor(color) {
     state.color = color;
     document.documentElement.style.setProperty("--selected-draw-color", color);
-
-    if (el.palettePreview) {
-      el.palettePreview.style.background = color;
-    }
+    el.palettePreview.style.background = color;
 
     el.colorChips.forEach(function (chip) {
       chip.classList.toggle("active", chip.dataset.color === color);
     });
 
-    if (el.brushCursor && el.brushCursor.style.display !== "none") {
+    if (el.brushCursor.style.display !== "none") {
       updateBrushCursor(state.cursorX || 0, state.cursorY || 0);
     }
   }
@@ -1356,6 +1530,38 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
     state.draggingNoteId = "";
   }
 
+  function moveSelectedNoteToPoint(clientX, clientY) {
+    if (!state.selectedNoteForMoveId) return;
+
+    const note = state.notes.find(function (item) { return item.id === state.selectedNoteForMoveId; });
+    if (!note) return;
+
+    const rect = el.drawCanvas.getBoundingClientRect();
+    let nextX = (clientX - rect.left) / rect.width;
+    let nextY = (clientY - rect.top) / rect.height;
+
+    nextX = Math.min(0.94, Math.max(0.06, nextX));
+    nextY = Math.min(0.92, Math.max(0.08, nextY));
+
+    note.x = nextX;
+    note.y = nextY;
+    note.updatedAt = Date.now();
+    note.updatedByName = state.userName;
+    note.updatedByRole = state.role;
+
+    renderNotes();
+    queueNoteSave(note, {
+      x: note.x,
+      y: note.y,
+      updatedAt: note.updatedAt,
+      updatedByName: note.updatedByName,
+      updatedByRole: note.updatedByRole
+    });
+
+    state.selectedNoteForMoveId = "";
+    state.isMobileNoteMoveMode = false;
+  }
+
   function startDrawing(event) {
     if (state.mode === "text") return;
     if (!state.currentViewerImageId) return;
@@ -1425,9 +1631,14 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
   function renderNotes() {
     el.textLayer.innerHTML = "";
+
     state.notes.forEach(function (note) {
       const marker = document.createElement("div");
-      marker.className = "noteMarker" + (state.activeNoteId === note.id ? " selected" : "");
+      marker.className =
+        "noteMarker" +
+        (state.activeNoteId === note.id ? " selected" : "") +
+        (state.selectedNoteForMoveId === note.id ? " moveTarget" : "");
+
       marker.style.left = (note.x * 100) + "%";
       marker.style.top = (note.y * 100) + "%";
       marker.style.background = note.color || "#fff7c2";
@@ -1439,6 +1650,7 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       marker.appendChild(text);
 
       marker.addEventListener("mousedown", function (event) {
+        if (isMobileViewport()) return;
         event.stopPropagation();
         beginNoteDrag(note.id, event.clientX, event.clientY);
       });
@@ -1447,6 +1659,15 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
         const touch = event.touches && event.touches[0];
         if (!touch) return;
         event.stopPropagation();
+
+        if (isMobileViewport()) {
+          state.selectedNoteForMoveId = note.id;
+          state.isMobileNoteMoveMode = true;
+          state.activeNoteId = note.id;
+          renderNotes();
+          return;
+        }
+
         beginNoteDrag(note.id, touch.clientX, touch.clientY);
       }, { passive: true });
 
@@ -1815,6 +2036,19 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       }, { passive: true });
     });
 
+    /* 모바일 메모 이동: 메모 1번 선택 후 화면 터치로 이동 */
+    el.drawCanvas.addEventListener("touchend", function (event) {
+      if (!isMobileViewport()) return;
+      if (!state.isMobileNoteMoveMode) return;
+      if (!state.selectedNoteForMoveId) return;
+
+      const touch = event.changedTouches && event.changedTouches[0];
+      if (!touch) return;
+
+      moveSelectedNoteToPoint(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    /* 웹 메모 드래그 */
     window.addEventListener("mousemove", function (event) {
       moveNoteDrag(event.clientX, event.clientY);
     });
@@ -1823,13 +2057,16 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
       endNoteDrag();
     });
 
+    /* 모바일에서는 드래그 이동 비활성 */
     window.addEventListener("touchmove", function (event) {
+      if (isMobileViewport()) return;
       const touch = event.touches && event.touches[0];
       if (!touch) return;
       moveNoteDrag(touch.clientX, touch.clientY);
     }, { passive: true });
 
     window.addEventListener("touchend", function () {
+      if (isMobileViewport()) return;
       endNoteDrag();
     });
 
@@ -1898,6 +2135,114 @@ body.viewer-inline-open{overflow:hidden;touch-action:none}
 
     el.viewerImage.addEventListener("load", function () {
       if (state.currentViewerImageId) resizeCanvas();
+    });
+  }
+
+  function bindSocket() {
+    socket = io({ transports: ["websocket", "polling"] });
+
+    socket.on("connect", function () {
+      state.connected = true;
+      state.joined = false;
+      syncConnectionUI();
+      socket.emit("join", {
+        roomId: state.roomId,
+        userName: state.userName,
+        role: state.role
+      });
+    });
+
+    socket.on("disconnect", function () {
+      state.connected = false;
+      state.joined = false;
+      syncConnectionUI();
+    });
+
+    socket.on("joined", function () {
+      state.joined = true;
+      syncConnectionUI();
+      if (state.currentViewerImageId) {
+        requestDrawingHistory();
+        requestNoteHistory();
+      }
+    });
+
+    socket.on("join-error", function () {
+      state.joined = false;
+      syncConnectionUI();
+    });
+
+    socket.on("history", function (messages) {
+      const list = Array.isArray(messages) ? messages : [];
+      el.chatInner.innerHTML = "";
+      el.viewerChatInner.innerHTML = "";
+      list.forEach(appendMessage);
+      syncConnectionUI();
+    });
+
+    socket.on("message", appendMessage);
+    socket.on("image", appendMessage);
+
+    socket.on("drawing-history", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.strokes = Array.isArray(payload.strokes) ? payload.strokes.slice() : [];
+      state.redoStrokes = [];
+      redrawCanvas();
+    });
+
+    socket.on("draw-stroke", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.strokes.push(payload);
+      redrawCanvas();
+    });
+
+    socket.on("draw-strokes", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+      state.strokes = state.strokes.concat(strokes);
+      redrawCanvas();
+    });
+
+    socket.on("clear-drawing", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.strokes = [];
+      state.redoStrokes = [];
+      redrawCanvas();
+    });
+
+    socket.on("note-history", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.notes = Array.isArray(payload.notes) ? payload.notes.slice() : [];
+      renderNotes();
+    });
+
+    socket.on("note-added", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
+      const exists = state.notes.some(function (note) { return note.id === payload.note.id; });
+      if (!exists) state.notes.push(payload.note);
+      renderNotes();
+    });
+
+    socket.on("note-live-update", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      const note = state.notes.find(function (item) { return item.id === payload.noteId; });
+      if (!note) return;
+      Object.assign(note, payload.patch || {});
+      renderNotes();
+    });
+
+    socket.on("note-updated", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
+      const idx = state.notes.findIndex(function (item) { return item.id === payload.note.id; });
+      if (idx >= 0) state.notes[idx] = payload.note;
+      renderNotes();
+    });
+
+    socket.on("note-deleted", function (payload) {
+      if (!payload || payload.imageId !== state.currentViewerImageId) return;
+      state.notes = state.notes.filter(function (note) { return note.id !== payload.noteId; });
+      renderNotes();
+      if (state.activeNoteId === payload.noteId) closeNoteEditor();
     });
   }
 
