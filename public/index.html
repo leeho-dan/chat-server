@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>디자인 상담 · RENDER v20260418-3</title>
+<title>디자인 상담 · RENDER v20260418-4</title>
 <style>
 :root{
   --bg:#f4f8fc;--bg-soft:#f8fbff;--line:#e3ebf3;--line-strong:#d6e0ea;
@@ -649,7 +649,7 @@ body.viewer-inline-open{
 <div id="app">
   <section id="chatCard">
     <div id="header">
-      <div id="title">디자인 상담 · RENDER v20260418-3</div>
+      <div id="title">디자인 상담 · RENDER v20260418-4</div>
       <div id="connectionBadge" aria-live="polite">연결 중</div>
     </div>
 
@@ -822,7 +822,6 @@ body.viewer-inline-open{
   </div>
 </div>
 
-<!-- body 직속 팔레트 -->
 <div id="colorPopover" aria-hidden="true">
   <div id="colorPopoverGrid">
     <button class="colorChip" type="button" data-color="#ff3b30" style="background:#ff3b30" aria-label="빨강"></button>
@@ -1200,14 +1199,25 @@ body.viewer-inline-open{
   function openViewer(imageId, imageUrl) {
     if (!imageId || !imageUrl) return;
 
-    if (isEmbed && !isMobileViewport() && window.parent && window.parent !== window) {
-      window.parent.postMessage({
-        type: "DH_OPEN_COLLAB",
-        roomId: state.roomId,
-        userName: state.userName,
-        imageId: imageId,
-        imageUrl: imageUrl
-      }, "*");
+    if (isEmbed && !isMobileViewport()) {
+      const collabUrl =
+        window.location.origin +
+        "/?roomId=" + encodeURIComponent(state.roomId) +
+        "&userName=" + encodeURIComponent(state.userName) +
+        "&viewer=1" +
+        "&imageId=" + encodeURIComponent(imageId) +
+        "&imageUrl=" + encodeURIComponent(imageUrl) +
+        "&v=20260418-4";
+
+      const popup = window.open(
+        collabUrl,
+        "designCollabWindow",
+        "width=1180,height=860,resizable=yes,scrollbars=yes"
+      );
+
+      if (!popup) {
+        alert("협업창 팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.");
+      }
       return;
     }
 
