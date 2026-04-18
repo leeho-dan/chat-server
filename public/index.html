@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>디자인 상담 · RENDER v20260418-5</title>
+<title>디자인 상담 · RENDER v20260418-6</title>
 <style>
 :root{
   --bg:#f4f8fc;--bg-soft:#f8fbff;--line:#e3ebf3;--line-strong:#d6e0ea;
@@ -330,7 +330,9 @@ body.viewer-inline-open{
   user-select:none;
   z-index:20;
   touch-action:none;
+  cursor:grab;
 }
+.noteMarker:active{cursor:grabbing}
 .noteMarker.selected{
   border-color:rgba(255,139,61,.55);
   box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.12)
@@ -659,7 +661,7 @@ body.viewer-inline-open{
 <div id="app">
   <section id="chatCard">
     <div id="header">
-      <div id="title">디자인 상담 · RENDER v20260418-5</div>
+      <div id="title">디자인 상담 · RENDER v20260418-6</div>
       <div id="connectionBadge" aria-live="polite">연결 중</div>
     </div>
 
@@ -894,14 +896,10 @@ body.viewer-inline-open{
 
   function hexToRgba(hex, alpha) {
     const safe = String(hex || "#2491ff").replace("#", "");
-    const full = safe.length === 3
-      ? safe.split("").map(function (c) { return c + c; }).join("")
-      : safe;
-
+    const full = safe.length === 3 ? safe.split("").map(function (c) { return c + c; }).join("") : safe;
     const r = parseInt(full.slice(0, 2), 16) || 36;
     const g = parseInt(full.slice(2, 4), 16) || 145;
     const b = parseInt(full.slice(4, 6), 16) || 255;
-
     return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
   }
 
@@ -945,8 +943,10 @@ body.viewer-inline-open{
     lastTapX: 0,
     lastTapY: 0,
     draggingNoteId: "",
+    draggingNotePointerId: null,
     dragOffsetX: 0,
     dragOffsetY: 0,
+    dragStartFromMarker: false,
     selectedNoteForMoveId: "",
     isMobileNoteMoveMode: false,
     colorPopoverOpen: false
@@ -1217,19 +1217,20 @@ body.viewer-inline-open{
         "&viewer=1" +
         "&imageId=" + encodeURIComponent(imageId) +
         "&imageUrl=" + encodeURIComponent(imageUrl) +
-        "&v=20260418-5";
+        "&v=20260418-6";
 
-      const popupHost = (window.top && window.top !== window) ? window.top : window;
-
-      const popup = popupHost.open(
-        collabUrl,
+      const popup = window.open(
+        "about:blank",
         "designCollabWindow",
         "width=1180,height=860,resizable=yes,scrollbars=yes"
       );
 
       if (!popup) {
         alert("협업창 팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.");
+        return;
       }
+
+      popup.location.href = collabUrl;
       return;
     }
 
@@ -1530,7 +1531,7 @@ body.viewer-inline-open{
     }, 180);
   }
 
-  function beginNoteDrag(noteId, clientX, clientY) {
+  function beginNoteDrag(noteId, clientX, clientY, pointerId) {
     const note = state.notes.find(function (item) { return item.id === noteId; });
     if (!note) return;
 
@@ -1539,6 +1540,7 @@ body.viewer-inline-open{
     const noteY = note.y * rect.height;
 
     state.draggingNoteId = noteId;
+    state.draggingNotePointerId = pointerId != null ? pointerId : null;
     state.dragOffsetX = clientX - rect.left - noteX;
     state.dragOffsetY = clientY - rect.top - noteY;
   }
@@ -1580,6 +1582,7 @@ body.viewer-inline-open{
     }
 
     state.draggingNoteId = "";
+    state.draggingNotePointerId = null;
   }
 
   function moveSelectedNoteToPoint(clientX, clientY) {
@@ -1707,18 +1710,7 @@ body.viewer-inline-open{
       }
       marker.appendChild(text);
 
-      marker.addEventListener("mousedown", function (event) {
-        if (isMobileViewport()) return;
-        event.stopPropagation();
-        state.activeNoteId = note.id;
-        state.selectedNoteForMoveId = note.id;
-        beginNoteDrag(note.id, event.clientX, event.clientY);
-        renderNotes();
-      });
-
-      marker.addEventListener("touchstart", function (event) {
-        const touch = event.touches && event.touches[0];
-        if (!touch) return;
+      marker.addEventListener("pointerdown", function (event) {
         event.stopPropagation();
 
         state.activeNoteId = note.id;
@@ -1730,9 +1722,38 @@ body.viewer-inline-open{
           return;
         }
 
-        beginNoteDrag(note.id, touch.clientX, touch.clientY);
+        beginNoteDrag(note.id, event.clientX, event.clientY, event.pointerId);
+
+        if (marker.setPointerCapture) {
+          try { marker.setPointerCapture(event.pointerId); } catch (e) {}
+        }
+
         renderNotes();
-      }, { passive: true });
+      });
+
+      marker.addEventListener("pointermove", function (event) {
+        if (isMobileViewport()) return;
+        if (!state.draggingNoteId) return;
+        if (state.draggingNoteId !== note.id) return;
+
+        moveNoteDrag(event.clientX, event.clientY);
+      });
+
+      marker.addEventListener("pointerup", function (event) {
+        if (!isMobileViewport() && state.draggingNoteId === note.id) {
+          endNoteDrag();
+        }
+
+        if (marker.releasePointerCapture) {
+          try { marker.releasePointerCapture(event.pointerId); } catch (e) {}
+        }
+      });
+
+      marker.addEventListener("pointercancel", function () {
+        if (!isMobileViewport() && state.draggingNoteId === note.id) {
+          endNoteDrag();
+        }
+      });
 
       marker.addEventListener("dblclick", function (event) {
         event.preventDefault();
@@ -1955,7 +1976,6 @@ body.viewer-inline-open{
     document.addEventListener("click", function (event) {
       const clickedInsideButton = el.paletteWrap.contains(event.target);
       const clickedInsidePopover = el.colorPopover.contains(event.target);
-
       if (!clickedInsideButton && !clickedInsidePopover) {
         closeColorPopover();
       }
@@ -2001,29 +2021,8 @@ body.viewer-inline-open{
 
       const touch = event.changedTouches && event.changedTouches[0];
       if (!touch) return;
-
       moveSelectedNoteToPoint(touch.clientX, touch.clientY);
     }, { passive: true });
-
-    window.addEventListener("mousemove", function (event) {
-      moveNoteDrag(event.clientX, event.clientY);
-    });
-
-    window.addEventListener("mouseup", function () {
-      endNoteDrag();
-    });
-
-    window.addEventListener("touchmove", function (event) {
-      if (isMobileViewport()) return;
-      const touch = event.touches && event.touches[0];
-      if (!touch) return;
-      moveNoteDrag(touch.clientX, touch.clientY);
-    }, { passive: true });
-
-    window.addEventListener("touchend", function () {
-      if (isMobileViewport()) return;
-      endNoteDrag();
-    });
 
     window.addEventListener("resize", function () {
       if (state.currentViewerImageId) resizeCanvas();
