@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>디자인 상담 · RENDER v20260418-6</title>
+<title>디자인 상담 · RENDER v20260418-7</title>
 <style>
 :root{
   --bg:#f4f8fc;--bg-soft:#f8fbff;--line:#e3ebf3;--line-strong:#d6e0ea;
@@ -661,7 +661,7 @@ body.viewer-inline-open{
 <div id="app">
   <section id="chatCard">
     <div id="header">
-      <div id="title">디자인 상담 · RENDER v20260418-6</div>
+      <div id="title">디자인 상담 · RENDER v20260418-7</div>
       <div id="connectionBadge" aria-live="polite">연결 중</div>
     </div>
 
@@ -1217,7 +1217,7 @@ body.viewer-inline-open{
         "&viewer=1" +
         "&imageId=" + encodeURIComponent(imageId) +
         "&imageUrl=" + encodeURIComponent(imageUrl) +
-        "&v=20260418-6";
+        "&v=20260418-7";
 
       const popup = window.open(
         "about:blank",
@@ -1225,12 +1225,25 @@ body.viewer-inline-open{
         "width=1180,height=860,resizable=yes,scrollbars=yes"
       );
 
-      if (!popup) {
-        alert("협업창 팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.");
+      if (popup) {
+        popup.location.href = collabUrl;
         return;
       }
 
-      popup.location.href = collabUrl;
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: "DH_OPEN_COLLAB_POPUP",
+            roomId: state.roomId,
+            userName: state.userName,
+            imageId: imageId,
+            imageUrl: imageUrl
+          }, "*");
+          return;
+        }
+      } catch (e) {}
+
+      alert("협업창 팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.");
       return;
     }
 
@@ -1819,7 +1832,7 @@ body.viewer-inline-open{
     if (state.summary.productName) parts.push("제품: " + state.summary.productName);
     if (state.summary.requestTypes.length) parts.push("요청: " + state.summary.requestTypes.join(", "));
     if (state.summary.detailNotes.length) parts.push("상세: " + state.summary.detailNotes.slice(-3).join(" / "));
-    return parts.join("\\n");
+    return parts.join("\n");
   }
 
   function buildQuoteText() {
@@ -1829,7 +1842,7 @@ body.viewer-inline-open{
     if (state.summary.requestTypes.length) parts.push("수정 요청: " + state.summary.requestTypes.join(", "));
     if (state.summary.detailNotes.length) parts.push("상세 요청: " + state.summary.detailNotes.slice(-3).join(" / "));
     if (el.phoneInput.value.trim()) parts.push("연락처: " + el.phoneInput.value.trim());
-    return parts.join("\\n");
+    return parts.join("\n");
   }
 
   function bindEvents() {
