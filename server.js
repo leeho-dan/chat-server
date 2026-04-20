@@ -14,6 +14,10 @@ const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
 const HOST = "0.0.0.0";
 const PUBLIC_DIR = path.join(__dirname, "public");
+const APP_VERSION = process.env.APP_VERSION || "20260420-1";
+const MAX_MESSAGES_PER_ROOM = Number(process.env.MAX_MESSAGES_PER_ROOM || 300);
+const MAX_NOTES_PER_IMAGE = Number(process.env.MAX_NOTES_PER_IMAGE || 100);
+const MAX_STROKES_PER_IMAGE = Number(process.env.MAX_STROKES_PER_IMAGE || 2000);
 
 const ALLOWED_ORIGINS = String(process.env.CLIENT_ORIGIN || "")
   .split(",")
@@ -50,12 +54,32 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
+let mongoEnabled = false;
+let mongoAvailable = false;
+let cloudinaryEnabled = false;
+
 app.get("/health", async (req, res) => {
   const mongoReady = mongoose.connection.readyState === 1;
+  const ok = true;
+  res.json({
+    ok,
+    version: APP_VERSION,
+    uptime: process.uptime(),
+    mongoEnabled,
+    mongoReady,
+    cloudinaryEnabled
+  });
+});
+
+app.get("/config", (req, res) => {
   res.json({
     ok: true,
-    uptime: process.uptime(),
-    mongoReady
+    version: APP_VERSION,
+    socketPath: "/socket.io",
+    maxUploadMb: 20,
+    mongoEnabled,
+    mongoReady: mongoose.connection.readyState === 1,
+    cloudinaryEnabled
   });
 });
 
@@ -71,6 +95,7 @@ if (hasCloudinaryEnv) {
     api_secret: process.env.CLOUD_SECRET,
     secure: true
   });
+  cloudinaryEnabled = true;
 }
 
 const upload = multer({
@@ -87,11 +112,11 @@ const upload = multer({
 const messageSchema = new mongoose.Schema(
   {
     roomId: { type: String, required: true, index: true },
-    type: { type: String, enum: ["text", "image"], required: true },
+    type: { type: String, enum: ["text", "image", "system"], required: true },
     text: { type: String, default: "" },
     imageId: { type: String, default: "" },
     imageUrl: { type: String, default: "" },
-    sender: { type: String, enum: ["user", "admin"], required: true },
+    sender: { type: String, enum: ["user", "admin", "system"], required: true },
     senderName: { type: String, required: true },
     time: { type: Number, required: true, index: true }
   },
@@ -102,7 +127,8 @@ const drawingSchema = new mongoose.Schema(
   {
     roomId: { type: String, required: true, index: true },
     imageId: { type: String, required: true, index: true },
-    strokes: { type: Array, default: [] }
+    strokes: { type: Array, default: [] },
+    updatedAt: { type: Number, default: Date.now }
   },
   { versionKey: false }
 );
@@ -134,6 +160,21 @@ const Message = mongoose.model("Message", messageSchema);
 const Drawing = mongoose.model("Drawing", drawingSchema);
 const Note = mongoose.model("Note", noteSchema);
 
+const memoryStore = {
+  rooms: new Map()
+};
+
+function getMemoryRoom(roomId) {
+  if (!memoryStore.rooms.has(roomId)) {
+    memoryStore.rooms.set(roomId, {
+      messages: [],
+      drawings: new Map(),
+      notes: new Map()
+    });
+  }
+  return memoryStore.rooms.get(roomId);
+}
+
 function sanitizeRole(role) {
   return role === "admin" ? "admin" : "user";
 }
@@ -148,6 +189,48 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function normalizeMessage(message = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const sender = sanitizeRole(message.sender || fallbackRole);
+  const senderName = sender === "admin" ? "관리자" : sanitizeUserName(message.senderName || fallbackUserName, sender);
+  const type = ["text", "image", "system"].includes(message.type) ? message.type : "text";
+
+  return {
+    type,
+    text: String(message.text || "").slice(0, 5000),
+    imageId: String(message.imageId || "").slice(0, 120),
+    imageUrl: String(message.imageUrl || "").slice(0, 5000),
+    sender: type === "system" ? "system" : sender,
+    senderName: type === "system" ? "시스템" : senderName,
+    time: typeof message.time === "number" ? message.time : Date.now()
+  };
+}
+
+function normalizePoint(point = {}) {
+  return {
+    x: clamp(Number(point.x || 0), 0, 10000),
+    y: clamp(Number(point.y || 0), 0, 10000)
+  };
+}
+
+function normalizeStroke(stroke = {}) {
+  const mode = stroke.mode === "erase" ? "erase" : "draw";
+  const color = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(stroke.color || ""))
+    ? String(stroke.color)
+    : "#ff3b30";
+  const width = clamp(Number(stroke.width || 3), 1, 48);
+  const points = Array.isArray(stroke.points) ? stroke.points.slice(0, 500).map(normalizePoint) : [];
+
+  return {
+    id: String(stroke.id || uuidv4()),
+    mode,
+    color,
+    width,
+    points,
+    time: typeof stroke.time === "number" ? stroke.time : Date.now(),
+    sender: sanitizeRole(stroke.sender || "user")
+  };
+}
+
 function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
   const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
   const updatedByName =
@@ -156,13 +239,13 @@ function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고
       : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
 
   return {
-    noteId: String(note.id || uuidv4()),
+    noteId: String(note.id || note.noteId || uuidv4()),
     x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
     y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
     width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.3) : 0.16,
     height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.1,
     text: String(note.text || "").slice(0, 500),
-    color: String(note.color || "#fff7c2"),
+    color: /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(note.color || "")) ? String(note.color) : "#fff7c2",
     author: sanitizeRole(note.author || fallbackRole),
     updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
     updatedByRole,
@@ -178,7 +261,7 @@ function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName 
   if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.3);
   if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
   if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
-  if (typeof patch.color === "string") next.color = patch.color;
+  if (typeof patch.color === "string" && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(patch.color)) next.color = patch.color;
 
   next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
 
@@ -194,162 +277,273 @@ function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName 
 
 async function ensureMongoConnected() {
   const uri = process.env.MONGODB_URI;
-  if (!uri) throw new Error("MONGODB_URI 환경변수가 없습니다.");
-  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) return;
+  mongoEnabled = Boolean(uri);
 
-  await mongoose.connect(uri, { autoIndex: true });
-  console.log("[MONGO] connected");
-}
+  if (!uri) {
+    console.warn("[MONGO] MONGODB_URI 없음. 메모리 모드로 실행합니다.");
+    mongoAvailable = false;
+    return;
+  }
 
-async function getMessageHistory(roomId) {
-  return Message.find({ roomId }).sort({ time: 1 }).limit(300).lean();
-}
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    mongoAvailable = true;
+    return;
+  }
 
-async function appendMessage(roomId, message) {
-  await Message.create({ roomId, ...message });
-
-  const count = await Message.countDocuments({ roomId });
-  if (count > 300) {
-    const overflow = count - 300;
-    const oldDocs = await Message.find({ roomId })
-      .sort({ time: 1 })
-      .limit(overflow)
-      .select("_id")
-      .lean();
-
-    if (oldDocs.length) {
-      await Message.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
-    }
+  try {
+    await mongoose.connect(uri, {
+      autoIndex: true,
+      serverSelectionTimeoutMS: 8000
+    });
+    mongoAvailable = true;
+    console.log("[MONGO] connected");
+  } catch (error) {
+    mongoAvailable = false;
+    console.error("[MONGO] connect failed. 메모리 모드로 계속 실행합니다.", error.message);
   }
 }
 
+async function getMessageHistory(roomId) {
+  if (mongoAvailable) {
+    return Message.find({ roomId }).sort({ time: 1 }).limit(MAX_MESSAGES_PER_ROOM).lean();
+  }
+
+  return getMemoryRoom(roomId).messages.slice(-MAX_MESSAGES_PER_ROOM);
+}
+
+async function appendMessage(roomId, message) {
+  const normalized = normalizeMessage(message, message.sender, message.senderName);
+
+  if (mongoAvailable) {
+    await Message.create({ roomId, ...normalized });
+
+    const count = await Message.countDocuments({ roomId });
+    if (count > MAX_MESSAGES_PER_ROOM) {
+      const overflow = count - MAX_MESSAGES_PER_ROOM;
+      const oldDocs = await Message.find({ roomId })
+        .sort({ time: 1 })
+        .limit(overflow)
+        .select("_id")
+        .lean();
+
+      if (oldDocs.length) {
+        await Message.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
+      }
+    }
+
+    return normalized;
+  }
+
+  const room = getMemoryRoom(roomId);
+  room.messages.push(normalized);
+  if (room.messages.length > MAX_MESSAGES_PER_ROOM) {
+    room.messages.splice(0, room.messages.length - MAX_MESSAGES_PER_ROOM);
+  }
+  return normalized;
+}
+
 async function getDrawingHistory(roomId, imageId) {
-  const doc = await Drawing.findOne({ roomId, imageId }).lean();
-  return doc?.strokes || [];
+  if (mongoAvailable) {
+    const doc = await Drawing.findOne({ roomId, imageId }).lean();
+    return doc?.strokes || [];
+  }
+
+  return getMemoryRoom(roomId).drawings.get(imageId) || [];
 }
 
 async function replaceDrawingHistory(roomId, imageId, strokes) {
-  const safeStrokes = Array.isArray(strokes) ? strokes.slice(-2000) : [];
-  await Drawing.findOneAndUpdate(
-    { roomId, imageId },
-    { $set: { strokes: safeStrokes } },
-    { upsert: true, new: true }
-  );
+  const safeStrokes = Array.isArray(strokes)
+    ? strokes.slice(-MAX_STROKES_PER_IMAGE).map(normalizeStroke)
+    : [];
+
+  if (mongoAvailable) {
+    await Drawing.findOneAndUpdate(
+      { roomId, imageId },
+      { $set: { strokes: safeStrokes, updatedAt: Date.now() } },
+      { upsert: true, new: true }
+    );
+    return safeStrokes;
+  }
+
+  const room = getMemoryRoom(roomId);
+  room.drawings.set(imageId, safeStrokes);
   return safeStrokes;
 }
 
 async function appendDrawStroke(roomId, imageId, stroke) {
   const current = await getDrawingHistory(roomId, imageId);
-  current.push(stroke);
+  current.push(normalizeStroke(stroke));
   return replaceDrawingHistory(roomId, imageId, current);
 }
 
 async function appendDrawStrokes(roomId, imageId, strokes) {
   const current = await getDrawingHistory(roomId, imageId);
-  current.push(...strokes);
+  const safeStrokes = Array.isArray(strokes) ? strokes.map(normalizeStroke) : [];
+  current.push(...safeStrokes);
   return replaceDrawingHistory(roomId, imageId, current);
 }
 
 async function clearDrawingHistory(roomId, imageId) {
-  await Drawing.findOneAndUpdate(
-    { roomId, imageId },
-    { $set: { strokes: [] } },
-    { upsert: true, new: true }
-  );
+  if (mongoAvailable) {
+    await Drawing.findOneAndUpdate(
+      { roomId, imageId },
+      { $set: { strokes: [], updatedAt: Date.now() } },
+      { upsert: true, new: true }
+    );
+    return;
+  }
+
+  getMemoryRoom(roomId).drawings.set(imageId, []);
 }
 
 async function getNotes(roomId, imageId) {
-  const docs = await Note.find({ roomId, imageId }).sort({ updatedAt: 1 }).lean();
-  return docs.map((note) => ({
-    id: note.noteId,
-    x: note.x,
-    y: note.y,
-    width: note.width,
-    height: note.height,
-    text: note.text,
-    color: note.color,
-    author: note.author,
-    updatedAt: note.updatedAt,
-    updatedByRole: note.updatedByRole,
-    updatedByName: note.updatedByName
-  }));
+  if (mongoAvailable) {
+    const docs = await Note.find({ roomId, imageId }).sort({ updatedAt: 1 }).lean();
+    return docs.map((note) => ({
+      id: note.noteId,
+      x: note.x,
+      y: note.y,
+      width: note.width,
+      height: note.height,
+      text: note.text,
+      color: note.color,
+      author: note.author,
+      updatedAt: note.updatedAt,
+      updatedByRole: note.updatedByRole,
+      updatedByName: note.updatedByName
+    }));
+  }
+
+  const items = Array.from((getMemoryRoom(roomId).notes.get(imageId) || new Map()).values());
+  return items.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
 }
 
 async function addOrGetNote(roomId, imageId, normalized) {
-  const existing = await Note.findOne({ roomId, imageId, noteId: normalized.noteId }).lean();
-  if (existing) {
+  if (mongoAvailable) {
+    const existing = await Note.findOne({ roomId, imageId, noteId: normalized.noteId }).lean();
+    if (existing) {
+      return {
+        id: existing.noteId,
+        x: existing.x,
+        y: existing.y,
+        width: existing.width,
+        height: existing.height,
+        text: existing.text,
+        color: existing.color,
+        author: existing.author,
+        updatedAt: existing.updatedAt,
+        updatedByRole: existing.updatedByRole,
+        updatedByName: existing.updatedByName
+      };
+    }
+
+    const created = await Note.create({ roomId, imageId, ...normalized });
+
+    const count = await Note.countDocuments({ roomId, imageId });
+    if (count > MAX_NOTES_PER_IMAGE) {
+      const overflow = count - MAX_NOTES_PER_IMAGE;
+      const oldDocs = await Note.find({ roomId, imageId })
+        .sort({ updatedAt: 1 })
+        .limit(overflow)
+        .select("_id")
+        .lean();
+
+      if (oldDocs.length) {
+        await Note.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
+      }
+    }
+
     return {
-      id: existing.noteId,
-      x: existing.x,
-      y: existing.y,
-      width: existing.width,
-      height: existing.height,
-      text: existing.text,
-      color: existing.color,
-      author: existing.author,
-      updatedAt: existing.updatedAt,
-      updatedByRole: existing.updatedByRole,
-      updatedByName: existing.updatedByName
+      id: created.noteId,
+      x: created.x,
+      y: created.y,
+      width: created.width,
+      height: created.height,
+      text: created.text,
+      color: created.color,
+      author: created.author,
+      updatedAt: created.updatedAt,
+      updatedByRole: created.updatedByRole,
+      updatedByName: created.updatedByName
     };
   }
 
-  const created = await Note.create({ roomId, imageId, ...normalized });
+  const room = getMemoryRoom(roomId);
+  const imageMap = room.notes.get(imageId) || new Map();
+  room.notes.set(imageId, imageMap);
 
-  const count = await Note.countDocuments({ roomId, imageId });
-  if (count > 100) {
-    const overflow = count - 100;
-    const oldDocs = await Note.find({ roomId, imageId })
-      .sort({ updatedAt: 1 })
-      .limit(overflow)
-      .select("_id")
-      .lean();
-
-    if (oldDocs.length) {
-      await Note.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
-    }
+  if (imageMap.has(normalized.noteId)) {
+    return imageMap.get(normalized.noteId);
   }
 
-  return {
-    id: created.noteId,
-    x: created.x,
-    y: created.y,
-    width: created.width,
-    height: created.height,
-    text: created.text,
-    color: created.color,
-    author: created.author,
-    updatedAt: created.updatedAt,
-    updatedByRole: created.updatedByRole,
-    updatedByName: created.updatedByName
+  const note = {
+    id: normalized.noteId,
+    x: normalized.x,
+    y: normalized.y,
+    width: normalized.width,
+    height: normalized.height,
+    text: normalized.text,
+    color: normalized.color,
+    author: normalized.author,
+    updatedAt: normalized.updatedAt,
+    updatedByRole: normalized.updatedByRole,
+    updatedByName: normalized.updatedByName
   };
+
+  imageMap.set(note.id, note);
+  const notes = Array.from(imageMap.values()).sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+  while (notes.length > MAX_NOTES_PER_IMAGE) {
+    const removed = notes.shift();
+    if (removed) imageMap.delete(removed.id);
+  }
+
+  return note;
 }
 
 async function updateNote(roomId, imageId, noteId, patch) {
-  const updated = await Note.findOneAndUpdate(
-    { roomId, imageId, noteId },
-    { $set: patch },
-    { new: true }
-  ).lean();
+  if (mongoAvailable) {
+    const updated = await Note.findOneAndUpdate(
+      { roomId, imageId, noteId },
+      { $set: patch },
+      { new: true }
+    ).lean();
 
-  if (!updated) return null;
+    if (!updated) return null;
 
-  return {
-    id: updated.noteId,
-    x: updated.x,
-    y: updated.y,
-    width: updated.width,
-    height: updated.height,
-    text: updated.text,
-    color: updated.color,
-    author: updated.author,
-    updatedAt: updated.updatedAt,
-    updatedByRole: updated.updatedByRole,
-    updatedByName: updated.updatedByName
-  };
+    return {
+      id: updated.noteId,
+      x: updated.x,
+      y: updated.y,
+      width: updated.width,
+      height: updated.height,
+      text: updated.text,
+      color: updated.color,
+      author: updated.author,
+      updatedAt: updated.updatedAt,
+      updatedByRole: updated.updatedByRole,
+      updatedByName: updated.updatedByName
+    };
+  }
+
+  const room = getMemoryRoom(roomId);
+  const imageMap = room.notes.get(imageId) || new Map();
+  if (!imageMap.has(noteId)) return null;
+
+  const current = imageMap.get(noteId);
+  const updated = { ...current, ...patch };
+  imageMap.set(noteId, updated);
+  return updated;
 }
 
 async function deleteNote(roomId, imageId, noteId) {
-  await Note.deleteOne({ roomId, imageId, noteId });
+  if (mongoAvailable) {
+    await Note.deleteOne({ roomId, imageId, noteId });
+    return;
+  }
+
+  const room = getMemoryRoom(roomId);
+  const imageMap = room.notes.get(imageId) || new Map();
+  imageMap.delete(noteId);
 }
 
 app.post(
@@ -364,19 +558,15 @@ app.post(
             error: "이미지 용량이 너무 큽니다. 20MB 이하만 가능합니다."
           });
         }
-        return res.status(400).json({
-          error: "업로드 처리 중 오류가 발생했습니다."
-        });
+        return res.status(400).json({ error: "업로드 처리 중 오류가 발생했습니다." });
       }
 
-      return res.status(400).json({
-        error: err.message || "업로드 실패"
-      });
+      return res.status(400).json({ error: err.message || "업로드 실패" });
     });
   },
   async (req, res) => {
     try {
-      if (!hasCloudinaryEnv) {
+      if (!cloudinaryEnabled) {
         return res.status(500).json({ error: "Cloudinary 환경변수가 설정되지 않았습니다." });
       }
 
@@ -403,14 +593,18 @@ app.post(
   }
 );
 
+function emitErrorAck(ack, error) {
+  if (typeof ack === "function") ack({ ok: false, error });
+}
+
 io.on("connection", (socket) => {
   console.log("connect:", socket.id);
 
   socket.on("join", async (payload = {}, ack) => {
     try {
-      const roomId = String(payload.roomId || "").trim();
+      const roomId = String(payload.roomId || "").trim().slice(0, 120);
       if (!roomId) {
-        if (ack) ack({ ok: false, error: "roomId 없음" });
+        emitErrorAck(ack, "roomId 없음");
         socket.emit("join-error", { ok: false, error: "roomId 없음" });
         return;
       }
@@ -426,11 +620,11 @@ io.on("connection", (socket) => {
       const history = await getMessageHistory(roomId);
       socket.emit("history", history);
 
-      if (ack) ack({ ok: true, roomId, role, userName });
-      socket.emit("joined", { ok: true, roomId, role, userName });
+      if (ack) ack({ ok: true, roomId, role, userName, mongoReady: mongoAvailable });
+      socket.emit("joined", { ok: true, roomId, role, userName, mongoReady: mongoAvailable });
     } catch (error) {
       console.error("join error:", error);
-      if (ack) ack({ ok: false, error: "join 오류" });
+      emitErrorAck(ack, "join 오류");
       socket.emit("join-error", { ok: false, error: "join 오류" });
     }
   });
@@ -438,187 +632,182 @@ io.on("connection", (socket) => {
   socket.on("message", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
+      if (!roomId) return emitErrorAck(ack, "join 필요");
 
       const text = String(payload.text || "").trim();
-      if (!text) {
-        if (ack) ack({ ok: false, error: "메시지 없음" });
-        return;
-      }
+      if (!text) return emitErrorAck(ack, "메시지 없음");
 
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
-
-      const message = {
+      const message = await appendMessage(roomId, {
         type: "text",
         text,
         sender: role,
         senderName: userName,
         time: Date.now()
-      };
+      });
 
-      await appendMessage(roomId, message);
       io.to(roomId).emit("message", message);
-
-      if (ack) ack({ ok: true });
+      if (ack) ack({ ok: true, message });
     } catch (error) {
       console.error("message error:", error);
-      if (ack) ack({ ok: false, error: "메시지 오류" });
+      emitErrorAck(ack, "메시지 저장 오류");
     }
   });
 
   socket.on("image", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
-      if (!roomId) {
-        if (ack) ack({ ok: false, error: "join 필요" });
-        return;
-      }
+      if (!roomId) return emitErrorAck(ack, "join 필요");
 
       const imageUrl = String(payload.url || "").trim();
-      if (!imageUrl) {
-        if (ack) ack({ ok: false, error: "imageUrl 없음" });
-        return;
-      }
+      if (!imageUrl) return emitErrorAck(ack, "이미지 URL 없음");
 
-      const imageId = uuidv4();
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
+      const imageId = uuidv4();
 
-      const message = {
+      const message = await appendMessage(roomId, {
         type: "image",
         imageId,
         imageUrl,
         sender: role,
         senderName: userName,
         time: Date.now()
-      };
+      });
 
-      await appendMessage(roomId, message);
-      await replaceDrawingHistory(roomId, imageId, []);
-      io.to(roomId).emit("image", message);
-
-      if (ack) ack({ ok: true, imageId, imageUrl });
+      io.to(roomId).emit("message", message);
+      if (ack) ack({ ok: true, imageId, message });
     } catch (error) {
       console.error("image error:", error);
-      if (ack) ack({ ok: false, error: "이미지 오류" });
+      emitErrorAck(ack, "이미지 저장 오류");
     }
   });
 
-  socket.on("request-drawing-history", async (payload = {}) => {
+  socket.on("get-drawing", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
 
       const strokes = await getDrawingHistory(roomId, imageId);
-      socket.emit("drawing-history", { imageId, strokes });
+      if (ack) ack({ ok: true, strokes });
     } catch (error) {
-      console.error("request-drawing-history error:", error);
+      console.error("get-drawing error:", error);
+      emitErrorAck(ack, "드로잉 불러오기 오류");
     }
   });
 
-  socket.on("draw-stroke", async (payload = {}) => {
+  socket.on("replace-drawing", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
 
-      await appendDrawStroke(roomId, imageId, payload);
-      io.to(roomId).emit("draw-stroke", payload);
+      const strokes = await replaceDrawingHistory(roomId, imageId, payload.strokes || []);
+      io.to(roomId).emit("drawing-replaced", { imageId, strokes });
+      if (ack) ack({ ok: true, strokes });
+    } catch (error) {
+      console.error("replace-drawing error:", error);
+      emitErrorAck(ack, "드로잉 저장 오류");
+    }
+  });
+
+  socket.on("draw-stroke", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      const stroke = normalizeStroke({ ...payload.stroke, sender: sanitizeRole(socket.data.role) });
+      await appendDrawStroke(roomId, imageId, stroke);
+      io.to(roomId).emit("stroke-added", { imageId, stroke });
+      if (ack) ack({ ok: true, stroke });
     } catch (error) {
       console.error("draw-stroke error:", error);
+      emitErrorAck(ack, "드로잉 저장 오류");
     }
   });
 
-  socket.on("draw-strokes", async (payload = {}) => {
+  socket.on("draw-strokes", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId || !strokes.length) return;
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      const strokes = Array.isArray(payload.strokes)
+        ? payload.strokes.map((stroke) => normalizeStroke({ ...stroke, sender: sanitizeRole(socket.data.role) }))
+        : [];
 
       await appendDrawStrokes(roomId, imageId, strokes);
-      io.to(roomId).emit("draw-strokes", { imageId, strokes });
+      io.to(roomId).emit("strokes-added", { imageId, strokes });
+      if (ack) ack({ ok: true, strokes });
     } catch (error) {
       console.error("draw-strokes error:", error);
+      emitErrorAck(ack, "드로잉 저장 오류");
     }
   });
 
-  socket.on("replace-drawing-history", async (payload = {}) => {
+  socket.on("clear-drawing", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
-      const strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-      if (!roomId || !imageId) return;
-
-      const saved = await replaceDrawingHistory(roomId, imageId, strokes);
-      io.to(roomId).emit("drawing-history", { imageId, strokes: saved });
-    } catch (error) {
-      console.error("replace-drawing-history error:", error);
-    }
-  });
-
-  socket.on("clear-drawing", async (payload = {}) => {
-    try {
-      const roomId = socket.data.roomId;
-      const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
 
       await clearDrawingHistory(roomId, imageId);
-      io.to(roomId).emit("clear-drawing", { imageId });
+      io.to(roomId).emit("drawing-cleared", { imageId });
+      if (ack) ack({ ok: true });
     } catch (error) {
       console.error("clear-drawing error:", error);
+      emitErrorAck(ack, "드로잉 초기화 오류");
     }
   });
 
-  socket.on("request-note-history", async (payload = {}) => {
+  socket.on("get-notes", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
-      if (!roomId || !imageId) return;
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
 
       const notes = await getNotes(roomId, imageId);
-      socket.emit("note-history", { imageId, notes });
+      if (ack) ack({ ok: true, notes });
     } catch (error) {
-      console.error("request-note-history error:", error);
+      console.error("get-notes error:", error);
+      emitErrorAck(ack, "노트 불러오기 오류");
     }
   });
 
-  socket.on("add-note", async (payload = {}) => {
+  socket.on("add-note", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
-      const note = payload.note;
-      if (!roomId || !imageId || !note) return;
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
 
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
-      const normalized = normalizeNote(note, role, userName);
-      const saved = await addOrGetNote(roomId, imageId, normalized);
+      const note = normalizeNote(payload.note || {}, role, userName);
+      const created = await addOrGetNote(roomId, imageId, note);
 
-      io.to(roomId).emit("note-added", { imageId, note: saved });
+      io.to(roomId).emit("note-added", { imageId, note: created });
+      if (ack) ack({ ok: true, note: created });
     } catch (error) {
       console.error("add-note error:", error);
+      emitErrorAck(ack, "노트 저장 오류");
     }
   });
 
-  socket.on("note-live-update", async (payload = {}) => {
+  socket.on("note-live-update", async (payload = {}, ack) => {
     try {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) return;
+      if (!roomId || !imageId || !noteId) return emitErrorAck(ack, "필수값 없음");
 
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
       const patch = normalizeNotePatch(payload.patch || {}, role, userName);
-
       const updated = await updateNote(roomId, imageId, noteId, patch);
-      if (!updated) return;
+      if (!updated) return emitErrorAck(ack, "노트를 찾을 수 없음");
 
       io.to(roomId).emit("note-live-update", {
         imageId,
@@ -635,8 +824,10 @@ io.on("connection", (socket) => {
           updatedByName: updated.updatedByName
         }
       });
+      if (ack) ack({ ok: true });
     } catch (error) {
       console.error("note-live-update error:", error);
+      emitErrorAck(ack, "노트 실시간 갱신 오류");
     }
   });
 
@@ -645,26 +836,20 @@ io.on("connection", (socket) => {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
+      if (!roomId || !imageId || !noteId) return emitErrorAck(ack, "필수값 없음");
 
       const role = sanitizeRole(socket.data.role);
       const userName = sanitizeUserName(socket.data.userName, role);
       const patch = normalizeNotePatch(payload.patch || {}, role, userName);
 
       const updated = await updateNote(roomId, imageId, noteId, patch);
-      if (!updated) {
-        if (ack) ack({ ok: false, error: "노트를 찾을 수 없음" });
-        return;
-      }
+      if (!updated) return emitErrorAck(ack, "노트를 찾을 수 없음");
 
       io.to(roomId).emit("note-updated", { imageId, note: updated });
       if (ack) ack({ ok: true, note: updated });
     } catch (error) {
       console.error("update-note error:", error);
-      if (ack) ack({ ok: false, error: "노트 저장 오류" });
+      emitErrorAck(ack, "노트 저장 오류");
     }
   });
 
@@ -673,17 +858,14 @@ io.on("connection", (socket) => {
       const roomId = socket.data.roomId;
       const imageId = String(payload.imageId || "").trim();
       const noteId = String(payload.noteId || "").trim();
-      if (!roomId || !imageId || !noteId) {
-        if (ack) ack({ ok: false, error: "필수값 없음" });
-        return;
-      }
+      if (!roomId || !imageId || !noteId) return emitErrorAck(ack, "필수값 없음");
 
       await deleteNote(roomId, imageId, noteId);
       io.to(roomId).emit("note-deleted", { imageId, noteId });
       if (ack) ack({ ok: true });
     } catch (error) {
       console.error("delete-note error:", error);
-      if (ack) ack({ ok: false, error: "노트 삭제 오류" });
+      emitErrorAck(ack, "노트 삭제 오류");
     }
   });
 
@@ -693,15 +875,15 @@ io.on("connection", (socket) => {
 });
 
 async function bootstrap() {
-  try {
-    await ensureMongoConnected();
-    server.listen(PORT, HOST, () => {
-      console.log(`[SERVER] listening on http://${HOST}:${PORT}`);
-    });
-  } catch (error) {
-    console.error("[BOOT] failed:", error);
-    process.exit(1);
-  }
+  await ensureMongoConnected();
+  server.listen(PORT, HOST, () => {
+    console.log(`[SERVER] listening on http://${HOST}:${PORT}`);
+    console.log(`[SERVER] version ${APP_VERSION}`);
+    console.log(`[SERVER] mongo=${mongoAvailable ? "ready" : "memory-mode"} cloudinary=${cloudinaryEnabled ? "ready" : "disabled"}`);
+  });
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error("[BOOT] failed:", error);
+  process.exit(1);
+});
