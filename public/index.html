@@ -1,1393 +1,2001 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>디자인 상담 · RENDER</title>
-<style>
-:root{
-  --bg:#f4f8fc;--bg-soft:#f8fbff;--line:#e3ebf3;--line-strong:#d6e0ea;
-  --text:#17212b;--text-soft:#24313f;--sub:#728292;
-  --primary:#2491ff;--primary-soft:#79c7ff;--danger:#ff5b5b;
-  --shadow:0 18px 50px rgba(18,36,61,.10);--radius-xl:28px;
-  --safe-bottom:max(env(safe-area-inset-bottom),0px);
-  --selected-draw-color:#ff3b30;
-}
-*{box-sizing:border-box}
-html,body{
-  margin:0;width:100%;height:100%;
-  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
-  color:var(--text);
-  background:radial-gradient(circle at top left,rgba(36,145,255,.08),transparent 24%),linear-gradient(180deg,#f9fbff 0%,#edf4fa 100%);
-}
-body{overflow:hidden;-webkit-text-size-adjust:100%;overscroll-behavior:none}
-button,input,textarea,label{font:inherit}
-button{border:none;cursor:pointer}
-button:disabled{opacity:.45;cursor:not-allowed}
-input,textarea{outline:none}
-#app{width:100%;height:100%;display:flex;align-items:stretch;justify-content:center}
-#chatCard{
-  width:min(430px,100%);height:100%;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);
-  border:1px solid rgba(255,255,255,.82);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;
-  display:flex;flex-direction:column
-}
-#header{height:44px;flex-shrink:0;border-bottom:1px solid #e3ebf3;background:rgba(255,255,255,.96);display:flex;align-items:center;justify-content:space-between;padding:0 14px}
-#title{font-size:14px;font-weight:800;color:#24313f}
-#connectionBadge{height:28px;padding:0 10px;border-radius:999px;background:#edf4fa;color:#53687a;display:inline-flex;align-items:center;font-size:11px;font-weight:800}
-#quickRequestBar{flex-shrink:0;padding:10px 14px 8px;background:rgba(255,255,255,.96);border-bottom:1px solid #e3ebf3;display:flex;flex-direction:column;gap:8px}
-#quickRequestTitle{font-size:13px;font-weight:700;color:#24313f}
-#quickRequestButtons{display:flex;gap:6px;flex-wrap:wrap}
-.quickChip{height:34px;padding:0 12px;border-radius:999px;background:#edf4fa;color:#425466;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
-.quickChip.active{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
-#summaryCard{flex-shrink:0;margin:0 12px 6px;padding:8px 10px;border:1px solid #e3ebf3;border-radius:16px;background:linear-gradient(180deg,#fbfdff,#f5f9fd);display:flex;flex-direction:column;gap:6px}
-#summaryHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
-#summaryHeaderLeft{min-width:0;display:flex;align-items:center;gap:8px;flex:1}
-#summaryTitle{font-size:12px;font-weight:800;color:#24313f}
-#summaryToggleBtn{width:26px;min-width:26px;height:26px;border-radius:999px;background:#edf4fa;color:#4f6579;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center}
-#summaryToggleBtn::before{content:"⌃"}
-#summaryCard.collapsed #summaryToggleBtn::before{content:"⌄"}
-#summaryPreview{min-width:0;flex:1;display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap}
-.summaryInlineChip{height:24px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;background:#f5f9fd;color:#53687a;font-size:11px;font-weight:800;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
-.summaryInlineChip.empty{max-width:none}
-#summaryRows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.summaryItem{min-width:0;padding:10px;border-radius:14px;background:#fff;border:1px solid #e9eff5;display:flex;flex-direction:column;gap:4px}
-.summaryLabel{font-size:10px;font-weight:800;color:#91a0af;text-transform:uppercase;letter-spacing:.04em}
-.summaryValue{min-height:18px;font-size:13px;font-weight:700;line-height:1.45;color:#17212b;word-break:break-word}
-#summaryActions{display:flex;gap:8px;flex-wrap:wrap}
-.summaryActionBtn{height:36px;padding:0 12px;border-radius:12px;background:#edf4fa;color:#425466;font-size:12px;font-weight:800}
-.summaryActionBtn.primary{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
-#summaryCard.collapsed #summaryRows,#summaryCard.collapsed #summaryActions{display:none}
-#chatBox{flex:1;min-height:0;overflow-y:auto;padding:0 14px 8px;background:#f8fbff}
-#chatInner,#viewerChatInner{display:flex;flex-direction:column;gap:14px;min-height:100%}
-.messageRow{display:flex;flex-direction:column;gap:5px}
-.messageRow.me{align-items:flex-end}
-.messageRow.other{align-items:flex-start}
-.messageRow.system{align-items:center}
-.bubble{max-width:86%;padding:12px 16px;border-radius:22px;font-size:15px;line-height:1.52;letter-spacing:-.02em;word-break:break-word}
-.messageRow.me .bubble{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff;border-bottom-right-radius:8px;box-shadow:0 8px 20px rgba(36,145,255,.16)}
-.messageRow.other .bubble{background:#fff;border:1px solid #e3ebf3;color:#17212b;border-bottom-left-radius:8px}
-.messageRow.system .bubble{background:#eef5ff;color:#40617d;font-size:12px;font-weight:700;padding:8px 12px;max-width:92%}
-.meta{font-size:10px;color:#95a3b1;padding:0 8px}
-.imageBubble{max-width:92%;background:#fff;border:1px solid #e3ebf3;border-radius:22px;padding:8px;cursor:pointer;box-shadow:0 8px 18px rgba(18,36,61,.04)}
-.chatImg{display:block;width:100%;max-width:320px;border-radius:14px}
-.imageHint{margin-top:8px;padding:8px 10px;border-radius:12px;background:#f6fbff;color:#557086;font-size:10px;font-weight:800}
-#inputArea{flex-shrink:0;border-top:1px solid #e3ebf3;background:rgba(255,255,255,.97);padding:10px 12px calc(12px + var(--safe-bottom));display:flex;flex-direction:column;gap:8px}
-#phoneRow,#messageRowBar{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #e3ebf3;border-radius:16px;background:#fbfdff}
-#phoneStatus{display:none;font-size:11px;color:#5f7286;padding:0 2px}
-#phoneStatus.show{display:block}
-#phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{border:1px solid #d6e0ea;background:#f8fbff}
-#phoneInput{width:180px;height:34px;border-radius:10px;padding:0 10px;font-size:12px}
-#savePhoneBtn,#deletePhoneBtn{height:34px;min-width:48px;padding:0 10px;border-radius:10px;font-size:12px;font-weight:800}
-#savePhoneBtn{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
-#deletePhoneBtn{background:#edf4fa;color:#425466}
-#msgInput{flex:1;min-width:0;height:36px;border-radius:12px;padding:0 12px;font-size:13px}
-#sendBtn,#fileLabel{width:34px;height:34px;min-width:34px;border-radius:11px;font-size:15px;display:flex;align-items:center;justify-content:center}
-#sendBtn{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
-#fileInput{display:none}
-#fileLabel{background:#f2f6fa;color:#7b8d9f;border:1px solid #e5edf4}
-#fileLabel.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
-#viewerOverlay,#noteEditorOverlay{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;width:100vw;height:100dvh;min-height:100dvh;background:rgba(245,248,252,.985)}
-#viewerOverlay.open,#noteEditorOverlay.open{display:flex}
-body.viewer-inline-open{overflow:hidden;touch-action:none}
-#viewerTopbar{height:52px;flex-shrink:0;border-bottom:1px solid #e3ebf3;background:rgba(255,255,255,.96);display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:0 10px;position:relative;z-index:40}
-#viewerTopLeft{min-width:0;display:flex;align-items:center;font-weight:800;color:#24313f}
-#viewerActions{display:flex;gap:6px;flex-shrink:0;position:relative;z-index:41}
-.viewerBtn,.toolBtn,.summaryActionBtn{transition:transform .12s ease,box-shadow .12s ease}
-.viewerBtn:hover,.toolBtn:hover,.summaryActionBtn:hover{transform:translateY(-1px)}
-.viewerBtn{min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;z-index:41}
-.viewerBtn svg,.toolBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#viewerMain{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)}
-#viewerLeft{min-width:0;display:flex;flex-direction:column;border-right:1px solid #e3ebf3;background:#f8fbff;position:relative;z-index:10}
-#canvasWrap{flex:1;min-height:0;padding:10px;display:flex;align-items:center;justify-content:center;position:relative;z-index:11}
-#imageStage{position:relative;width:100%;height:min(100%,760px);min-height:420px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,251,255,.96));border:1px solid #dfe9f3;box-shadow:0 18px 38px rgba(18,36,61,.08);overflow:hidden;z-index:12}
-#viewerImage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:84%;max-height:84%;border-radius:18px;box-shadow:0 14px 32px rgba(18,36,61,.12);pointer-events:none;user-select:none;-webkit-user-drag:none;z-index:1}
-#drawCanvas{position:absolute;inset:0;width:100%;height:100%;border-radius:22px;touch-action:none;z-index:2}
-#textLayer{position:absolute;inset:0;z-index:3;pointer-events:none}
-#brushCursor{position:absolute;pointer-events:none;border-radius:50%;background:rgba(36,145,255,0.16);border:1.5px solid rgba(36,145,255,0.7);box-shadow:0 0 0 1px rgba(255,255,255,0.45) inset,0 2px 10px rgba(18,36,61,0.10);transform:translate(-50%,-50%);display:none;z-index:10;backdrop-filter:blur(1px);transition:width .08s linear,height .08s linear,background-color .08s linear,border-color .08s linear}
-.noteMarker{position:absolute;min-width:56px;min-height:42px;padding:0 12px;border-radius:14px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border:1px solid rgba(36,145,255,.22);box-shadow:0 10px 18px rgba(18,36,61,.10);transform:translate(-50%,-50%);pointer-events:auto;user-select:none;z-index:20;touch-action:none;cursor:grab}
-.noteMarker:active{cursor:grabbing}
-.noteMarker.selected{border-color:rgba(255,139,61,.55);box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.12)}
-.noteMarkerText{max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;color:#17212b}
-.noteDot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;border:1px solid rgba(0,0,0,.1)}
-#toolbar{flex-shrink:0;border-top:1px solid #e3ebf3;background:#fff;padding:10px 12px 12px;position:relative;z-index:50;overflow:visible}
-#toolbarInline{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
-#toolbarInline::-webkit-scrollbar{display:none}
-.toolBtn{min-width:40px;width:40px;height:40px;padding:0;border-radius:12px;background:#edf4fa;color:#425466;display:inline-flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;position:relative;z-index:51}
-.toolBtn.active{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
-.toolBtnSmall{min-width:32px;width:32px;height:32px;border-radius:10px;font-size:13px}
-#thicknessWrap{display:flex;align-items:center;padding:0 8px;height:40px;border-radius:12px;background:#f6faff;border:1px solid #e3ebf3;flex:0 0 auto;position:relative;z-index:51}
-#thicknessRange{width:88px}
-#paletteWrap{position:relative;z-index:60;flex:0 0 auto}
-#paletteBtn{position:relative;overflow:visible;background:#edf4fa;color:#425466;z-index:61}
-#palettePreview{position:absolute;right:4px;bottom:4px;width:12px;height:12px;border-radius:50%;background:var(--selected-draw-color,#ff3b30);border:1px solid rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(18,36,61,.16);z-index:3;pointer-events:none}
-#colorPopover{position:fixed;left:0;top:0;display:none;width:172px;padding:10px;border-radius:16px;background:rgba(255,255,255,.99);border:1px solid #dfe7f0;box-shadow:0 18px 36px rgba(18,36,61,.18);backdrop-filter:blur(10px);z-index:999999}
-#colorPopover.open{display:block}
-#colorPopoverGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.colorChip{width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(18,36,61,.12);cursor:pointer}
-.colorChip.active{box-shadow:0 0 0 3px rgba(36,145,255,.20),0 0 0 1px rgba(18,36,61,.12)}
-.noteColorSwatch{border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.10);display:inline-flex;width:22px;height:22px;cursor:pointer}
-.noteColorSwatch.active{box-shadow:0 0 0 3px rgba(36,145,255,.18)}
-#viewerRight{display:flex;flex-direction:column;min-height:0;position:relative;z-index:10}
-#viewerChatBox{flex:1;min-height:0;overflow-y:auto;padding:12px;background:#fbfdff}
-#viewerChatInner .meta{display:none}
-#viewerInputBar{flex-shrink:0;border-top:1px solid #e3ebf3;padding:12px 14px calc(14px + var(--safe-bottom));background:#fff;display:flex;gap:10px;position:relative;z-index:50}
-#viewerMsgInput{flex:1;height:46px;border-radius:16px;padding:0 14px;font-size:15px}
-#viewerSendBtn{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff;font-size:18px;font-weight:800}
-#noteEditorHeader{min-height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #e3ebf3;background:#fff}
-#noteEditorTitleWrap{min-width:0;display:flex;flex-direction:column;gap:4px}
-#noteEditorTitle{font-size:17px;font-weight:800}
-#noteEditorMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#noteEditorSaveBadge{height:24px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;background:#eef4fa;color:#587085;font-size:11px;font-weight:800}
-#noteEditorSaveBadge.pending{background:#fff7ea;color:#9a6500}
-#noteEditorSaveBadge.saved{background:#ebf9ee;color:#2f7b42}
-#noteEditorSaveBadge.offline{background:#fff3f3;color:#c74242}
-#noteEditorActions{display:flex;align-items:center;gap:8px}
-.noteEditorDangerBtn,#noteEditorDoneBtn{height:38px;padding:0 12px;border-radius:12px;font-weight:800}
-.noteEditorDangerBtn{background:#fff1f1;color:#c74242}
-#noteEditorDoneBtn{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
-#noteEditorBody{flex:1;min-height:0;padding:14px;background:#f7fbff;display:flex;flex-direction:column;gap:10px}
-#noteEditorTools{display:flex;flex-direction:column;gap:8px}
-#noteEditorColorRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-#noteEditorMetaLine{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#728292;font-size:12px;font-weight:700}
-#noteEditorTextarea{width:100%;height:100%;border-radius:20px;resize:none;padding:16px;font-size:16px;line-height:1.55;color:#17212b}
-#uploadLoading{position:fixed;inset:0;z-index:260;display:none;align-items:center;justify-content:center;background:rgba(245,248,252,.72);backdrop-filter:blur(4px)}
-#uploadLoading.show{display:flex}
-#uploadLoadingCard{min-width:180px;padding:18px 20px;border-radius:18px;background:rgba(255,255,255,.96);border:1px solid #e3ebf3;box-shadow:0 18px 40px rgba(18,36,61,.12);display:flex;align-items:center;gap:12px}
-.uploadSpinner{width:22px;height:22px;border-radius:50%;border:2px solid rgba(36,145,255,.18);border-top-color:#2491ff;animation:spin .85s linear infinite}
-#uploadLoadingText{font-size:13px;font-weight:700;color:#24313f}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media (max-width:900px){
-  #chatCard{width:100vw!important;height:100dvh!important;max-width:none!important;border-radius:0!important}
-  #header{height:40px}
-  #quickRequestBar{padding:8px 10px 6px;gap:6px}
-  #quickRequestButtons{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  #quickRequestButtons::-webkit-scrollbar{display:none}
-  .quickChip{flex:0 0 auto}
-  #summaryCard{margin:0 8px 4px;gap:4px}
-  #summaryHeaderLeft{gap:6px}
-  #summaryPreview{gap:4px}
-  .summaryInlineChip{max-width:110px;font-size:10px;padding:0 8px}
-  #summaryRows{grid-template-columns:1fr 1fr;gap:6px}
-  #chatBox{padding:0 10px 6px}
-  .bubble{max-width:86%;font-size:14px;padding:11px 14px}
-  .chatImg{max-width:220px}
-  #inputArea{padding:8px 8px calc(10px + var(--safe-bottom));gap:6px}
-  #phoneRow,#messageRowBar{gap:6px;padding:6px;border-radius:14px}
-  #phoneInput{width:100%;max-width:140px;height:30px;padding:0 8px;font-size:11px}
-  #savePhoneBtn,#deletePhoneBtn{height:30px;min-width:40px;padding:0 8px;border-radius:9px;font-size:11px}
-  #msgInput{height:32px;border-radius:10px;padding:0 10px;font-size:12px}
-  #sendBtn,#fileLabel{width:30px;height:30px;min-width:30px;border-radius:9px}
-  #viewerMain{display:flex!important;flex-direction:column!important;min-height:0!important;height:calc(100dvh - 52px)!important;flex:1!important}
-  #viewerLeft{display:flex!important;flex-direction:column!important;min-height:0!important;flex:3 1 0!important;border-right:none!important}
-  #canvasWrap{flex:2 1 0!important;min-height:0!important;padding:8px!important}
-  #imageStage{min-height:0!important;height:100%!important;border-radius:16px!important}
-  #toolbar{position:static!important;flex:0 0 auto!important;min-height:auto!important;padding:8px 10px 10px!important;overflow:visible!important}
-  #toolbarInline{gap:6px!important}
-  #viewerRight{display:flex!important;flex-direction:column!important;flex:2 1 0!important;min-height:0!important;border-top:1px solid #e3ebf3!important;border-left:none!important}
-  #viewerChatBox{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;padding:12px 12px 8px!important}
-  #viewerInputBar{flex-shrink:0!important;border-top:1px solid #e3ebf3!important;padding:8px 10px calc(10px + var(--safe-bottom))!important;display:flex!important;gap:8px!important}
-  #viewerMsgInput{flex:1!important;height:44px!important;border-radius:14px!important;padding:0 12px!important;font-size:15px!important}
-  #viewerSendBtn{width:44px!important;height:44px!important;border-radius:14px!important;font-size:18px!important}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>디자인 상담 · RENDER</title>
+  <style>
+    :root{
+      --bg:#f4f8fc;
+      --bg-soft:#f8fbff;
+      --line:#e3ebf3;
+      --line-strong:#d6e0ea;
+      --text:#17212b;
+      --text-soft:#24313f;
+      --sub:#728292;
+      --primary:#2491ff;
+      --primary-soft:#79c7ff;
+      --danger:#ff5b5b;
+      --shadow:0 18px 50px rgba(18,36,61,.10);
+      --safe-bottom:max(env(safe-area-inset-bottom),0px);
+      --selected-draw-color:#ff3b30;
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left,rgba(36,145,255,.08),transparent 24%),
+        linear-gradient(180deg,#f9fbff 0%,#edf4fa 100%);
+    }
+
+    body{
+      overflow:hidden;
+      -webkit-text-size-adjust:100%;
+      overscroll-behavior:none;
+    }
+
+    button,input,textarea,label{font:inherit}
+    button{border:none;cursor:pointer}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    input,textarea{outline:none}
+
+    #app{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+    }
+
+    #chatCard{
+      width:min(430px,100%);
+      height:100%;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,.82);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    #header{
+      height:44px;
+      flex-shrink:0;
+      border-bottom:1px solid #e3ebf3;
+      background:rgba(255,255,255,.96);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 14px;
+    }
+
+    #title{font-size:14px;font-weight:800;color:#24313f}
+    #connectionBadge{
+      height:28px;
+      padding:0 10px;
+      border-radius:999px;
+      background:#edf4fa;
+      color:#53687a;
+      display:inline-flex;
+      align-items:center;
+      font-size:11px;
+      font-weight:800;
+    }
+
+    #quickRequestBar{
+      flex-shrink:0;
+      padding:10px 14px 8px;
+      background:rgba(255,255,255,.96);
+      border-bottom:1px solid #e3ebf3;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    #quickRequestTitle{
+      font-size:13px;
+      font-weight:700;
+      color:#24313f;
+    }
+
+    #quickRequestButtons{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .quickChip{
+      height:34px;
+      padding:0 12px;
+      border-radius:999px;
+      background:#edf4fa;
+      color:#425466;
+      font-size:12px;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .quickChip.active{
+      background:linear-gradient(135deg,#79c7ff,#2491ff);
+      color:#fff;
+    }
+
+    #chatBox{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      padding:12px 14px 8px;
+      background:#f8fbff;
+    }
+
+    #chatInner,#viewerChatInner{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      min-height:100%;
+    }
+
+    .messageRow{display:flex;flex-direction:column;gap:5px}
+    .messageRow.me{align-items:flex-end}
+    .messageRow.other{align-items:flex-start}
+    .messageRow.system{align-items:center}
+
+    .bubble{
+      max-width:86%;
+      padding:12px 16px;
+      border-radius:22px;
+      font-size:15px;
+      line-height:1.52;
+      letter-spacing:-.02em;
+      word-break:break-word;
+    }
+
+    .messageRow.me .bubble{
+      background:linear-gradient(135deg,#79c7ff,#2491ff);
+      color:#fff;
+      border-bottom-right-radius:8px;
+      box-shadow:0 8px 20px rgba(36,145,255,.16);
+    }
+
+    .messageRow.other .bubble{
+      background:#fff;
+      border:1px solid #e3ebf3;
+      color:#17212b;
+      border-bottom-left-radius:8px;
+    }
+
+    .messageRow.system .bubble{
+      background:#eef5ff;
+      color:#40617d;
+      font-size:12px;
+      font-weight:700;
+      padding:8px 12px;
+      max-width:92%;
+    }
+
+    .meta{
+      font-size:10px;
+      color:#95a3b1;
+      padding:0 8px;
+    }
+
+    .imageBubble{
+      max-width:92%;
+      background:#fff;
+      border:1px solid #e3ebf3;
+      border-radius:22px;
+      padding:8px;
+      cursor:pointer;
+      box-shadow:0 8px 18px rgba(18,36,61,.04);
+    }
+
+    .chatImg{
+      display:block;
+      width:100%;
+      max-width:320px;
+      border-radius:14px;
+    }
+
+    .imageHint{
+      margin-top:8px;
+      padding:8px 10px;
+      border-radius:12px;
+      background:#f6fbff;
+      color:#557086;
+      font-size:10px;
+      font-weight:800;
+    }
+
+    #inputArea{
+      flex-shrink:0;
+      border-top:1px solid #e3ebf3;
+      background:rgba(255,255,255,.97);
+      padding:10px 12px calc(12px + var(--safe-bottom));
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    #phoneRow,#messageRowBar{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px;
+      border:1px solid #e3ebf3;
+      border-radius:16px;
+      background:#fbfdff;
+    }
+
+    #phoneStatus{
+      display:none;
+      font-size:11px;
+      color:#5f7286;
+      padding:0 2px;
+    }
+    #phoneStatus.show{display:block}
+
+    #phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
+      border:1px solid #d6e0ea;
+      background:#f8fbff;
+    }
+
+    #phoneInput{
+      width:180px;
+      height:34px;
+      border-radius:10px;
+      padding:0 10px;
+      font-size:12px;
+    }
+
+    #savePhoneBtn,#deletePhoneBtn{
+      height:34px;
+      min-width:48px;
+      padding:0 10px;
+      border-radius:10px;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    #savePhoneBtn{
+      background:linear-gradient(135deg,#79c7ff,#2491ff);
+      color:#fff;
+    }
+
+    #deletePhoneBtn{
+      background:#edf4fa;
+      color:#425466;
+    }
+
+    #msgInput{
+      flex:1;
+      min-width:0;
+      height:36px;
+      border-radius:12px;
+      padding:0 12px;
+      font-size:13px;
+    }
+
+    #sendBtn,#fileLabel{
+      width:34px;
+      height:34px;
+      min-width:34px;
+      border-radius:11px;
+      font-size:15px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    #sendBtn{
+      background:linear-gradient(135deg,#79c7ff,#2491ff);
+      color:#fff;
+    }
+
+    #fileInput{display:none}
+
+    #fileLabel{
+      background:#f2f6fa;
+      color:#7b8d9f;
+      border:1px solid #e5edf4;
+    }
+
+    #fileLabel.disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      pointer-events:none;
+    }
+
+    #viewerOverlay,#noteEditorOverlay{
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      display:none;
+      flex-direction:column;
+      width:100vw;
+      height:100dvh;
+      min-height:100dvh;
+      background:rgba(245,248,252,.985);
+    }
+
+    #viewerOverlay.open,#noteEditorOverlay.open{display:flex}
+
+    body.viewer-inline-open{
+      overflow:hidden;
+      touch-action:none;
+    }
+
+    #viewerTopbar{
+      height:52px;
+      flex-shrink:0;
+      border-bottom:1px solid #e3ebf3;
+      background:rgba(255,255,255,.96);
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:8px;
+      padding:0 10px;
+      position:relative;
+      z-index:40;
+    }
+
+    #viewerTopLeft{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      font-weight:800;
+      color:#24313f;
+    }
+
+    #viewerActions{
+      display:flex;
+      gap:6px;
+      flex-shrink:0;
+      position:relative;
+      z-index:41;
+    }
+
+    .viewerBtn,.toolBtn{transition:transform .12s ease,box-shadow .12s ease}
+    .viewerBtn:hover,.toolBtn:hover{transform:translateY(-1px)}
+
+    .viewerBtn{
+      min-width:40px;
+      width:40px;
+      height:40px;
+      padding:0;
+      border-radius:12px;
+      background:#edf4fa;
+      color:#425466;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+    }
+
+    #viewerMain{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);
+    }
+
+    #viewerLeft{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      border-right:1px solid #e3ebf3;
+      background:#f8fbff;
+      position:relative;
+      z-index:10;
+    }
+
+    #canvasWrap{
+      flex:1;
+      min-height:0;
+      padding:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      z-index:11;
+    }
+
+    #imageStage{
+      position:relative;
+      width:100%;
+      height:min(100%,760px);
+      min-height:420px;
+      border-radius:18px;
+      background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,251,255,.96));
+      border:1px solid #dfe9f3;
+      box-shadow:0 18px 38px rgba(18,36,61,.08);
+      overflow:hidden;
+      z-index:12;
+    }
+
+    #viewerImage{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      max-width:84%;
+      max-height:84%;
+      border-radius:18px;
+      box-shadow:0 14px 32px rgba(18,36,61,.12);
+      pointer-events:none;
+      user-select:none;
+      -webkit-user-drag:none;
+      z-index:1;
+    }
+
+    #drawCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border-radius:22px;
+      touch-action:none;
+      z-index:2;
+    }
+
+    #textLayer{
+      position:absolute;
+      inset:0;
+      z-index:3;
+      pointer-events:none;
+    }
+
+    .noteMarker{
+      position:absolute;
+      min-width:56px;
+      min-height:42px;
+      padding:0 12px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(36,145,255,.22);
+      box-shadow:0 10px 18px rgba(18,36,61,.10);
+      transform:translate(-50%,-50%);
+      pointer-events:auto;
+      user-select:none;
+      z-index:20;
+      touch-action:none;
+      cursor:grab;
+    }
+
+    .noteMarker.selected{
+      border-color:rgba(255,139,61,.55);
+      box-shadow:0 0 0 3px rgba(255,139,61,.14),0 10px 18px rgba(18,36,61,.12);
+    }
+
+    .noteMarkerText{
+      max-width:132px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:12px;
+      font-weight:800;
+      color:#17212b;
+    }
+
+    .noteDot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      flex:0 0 auto;
+      border:1px solid rgba(0,0,0,.1);
+    }
+
+    #toolbar{
+      flex-shrink:0;
+      border-top:1px solid #e3ebf3;
+      background:#fff;
+      padding:10px 12px 12px;
+      position:relative;
+      z-index:50;
+      overflow:visible;
+    }
+
+    #toolbarInline{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+    #toolbarInline::-webkit-scrollbar{display:none}
+
+    .toolBtn{
+      min-width:40px;
+      width:40px;
+      height:40px;
+      padding:0;
+      border-radius:12px;
+      background:#edf4fa;
+      color:#425466;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      flex:0 0 auto;
+      position:relative;
+      z-index:51;
+    }
+
+    .toolBtn.active{
+      background:linear-gradient(135deg,#79c7ff,#2491ff);
+      color:#fff;
+    }
+
+    .toolBtnSmall{
+      min-width:32px;
+      width:32px;
+      height:32px;
+      border-radius:10px;
+      font-size:13px;
+    }
+
+    #thicknessWrap{
+      display:flex;
+      align-items:center;
+      padding:0 8px;
+      height:40px;
+      border-radius:12px;
+      background:#f6faff;
+      border:1px solid #e3ebf3;
+      flex:0 0 auto;
+    }
+
+    #thicknessRange{width:88px}
+
+    #paletteWrap{
+      position:relative;
+      z-index:60;
+      flex:0 0 auto;
+    }
+
+    #paletteBtn{
+      position:relative;
+      overflow:visible;
+      background:#edf4fa;
+      color:#425466;
+      z-index:61;
+    }
+
+    #palettePreview{
+      position:absolute;
+      right:4px;
+      bottom:4px;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:var(--selected-draw-color,#ff3b30);
+      border:1px solid rgba(255,255,255,.92);
+      box-shadow:0 1px 4px rgba(18,36,61,.16);
+      z-index:3;
+      pointer-events:none;
+    }
+
+    #colorPopover{
+      position:fixed;
+      left:0;
+      top:0;
+      display:none;
+      width:172px;
+      padding:10px;
+      border-radius:16px;
+      background:rgba(255,255,255,.99);
+      border:1px solid #dfe7f0;
+      box-shadow:0 18px 36px rgba(18,36,61,.18);
+      z-index:999999;
+    }
+
+    #colorPopover.open{display:block}
+
+    #colorPopoverGrid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+    }
+
+    .colorChip{
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.95);
+      box-shadow:0 0 0 1px rgba(18,36,61,.12);
+      cursor:pointer;
+    }
+
+    .colorChip.active{
+      box-shadow:0 0 0 3px rgba(36,145,255,.20),0 0 0 1px rgba(18,36,61,.12);
+    }
+
+    .noteColorSwatch{
+      border-radius:50%;
+      box-shadow:0 0 0 1px rgba(0,0,0,.10);
+      display:inline-flex;
+      width:22px;
+      height:22px;
+      cursor:pointer;
+    }
+
+    .noteColorSwatch.active{
+      box-shadow:0 0 0 3px rgba(36,145,255,.18);
+    }
+
+    #viewerRight{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      position:relative;
+      z-index:10;
+    }
+
+    #viewerChatBox{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      padding:12px;
+      background:#fbfdff;
+    }
+
+    #viewerChatInner .meta{display:none}
+
+    #viewerInputBar{
+      flex-shrink:0;
+      border-top:1px solid #e3ebf3;
+      padding:12px 14px calc(14px + var(--safe-bottom));
+      background:#fff;
+      display:flex;
+      gap:10px;
+      position:relative;
+      z-index:50;
+    }
+
+    #viewerMsgInput{
+      flex:1;
+      height:46px;
+      border-radius:16px;
+      padding:0 14px;
+      font-size:15px;
+    }
+
+    #viewerSendBtn{
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      background:linear-gradient(135deg,#79c7ff,#2491ff);
+      color:#fff;
+      font-size:18px;
+      font-weight:800;
+    }
+
+    #noteEditorHeader{
+      min-height:70px;
+      flex-shrink:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-bottom:1px solid #e3ebf3;
+      background:#fff;
+    }
+
+    #noteEditorTitleWrap{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    #noteEditorTitle{font-size:17px;font-weight:800}
+
+    #noteEditorMeta{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    #noteEditorSaveBadge{
+      height:24px;
+      padding:0 8px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      background:#eef4fa;
+      color:#587085;
+      font-size:11px;
+      font-weight:800;
+    }
+
+    #noteEditorSaveBadge.pending{background:#fff7ea;color:#9a6500}
+    #noteEditorSaveBadge.saved{background:#ebf9ee;color:#2f7b42}
+    #noteEditorSaveBadge.offline{background:#fff3f3;color:#c74242}
+
+    #noteEditorActions{display:flex;align-items:center;gap:8px}
+
+    .noteEditorDangerBtn,#noteEditorDoneBtn{
+      height:38px;
+      padding:0 12px;
+      border-radius:12px;
+      font-weight:800;
+    }
+
+    .noteEditorDangerBtn{background:#fff1f1;color:#c74242}
+    #noteEditorDoneBtn{background:linear-gradient(135deg,#79c7ff,#2491ff);color:#fff}
+
+    #noteEditorBody{
+      flex:1;
+      min-height:0;
+      padding:14px;
+      background:#f7fbff;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    #noteEditorTools{display:flex;flex-direction:column;gap:8px}
+    #noteEditorColorRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+    #noteEditorMetaLine{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      color:#728292;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    #noteEditorTextarea{
+      width:100%;
+      height:100%;
+      border-radius:20px;
+      resize:none;
+      padding:16px;
+      font-size:16px;
+      line-height:1.55;
+      color:#17212b;
+    }
+
+    #uploadLoading{
+      position:fixed;
+      inset:0;
+      z-index:260;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(245,248,252,.72);
+      backdrop-filter:blur(4px);
+    }
+
+    #uploadLoading.show{display:flex}
+
+    #uploadLoadingCard{
+      min-width:180px;
+      padding:18px 20px;
+      border-radius:18px;
+      background:rgba(255,255,255,.96);
+      border:1px solid #e3ebf3;
+      box-shadow:0 18px 40px rgba(18,36,61,.12);
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .uploadSpinner{
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      border:2px solid rgba(36,145,255,.18);
+      border-top-color:#2491ff;
+      animation:spin .85s linear infinite;
+    }
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media (max-width:900px){
+      #chatCard{
+        width:100vw!important;
+        height:100dvh!important;
+        max-width:none!important;
+        border-radius:0!important;
+      }
+
+      #header{height:40px}
+      #quickRequestBar{padding:8px 10px 6px;gap:6px}
+      #quickRequestButtons{
+        flex-wrap:nowrap;
+        overflow-x:auto;
+        scrollbar-width:none;
+        -webkit-overflow-scrolling:touch;
+      }
+      #quickRequestButtons::-webkit-scrollbar{display:none}
+      .quickChip{flex:0 0 auto}
+      #chatBox{padding:10px 10px 6px}
+      .bubble{max-width:86%;font-size:14px;padding:11px 14px}
+      .chatImg{max-width:220px}
+      #inputArea{padding:8px 8px calc(10px + var(--safe-bottom));gap:6px}
+      #phoneRow,#messageRowBar{gap:6px;padding:6px;border-radius:14px}
+      #phoneInput{width:100%;max-width:140px;height:30px;padding:0 8px;font-size:11px}
+      #savePhoneBtn,#deletePhoneBtn{height:30px;min-width:40px;padding:0 8px;border-radius:9px;font-size:11px}
+      #msgInput{height:32px;border-radius:10px;padding:0 10px;font-size:12px}
+      #sendBtn,#fileLabel{width:30px;height:30px;min-width:30px;border-radius:9px}
+
+      #viewerMain{
+        display:flex!important;
+        flex-direction:column!important;
+        min-height:0!important;
+        height:calc(100dvh - 52px)!important;
+        flex:1!important;
+      }
+
+      #viewerLeft{
+        display:flex!important;
+        flex-direction:column!important;
+        min-height:0!important;
+        flex:3 1 0!important;
+        border-right:none!important;
+      }
+
+      #canvasWrap{
+        flex:2 1 0!important;
+        min-height:0!important;
+        padding:8px!important;
+      }
+
+      #imageStage{
+        min-height:0!important;
+        height:100%!important;
+        border-radius:16px!important;
+      }
+
+      #toolbar{
+        position:static!important;
+        flex:0 0 auto!important;
+        min-height:auto!important;
+        padding:8px 10px 10px!important;
+      }
+
+      #viewerRight{
+        display:flex!important;
+        flex-direction:column!important;
+        flex:2 1 0!important;
+        min-height:0!important;
+        border-top:1px solid #e3ebf3!important;
+      }
+
+      #viewerChatBox{
+        flex:1 1 auto!important;
+        min-height:0!important;
+        overflow-y:auto!important;
+        padding:12px 12px 8px!important;
+      }
+
+      #viewerInputBar{
+        flex-shrink:0!important;
+        border-top:1px solid #e3ebf3!important;
+        padding:8px 10px calc(10px + var(--safe-bottom))!important;
+        display:flex!important;
+        gap:8px!important;
+      }
+
+      #viewerMsgInput{
+        flex:1!important;
+        height:44px!important;
+        border-radius:14px!important;
+        padding:0 12px!important;
+        font-size:15px!important;
+      }
+
+      #viewerSendBtn{
+        width:44px!important;
+        height:44px!important;
+        border-radius:14px!important;
+        font-size:18px!important;
+      }
+    }
+  </style>
 </head>
 <body>
-<div id="app">
-  <section id="chatCard">
-    <div id="header">
-      <div id="title">디자인 상담</div>
-      <div id="connectionBadge" aria-live="polite">연결 중</div>
-    </div>
-
-    <div id="quickRequestBar">
-      <div id="quickRequestTitle">커스텀 내용을 선택해주세요.</div>
-      <div id="quickRequestButtons">
-        <button class="quickChip" type="button" data-request="색상 변경" data-draft="색상을 변경하고 싶어요.">색상 변경</button>
-        <button class="quickChip" type="button" data-request="문구 추가" data-draft="문구를 추가하고 싶어요.">문구 추가</button>
-        <button class="quickChip" type="button" data-request="사이즈 조정" data-draft="사이즈를 조정하고 싶어요.">사이즈 조정</button>
-        <button class="quickChip" type="button" data-request="디자인 수정" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정</button>
-        <button class="quickChip" type="button" data-request="추천 요청" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 요청</button>
+  <div id="app">
+    <section id="chatCard">
+      <div id="header">
+        <div id="title">디자인 상담</div>
+        <div id="connectionBadge" aria-live="polite">연결 중</div>
       </div>
-    </div>
 
-    <div id="summaryCard" class="collapsed">
-      <div id="summaryHeader">
-        <div id="summaryHeaderLeft">
-          <div id="summaryTitle">현재 요청</div>
-          <button id="summaryToggleBtn" type="button" aria-label="현재 요청 요약 펼치기"></button>
-          <div id="summaryPreview" aria-live="polite"></div>
+      <div id="quickRequestBar">
+        <div id="quickRequestTitle">커스텀 내용을 선택해주세요.</div>
+        <div id="quickRequestButtons">
+          <button class="quickChip" type="button" data-draft="색상을 변경하고 싶어요.">색상 변경</button>
+          <button class="quickChip" type="button" data-draft="문구를 추가하고 싶어요.">문구 추가</button>
+          <button class="quickChip" type="button" data-draft="사이즈를 조정하고 싶어요.">사이즈 조정</button>
+          <button class="quickChip" type="button" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정</button>
+          <button class="quickChip" type="button" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 요청</button>
         </div>
       </div>
-      <div id="summaryRows">
-        <div class="summaryItem"><div class="summaryLabel">제품</div><div class="summaryValue" id="summaryProductValue">선택 대기</div></div>
-        <div class="summaryItem"><div class="summaryLabel">상세</div><div class="summaryValue" id="summaryDetailValue">상담 시작</div></div>
-      </div>
-      <div id="summaryActions">
-        <button id="summaryComposeBtn" class="summaryActionBtn" type="button">요청 정리하기</button>
-        <button id="summaryQuoteBtn" class="summaryActionBtn primary" type="button">견적 요청 문구 만들기</button>
-      </div>
-    </div>
 
-    <div id="chatBox"><div id="chatInner"></div></div>
-
-    <div id="inputArea">
-      <div id="phoneRow">
-        <input id="phoneInput" type="tel" placeholder="연락처를 남겨주세요" />
-        <button id="savePhoneBtn" type="button">등록</button>
-        <button id="deletePhoneBtn" type="button">삭제</button>
+      <div id="chatBox">
+        <div id="chatInner"></div>
       </div>
-      <div id="messageRowBar">
-        <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
-        <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
-        <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
-        <input id="fileInput" type="file" accept="image/*" />
-      </div>
-      <div id="phoneStatus" aria-live="polite"></div>
-    </div>
-  </section>
-</div>
 
-<div id="viewerOverlay" aria-hidden="true">
-  <div id="viewerTopbar">
-    <div id="viewerTopLeft">이미지 협업</div>
-    <div id="viewerActions">
-      <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="이미지 다운로드">↓</button>
-      <button id="viewerCloseBtn" class="viewerBtn" type="button" aria-label="스케치 종료">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
-      </button>
-    </div>
-  </div>
-  <div id="viewerMain">
-    <section id="viewerLeft">
-      <div id="canvasWrap">
-        <div id="imageStage">
-          <img id="viewerImage" alt="상담 이미지" />
-          <canvas id="drawCanvas"></canvas>
-          <div id="textLayer"></div>
-          <div id="brushCursor"></div>
+      <div id="inputArea">
+        <div id="phoneRow">
+          <input id="phoneInput" type="tel" placeholder="연락처를 남겨주세요" />
+          <button id="savePhoneBtn" type="button">등록</button>
+          <button id="deletePhoneBtn" type="button">삭제</button>
         </div>
-      </div>
-      <div id="toolbar">
-        <div id="toolbarInline">
-          <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
-          </button>
-          <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20H7"></path><path d="M7 16l8.5-8.5a2.1 2.1 0 0 1 3 0l1 1a2.1 2.1 0 0 1 0 3L14 17"></path><path d="M7 16l-3-3a2.1 2.1 0 0 1 0-3l6.5-6.5"></path></svg>
-          </button>
-          <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M16 3v5h5"></path><path d="M9 13h6"></path><path d="M9 17h4"></path></svg>
-          </button>
-          <div id="thicknessWrap"><input id="thicknessRange" type="range" min="1" max="48" value="3" aria-label="선 두께 조절" /></div>
-          <div id="paletteWrap">
-            <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택">
-              <span id="palettePreview"></span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-1a1.4 1.4 0 0 1 0-2.8H15A6 6 0 0 0 15 3h-3z"></path><circle cx="7.5" cy="10" r="1"></circle><circle cx="10" cy="7.5" r="1"></circle><circle cx="14" cy="7.5" r="1"></circle><circle cx="16.5" cy="10" r="1"></circle></svg>
-            </button>
-          </div>
-          <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
-          <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시하기">↷</button>
-          <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 지우기">⌫</button>
+
+        <div id="messageRowBar">
+          <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
+          <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
+          <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
+          <input id="fileInput" type="file" accept="image/*" />
         </div>
+
+        <div id="phoneStatus" aria-live="polite"></div>
       </div>
     </section>
-    <aside id="viewerRight">
-      <div id="viewerChatBox"><div id="viewerChatInner"></div></div>
-      <div id="viewerInputBar">
-        <input id="viewerMsgInput" type="text" placeholder="이미지 관련 의견을 남겨주세요" autocomplete="off" />
-        <button id="viewerSendBtn" type="button" aria-label="메시지 전송">➤</button>
-      </div>
-    </aside>
   </div>
-</div>
 
-<div id="noteEditorOverlay" aria-hidden="true">
-  <div id="noteEditorHeader">
-    <div id="noteEditorTitleWrap">
-      <div id="noteEditorTitle">메모 편집</div>
-      <div id="noteEditorMeta">
-        <div id="noteEditorSaveBadge">대기 중</div>
-        <div id="noteEditorMetaText">이미지 위에 표시되는 메모를 수정합니다.</div>
+  <div id="viewerOverlay" aria-hidden="true">
+    <div id="viewerTopbar">
+      <div id="viewerTopLeft">이미지 협업</div>
+      <div id="viewerActions">
+        <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="이미지 다운로드">↓</button>
+        <button id="viewerCloseBtn" class="viewerBtn" type="button" aria-label="스케치 종료">✕</button>
       </div>
     </div>
-    <div id="noteEditorActions">
-      <button type="button" class="noteEditorDangerBtn" id="noteDeleteBtn">삭제</button>
-      <button type="button" id="noteEditorDoneBtn">완료</button>
+
+    <div id="viewerMain">
+      <section id="viewerLeft">
+        <div id="canvasWrap">
+          <div id="imageStage">
+            <img id="viewerImage" alt="상담 이미지" />
+            <canvas id="drawCanvas"></canvas>
+            <div id="textLayer"></div>
+          </div>
+        </div>
+
+        <div id="toolbar">
+          <div id="toolbarInline">
+            <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">✎</button>
+            <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">⌫</button>
+            <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가">T</button>
+
+            <div id="thicknessWrap">
+              <input id="thicknessRange" type="range" min="1" max="24" value="3" aria-label="선 두께 조절" />
+            </div>
+
+            <div id="paletteWrap">
+              <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택">
+                🎨
+                <span id="palettePreview"></span>
+              </button>
+            </div>
+
+            <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
+            <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시하기">↷</button>
+            <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 지우기">⌫</button>
+          </div>
+        </div>
+      </section>
+
+      <aside id="viewerRight">
+        <div id="viewerChatBox">
+          <div id="viewerChatInner"></div>
+        </div>
+
+        <div id="viewerInputBar">
+          <input id="viewerMsgInput" type="text" placeholder="이미지 관련 의견을 남겨주세요" autocomplete="off" />
+          <button id="viewerSendBtn" type="button" aria-label="메시지 전송">➤</button>
+        </div>
+      </aside>
     </div>
   </div>
-  <div id="noteEditorBody">
-    <div id="noteEditorTools">
-      <div id="noteEditorMetaLine"><span>메모 색상</span><span id="noteEditorCounter">0 / 500</span></div>
-      <div id="noteEditorColorRow"></div>
+
+  <div id="noteEditorOverlay" aria-hidden="true">
+    <div id="noteEditorHeader">
+      <div id="noteEditorTitleWrap">
+        <div id="noteEditorTitle">메모 편집</div>
+        <div id="noteEditorMeta">
+          <div id="noteEditorSaveBadge">대기 중</div>
+          <div id="noteEditorMetaText">이미지 위에 표시되는 메모를 수정합니다.</div>
+        </div>
+      </div>
+
+      <div id="noteEditorActions">
+        <button type="button" class="noteEditorDangerBtn" id="noteDeleteBtn">삭제</button>
+        <button type="button" id="noteEditorDoneBtn">완료</button>
+      </div>
     </div>
-    <textarea id="noteEditorTextarea" maxlength="500" placeholder="수정 요청이나 메모를 남겨주세요"></textarea>
+
+    <div id="noteEditorBody">
+      <div id="noteEditorTools">
+        <div id="noteEditorMetaLine">
+          <span>메모 색상</span>
+          <span id="noteEditorCounter">0 / 500</span>
+        </div>
+        <div id="noteEditorColorRow"></div>
+      </div>
+
+      <textarea id="noteEditorTextarea" maxlength="500" placeholder="수정 요청이나 메모를 남겨주세요"></textarea>
+    </div>
   </div>
-</div>
 
-<div id="colorPopover"><div id="colorPopoverGrid"></div></div>
-<div id="uploadLoading"><div id="uploadLoadingCard"><div class="uploadSpinner"></div><div id="uploadLoadingText">이미지 업로드 중…</div></div></div>
+  <div id="colorPopover">
+    <div id="colorPopoverGrid"></div>
+  </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-(function () {
-  const STORAGE_KEYS = { roomId: "roomId", userName: "userName", role: "role", phone: "phone" };
-  const MAX_NOTE_CHARS = 500;
-  const DOUBLE_TAP_MS = 320;
-  const COLORS = ["#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#30b0c7", "#2491ff", "#5856d6", "#af52de", "#ff2d55", "#17212b"];
-  const NOTE_COLORS = ["#fff7c2", "#ffe5e5", "#e4f4ff", "#e8ffe8", "#f3e9ff"];
-  const params = new URLSearchParams(location.search);
+  <div id="uploadLoading">
+    <div id="uploadLoadingCard">
+      <div class="uploadSpinner"></div>
+      <div id="uploadLoadingText">이미지 업로드 중…</div>
+    </div>
+  </div>
 
-  function safeStorageGet(key) { try { return localStorage.getItem(key); } catch (e) { return ""; } }
-  function safeStorageSet(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
-  function safeStorageRemove(key) { try { localStorage.removeItem(key); } catch (e) {} }
-  function createUuid() { return (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ("room-" + Date.now() + "-" + Math.random().toString(16).slice(2)); }
-  function escapeHtml(value) { return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
-  function formatTime(timestamp) { try { return new Date(timestamp || Date.now()).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } }
-  function isMobileViewport() { return window.matchMedia("(max-width: 900px)").matches; }
-  function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
-  function isHexColor(value) { return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(value || "")); }
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    (function () {
+      const STORAGE_KEYS = {
+        roomId: "designChat.roomId",
+        userName: "designChat.userName",
+        role: "designChat.role",
+        phone: "designChat.phone"
+      };
 
-  const state = {
-    apiBase: location.origin,
-    version: "local",
-    roomId: (params.get("roomId") || params.get("room") || "").trim() || safeStorageGet(STORAGE_KEYS.roomId) || createUuid(),
-    userName: (params.get("userName") || params.get("username") || params.get("name") || "").trim() || safeStorageGet(STORAGE_KEYS.userName) || "고객",
-    role: safeStorageGet(STORAGE_KEYS.role) === "admin" ? "admin" : "user",
-    isEmbed: params.get("embed") === "1",
-    isViewerWindow: params.get("viewer") === "1",
-    bootImageId: (params.get("imageId") || "").trim(),
-    bootImageUrl: (params.get("imageUrl") || "").trim(),
-    summaryCollapsed: true,
-    summary: { productName: "", requestTypes: [], detailNotes: [] },
-    connected: false,
-    joined: false,
-    uploadBusy: false,
-    phone: safeStorageGet(STORAGE_KEYS.phone) || "",
-    currentViewerImageId: "",
-    currentViewerImageUrl: "",
-    mode: "draw",
-    color: "#ff3b30",
-    width: 3,
-    strokes: [],
-    redoStrokes: [],
-    notes: [],
-    currentStroke: null,
-    noteColor: "#fff7c2",
-    activeNoteId: "",
-    draggingNoteId: "",
-    draggingNotePointerId: null,
-    dragOffsetX: 0,
-    dragOffsetY: 0,
-    cursorX: 0,
-    cursorY: 0,
-    noteSaveTimer: null,
-    colorPopoverOpen: false
-  };
+      const MAX_NOTE_CHARS = 500;
+      const COLORS = ["#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#30b0c7", "#2491ff", "#5856d6", "#af52de", "#ff2d55", "#17212b"];
+      const NOTE_COLORS = ["#fff7c2", "#ffe5e5", "#e4f4ff", "#e8ffe8", "#f3e9ff"];
+      const params = new URLSearchParams(location.search);
 
-  safeStorageSet(STORAGE_KEYS.roomId, state.roomId);
-  safeStorageSet(STORAGE_KEYS.userName, state.userName);
-  safeStorageSet(STORAGE_KEYS.role, state.role);
-
-  const el = {
-    title: document.getElementById("title"),
-    connectionBadge: document.getElementById("connectionBadge"),
-    quickChips: Array.from(document.querySelectorAll(".quickChip")),
-    summaryCard: document.getElementById("summaryCard"),
-    summaryToggleBtn: document.getElementById("summaryToggleBtn"),
-    summaryProductValue: document.getElementById("summaryProductValue"),
-    summaryDetailValue: document.getElementById("summaryDetailValue"),
-    summaryPreview: document.getElementById("summaryPreview"),
-    summaryComposeBtn: document.getElementById("summaryComposeBtn"),
-    summaryQuoteBtn: document.getElementById("summaryQuoteBtn"),
-    chatInner: document.getElementById("chatInner"),
-    chatBox: document.getElementById("chatBox"),
-    msgInput: document.getElementById("msgInput"),
-    sendBtn: document.getElementById("sendBtn"),
-    phoneInput: document.getElementById("phoneInput"),
-    savePhoneBtn: document.getElementById("savePhoneBtn"),
-    deletePhoneBtn: document.getElementById("deletePhoneBtn"),
-    phoneStatus: document.getElementById("phoneStatus"),
-    fileInput: document.getElementById("fileInput"),
-    fileLabel: document.getElementById("fileLabel"),
-    viewerOverlay: document.getElementById("viewerOverlay"),
-    viewerTopLeft: document.getElementById("viewerTopLeft"),
-    viewerCloseBtn: document.getElementById("viewerCloseBtn"),
-    viewerImage: document.getElementById("viewerImage"),
-    drawCanvas: document.getElementById("drawCanvas"),
-    textLayer: document.getElementById("textLayer"),
-    brushCursor: document.getElementById("brushCursor"),
-    penBtn: document.getElementById("penBtn"),
-    eraserBtn: document.getElementById("eraserBtn"),
-    addTextBtn: document.getElementById("addTextBtn"),
-    thicknessRange: document.getElementById("thicknessRange"),
-    paletteBtn: document.getElementById("paletteBtn"),
-    palettePreview: document.getElementById("palettePreview"),
-    colorPopover: document.getElementById("colorPopover"),
-    colorPopoverGrid: document.getElementById("colorPopoverGrid"),
-    undoBtn: document.getElementById("undoBtn"),
-    redoBtn: document.getElementById("redoBtn"),
-    clearBtn: document.getElementById("clearBtn"),
-    viewerChatInner: document.getElementById("viewerChatInner"),
-    viewerChatBox: document.getElementById("viewerChatBox"),
-    viewerMsgInput: document.getElementById("viewerMsgInput"),
-    viewerSendBtn: document.getElementById("viewerSendBtn"),
-    downloadSketchBtn: document.getElementById("downloadSketchBtn"),
-    noteEditorOverlay: document.getElementById("noteEditorOverlay"),
-    noteEditorTextarea: document.getElementById("noteEditorTextarea"),
-    noteEditorSaveBadge: document.getElementById("noteEditorSaveBadge"),
-    noteEditorCounter: document.getElementById("noteEditorCounter"),
-    noteEditorDoneBtn: document.getElementById("noteEditorDoneBtn"),
-    noteDeleteBtn: document.getElementById("noteDeleteBtn"),
-    noteEditorColorRow: document.getElementById("noteEditorColorRow"),
-    uploadLoading: document.getElementById("uploadLoading")
-  };
-
-  const canvasCtx = el.drawCanvas.getContext("2d", { willReadFrequently: true });
-  let socket = null;
-  let composeMain = false;
-  let composeViewer = false;
-  let lastTapAt = 0;
-
-  function setConnectionBadge(text, connected) {
-    el.connectionBadge.textContent = text;
-    el.connectionBadge.style.background = connected ? "#ebf9ee" : "#edf4fa";
-    el.connectionBadge.style.color = connected ? "#2f7b42" : "#53687a";
-  }
-
-  function showPhoneStatus(text, ok) {
-    el.phoneStatus.textContent = text || "";
-    el.phoneStatus.classList.toggle("show", Boolean(text));
-    el.phoneStatus.style.color = ok ? "#2f7b42" : "#5f7286";
-  }
-
-  function setUploadBusy(busy) {
-    state.uploadBusy = busy;
-    el.fileLabel.classList.toggle("disabled", busy);
-    el.uploadLoading.classList.toggle("show", busy);
-  }
-
-  function buildSystemMessage(text) {
-    return {
-      type: "system",
-      text,
-      sender: "system",
-      senderName: "시스템",
-      time: Date.now()
-    };
-  }
-
-  function renderSummary() {
-    el.summaryCard.classList.toggle("collapsed", state.summaryCollapsed);
-
-    el.summaryProductValue.textContent = state.summary.productName || "선택 대기";
-
-    const detailText = state.summary.detailNotes.length
-      ? state.summary.detailNotes.join(" · ")
-      : (state.summary.requestTypes.length ? state.summary.requestTypes.join(", ") : "상담 시작");
-    el.summaryDetailValue.textContent = detailText;
-
-    el.summaryPreview.innerHTML = "";
-    const items = [];
-    if (state.summary.productName) items.push(state.summary.productName);
-    items.push(...state.summary.requestTypes.slice(0, 2));
-    if (state.summary.detailNotes[0]) items.push(state.summary.detailNotes[0]);
-
-    if (!items.length) {
-      const chip = document.createElement("div");
-      chip.className = "summaryInlineChip empty";
-      chip.textContent = "아직 정리된 요청이 없습니다";
-      el.summaryPreview.appendChild(chip);
-      return;
-    }
-
-    items.forEach((item) => {
-      const chip = document.createElement("div");
-      chip.className = "summaryInlineChip";
-      chip.textContent = item;
-      el.summaryPreview.appendChild(chip);
-    });
-  }
-
-  function pushSummaryDetail(text) {
-    const value = String(text || "").trim();
-    if (!value) return;
-    if (!state.summary.detailNotes.includes(value)) {
-      state.summary.detailNotes.push(value);
-      state.summary.detailNotes = state.summary.detailNotes.slice(-4);
-    }
-    renderSummary();
-  }
-
-  function extractSummaryFromText(text) {
-    const value = String(text || "").trim();
-    if (!value) return;
-    if (!state.summary.productName && value.length <= 40) {
-      state.summary.productName = value;
-    } else {
-      pushSummaryDetail(value);
-    }
-    renderSummary();
-  }
-
-  function setSelectedQuickChip(button) {
-    el.quickChips.forEach((chip) => chip.classList.remove("active"));
-    if (button) button.classList.add("active");
-  }
-
-  function createMessageRow(message) {
-    const isMe = message.sender === state.role;
-    const row = document.createElement("div");
-    row.className = "messageRow " + (message.type === "system" ? "system" : (isMe ? "me" : "other"));
-
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-
-    if (message.type === "image") {
-      bubble.className = "imageBubble";
-      bubble.innerHTML =
-        '<img class="chatImg" src="' + escapeHtml(message.imageUrl) + '" alt="업로드 이미지" />' +
-        '<div class="imageHint">이미지를 클릭하면 협업 뷰어가 열립니다</div>';
-      bubble.addEventListener("click", () => {
-        openViewer(message.imageId, message.imageUrl);
-      });
-    } else {
-      bubble.textContent = message.text || "";
-    }
-
-    row.appendChild(bubble);
-
-    if (message.type !== "system") {
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent = (message.senderName || "") + " · " + formatTime(message.time);
-      row.appendChild(meta);
-    }
-
-    return row;
-  }
-
-  function appendMessage(message, toViewerToo) {
-    const row = createMessageRow(message);
-    el.chatInner.appendChild(row);
-    el.chatBox.scrollTop = el.chatBox.scrollHeight;
-
-    if (toViewerToo && el.viewerOverlay.classList.contains("open")) {
-      const viewerRow = createMessageRow(message);
-      el.viewerChatInner.appendChild(viewerRow);
-      el.viewerChatBox.scrollTop = el.viewerChatBox.scrollHeight;
-    }
-  }
-
-  function replaceMessages(messages) {
-    el.chatInner.innerHTML = "";
-    el.viewerChatInner.innerHTML = "";
-    (messages || []).forEach((message) => {
-      appendMessage(message, true);
-    });
-  }
-
-  function emitAck(eventName, payload) {
-    return new Promise((resolve) => {
-      if (!socket) return resolve({ ok: false, error: "소켓 없음" });
-      socket.emit(eventName, payload || {}, (response) => {
-        resolve(response || { ok: false, error: "응답 없음" });
-      });
-    });
-  }
-
-  async function loadConfig() {
-    try {
-      const response = await fetch(state.apiBase + "/config", { credentials: "omit" });
-      const data = await response.json();
-      if (data && data.ok) {
-        state.version = data.version || state.version;
-        el.title.textContent = "디자인 상담 · " + state.version;
+      function safeStorageGet(key) {
+        try { return localStorage.getItem(key) || ""; } catch (e) { return ""; }
       }
-    } catch (error) {}
-  }
-
-  function connectSocket() {
-    setConnectionBadge("연결 중", false);
-    socket = io(state.apiBase, { transports: ["websocket", "polling"] });
-
-    socket.on("connect", async () => {
-      setConnectionBadge("연결됨", true);
-      state.connected = true;
-      const joined = await emitAck("join", {
-        roomId: state.roomId,
-        role: state.role,
-        userName: state.userName
-      });
-      if (joined.ok) {
-        state.joined = true;
-        if (!state.isViewerWindow) {
-          appendMessage(buildSystemMessage((state.role === "admin" ? "관리자" : "고객") + " 화면으로 연결되었습니다."), true);
+      function safeStorageSet(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) {}
+      }
+      function safeStorageRemove(key) {
+        try { localStorage.removeItem(key); } catch (e) {}
+      }
+      function createUuid() {
+        return (window.crypto && window.crypto.randomUUID)
+          ? window.crypto.randomUUID()
+          : ("id-" + Date.now() + "-" + Math.random().toString(16).slice(2));
+      }
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+      function formatTime(timestamp) {
+        try {
+          return new Date(timestamp || Date.now()).toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+        } catch (e) {
+          return "";
         }
-        if (state.bootImageId && state.bootImageUrl) {
-          openViewer(state.bootImageId, state.bootImageUrl);
+      }
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      const state = {
+        apiBase: location.origin,
+        socketPath: "/socket.io",
+        version: "local",
+        roomId: (params.get("roomId") || "").trim() || safeStorageGet(STORAGE_KEYS.roomId) || createUuid(),
+        userName: (params.get("userName") || "").trim() || safeStorageGet(STORAGE_KEYS.userName) || "고객",
+        role: safeStorageGet(STORAGE_KEYS.role) === "admin" ? "admin" : "user",
+        isEmbed: params.get("embed") === "1",
+        connected: false,
+        joined: false,
+        uploadBusy: false,
+        phone: safeStorageGet(STORAGE_KEYS.phone) || "",
+        currentViewerImageId: "",
+        currentViewerImageUrl: "",
+        mode: "draw",
+        color: "#ff3b30",
+        width: 3,
+        strokes: [],
+        redoStrokes: [],
+        notes: [],
+        currentStroke: null,
+        noteColor: "#fff7c2",
+        activeNoteId: "",
+        draggingNoteId: "",
+        draggingNotePointerId: null,
+        dragOffsetX: 0,
+        dragOffsetY: 0,
+        noteSaveTimer: null,
+        colorPopoverOpen: false
+      };
+
+      safeStorageSet(STORAGE_KEYS.roomId, state.roomId);
+      safeStorageSet(STORAGE_KEYS.userName, state.userName);
+      safeStorageSet(STORAGE_KEYS.role, state.role);
+
+      if (state.isEmbed) {
+        document.documentElement.style.height = "100%";
+        document.body.style.height = "100%";
+      }
+
+      const el = {
+        title: document.getElementById("title"),
+        connectionBadge: document.getElementById("connectionBadge"),
+        quickChips: Array.from(document.querySelectorAll(".quickChip")),
+        chatInner: document.getElementById("chatInner"),
+        chatBox: document.getElementById("chatBox"),
+        msgInput: document.getElementById("msgInput"),
+        sendBtn: document.getElementById("sendBtn"),
+        phoneInput: document.getElementById("phoneInput"),
+        savePhoneBtn: document.getElementById("savePhoneBtn"),
+        deletePhoneBtn: document.getElementById("deletePhoneBtn"),
+        phoneStatus: document.getElementById("phoneStatus"),
+        fileInput: document.getElementById("fileInput"),
+        fileLabel: document.getElementById("fileLabel"),
+        viewerOverlay: document.getElementById("viewerOverlay"),
+        viewerTopLeft: document.getElementById("viewerTopLeft"),
+        viewerCloseBtn: document.getElementById("viewerCloseBtn"),
+        viewerImage: document.getElementById("viewerImage"),
+        drawCanvas: document.getElementById("drawCanvas"),
+        textLayer: document.getElementById("textLayer"),
+        penBtn: document.getElementById("penBtn"),
+        eraserBtn: document.getElementById("eraserBtn"),
+        addTextBtn: document.getElementById("addTextBtn"),
+        thicknessRange: document.getElementById("thicknessRange"),
+        paletteBtn: document.getElementById("paletteBtn"),
+        palettePreview: document.getElementById("palettePreview"),
+        colorPopover: document.getElementById("colorPopover"),
+        colorPopoverGrid: document.getElementById("colorPopoverGrid"),
+        undoBtn: document.getElementById("undoBtn"),
+        redoBtn: document.getElementById("redoBtn"),
+        clearBtn: document.getElementById("clearBtn"),
+        viewerChatInner: document.getElementById("viewerChatInner"),
+        viewerChatBox: document.getElementById("viewerChatBox"),
+        viewerMsgInput: document.getElementById("viewerMsgInput"),
+        viewerSendBtn: document.getElementById("viewerSendBtn"),
+        downloadSketchBtn: document.getElementById("downloadSketchBtn"),
+        noteEditorOverlay: document.getElementById("noteEditorOverlay"),
+        noteEditorTextarea: document.getElementById("noteEditorTextarea"),
+        noteEditorSaveBadge: document.getElementById("noteEditorSaveBadge"),
+        noteEditorCounter: document.getElementById("noteEditorCounter"),
+        noteEditorDoneBtn: document.getElementById("noteEditorDoneBtn"),
+        noteDeleteBtn: document.getElementById("noteDeleteBtn"),
+        noteEditorColorRow: document.getElementById("noteEditorColorRow"),
+        uploadLoading: document.getElementById("uploadLoading")
+      };
+
+      const canvasCtx = el.drawCanvas.getContext("2d");
+      let socket = null;
+
+      function setConnectionBadge(text, ok) {
+        el.connectionBadge.textContent = text;
+        el.connectionBadge.style.background = ok ? "#ebf9ee" : "#edf4fa";
+        el.connectionBadge.style.color = ok ? "#2f7b42" : "#53687a";
+      }
+
+      function showPhoneStatus(text) {
+        el.phoneStatus.textContent = text;
+        el.phoneStatus.classList.add("show");
+        setTimeout(() => el.phoneStatus.classList.remove("show"), 1800);
+      }
+
+      function showUploadLoading(show) {
+        state.uploadBusy = show;
+        el.uploadLoading.classList.toggle("show", show);
+        el.fileLabel.classList.toggle("disabled", show);
+      }
+
+      function scrollToBottom(target) {
+        requestAnimationFrame(() => {
+          target.scrollTop = target.scrollHeight;
+        });
+      }
+
+      function isMe(sender) {
+        return (sender || "user") === state.role;
+      }
+
+      function renderMessages(messages) {
+        el.chatInner.innerHTML = "";
+        el.viewerChatInner.innerHTML = "";
+        messages.forEach(addMessageToUi);
+        scrollToBottom(el.chatBox);
+        scrollToBottom(el.viewerChatBox);
+      }
+
+      function addMessageToUi(message) {
+        const row = document.createElement("div");
+        const kind = message.type === "system" ? "system" : (isMe(message.sender) ? "me" : "other");
+        row.className = "messageRow " + kind;
+
+        if (message.type === "image" && message.imageUrl) {
+          const bubble = document.createElement("div");
+          bubble.className = "imageBubble";
+          bubble.dataset.imageId = message.imageId || "";
+          bubble.dataset.imageUrl = message.imageUrl || "";
+          bubble.innerHTML = `
+            <img class="chatImg" src="${escapeHtml(message.imageUrl)}" alt="업로드 이미지" />
+            <div class="imageHint">이미지를 눌러 협업창을 여세요</div>
+          `;
+          bubble.addEventListener("click", function () {
+            openViewer(message.imageId, message.imageUrl);
+          });
+          row.appendChild(bubble);
+        } else {
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+          bubble.innerHTML = escapeHtml(message.text || "");
+          row.appendChild(bubble);
         }
-      } else {
-        setConnectionBadge("참여 실패", false);
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = (message.senderName || "") + " · " + formatTime(message.time);
+        row.appendChild(meta);
+
+        const clone = row.cloneNode(true);
+        const cloneBubble = clone.querySelector(".imageBubble");
+        if (cloneBubble) {
+          cloneBubble.addEventListener("click", function () {
+            openViewer(message.imageId, message.imageUrl);
+          });
+        }
+
+        el.chatInner.appendChild(row);
+        el.viewerChatInner.appendChild(clone);
       }
-    });
 
-    socket.on("disconnect", () => {
-      state.connected = false;
-      state.joined = false;
-      setConnectionBadge("연결 끊김", false);
-    });
+      async function loadConfig() {
+        try {
+          const response = await fetch(state.apiBase + "/config", { credentials: "omit" });
+          const data = await response.json();
+          if (data && data.ok) {
+            state.version = data.version || state.version;
+            state.socketPath = data.socketPath || "/socket.io";
+            el.title.textContent = "디자인 상담 · " + state.version;
+          }
+        } catch (error) {
+          console.warn("config load failed", error);
+        }
+      }
 
-    socket.on("history", (messages) => {
-      replaceMessages(messages || []);
-    });
+      function connectSocket() {
+        setConnectionBadge("연결 중", false);
 
-    socket.on("message", (message) => {
-      appendMessage(message, true);
-    });
+        socket = io(state.apiBase, {
+          path: state.socketPath || "/socket.io",
+          transports: ["websocket", "polling"]
+        });
 
-    socket.on("drawing-replaced", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId) return;
-      state.strokes = Array.isArray(payload.strokes) ? payload.strokes.slice() : [];
-      state.redoStrokes = [];
-      redrawCanvas();
-    });
+        socket.on("connect", function () {
+          state.connected = true;
+          setConnectionBadge("연결됨", true);
+          joinRoom();
+        });
 
-    socket.on("stroke-added", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId) return;
-      if (payload.stroke) {
-        state.strokes.push(payload.stroke);
+        socket.on("disconnect", function () {
+          state.connected = false;
+          state.joined = false;
+          setConnectionBadge("연결 끊김", false);
+        });
+
+        socket.on("history", function (payload) {
+          renderMessages(Array.isArray(payload?.messages) ? payload.messages : []);
+        });
+
+        socket.on("message", function (message) {
+          addMessageToUi(message || {});
+          scrollToBottom(el.chatBox);
+          scrollToBottom(el.viewerChatBox);
+        });
+
+        socket.on("drawing-replaced", function (payload) {
+          if (payload?.imageId !== state.currentViewerImageId) return;
+          state.strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
+          state.redoStrokes = [];
+          redrawCanvas();
+        });
+
+        socket.on("draw-stroke", function (payload) {
+          if (payload?.imageId !== state.currentViewerImageId) return;
+          if (payload?.stroke) {
+            state.strokes.push(payload.stroke);
+            redrawCanvas();
+          }
+        });
+
+        socket.on("drawing-cleared", function (payload) {
+          if (payload?.imageId !== state.currentViewerImageId) return;
+          state.strokes = [];
+          state.redoStrokes = [];
+          redrawCanvas();
+        });
+
+        socket.on("notes", function (payload) {
+          if (payload?.imageId !== state.currentViewerImageId) return;
+          state.notes = Array.isArray(payload.notes) ? payload.notes : [];
+          renderNotes();
+        });
+
+        socket.on("note-added", function (payload) {
+          if (payload?.imageId !== state.currentViewerImageId || !payload.note) return;
+          const idx = state.notes.findIndex((note) => note.id === payload.note.id);
+          if (idx >= 0) state.notes[idx] = payload.note;
+          else state.notes.push(payload.note);
+          renderNotes();
+        });
+
+        socket.on("note-updated", function (payload) {
+          if (payload?.imageId !== state.currentViewerImageId || !payload.note) return;
+          const idx = state.notes.findIndex((note) => note.id === payload.note.id);
+          if (idx >= 0) state.notes[idx] = payload.note;
+          renderNotes();
+          syncActiveNoteEditor();
+        });
+
+        socket.on("note-deleted", function (payload) {
+          if (payload?.imageId !== state.currentViewerImageId) return;
+          state.notes = state.notes.filter((note) => note.id !== payload.noteId);
+          if (state.activeNoteId === payload.noteId) closeNoteEditor();
+          renderNotes();
+        });
+      }
+
+      function joinRoom() {
+        if (!socket || !socket.connected) return;
+
+        socket.emit("join", {
+          roomId: state.roomId,
+          userName: state.userName,
+          role: state.role,
+          phone: state.phone
+        }, function (response) {
+          if (response?.ok) state.joined = true;
+        });
+      }
+
+      function sendTextMessage(text) {
+        const value = String(text || "").trim();
+        if (!value || !socket || !state.joined) return;
+
+        socket.emit("message", { text: value }, function (response) {
+          if (!response?.ok) {
+            alert(response?.error || "메시지 전송 실패");
+          }
+        });
+      }
+
+      function handleMainSend() {
+        const text = el.msgInput.value.trim();
+        if (!text) return;
+        sendTextMessage(text);
+        el.msgInput.value = "";
+      }
+
+      function handleViewerSend() {
+        const text = el.viewerMsgInput.value.trim();
+        if (!text) return;
+        sendTextMessage(text);
+        el.viewerMsgInput.value = "";
+      }
+
+      async function uploadImage(file) {
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          alert("이미지 파일만 업로드할 수 있습니다.");
+          return;
+        }
+
+        try {
+          showUploadLoading(true);
+
+          const formData = new FormData();
+          formData.append("image", file);
+
+          const response = await fetch(state.apiBase + "/upload", {
+            method: "POST",
+            body: formData
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data?.ok || !data?.url) {
+            throw new Error(data?.error || "업로드 실패");
+          }
+
+          socket.emit("image", { url: data.url }, function (result) {
+            if (!result?.ok) alert(result?.error || "이미지 저장 실패");
+          });
+        } catch (error) {
+          alert(error.message || "이미지 업로드 실패");
+        } finally {
+          showUploadLoading(false);
+          el.fileInput.value = "";
+        }
+      }
+
+      function openViewer(imageId, imageUrl) {
+        if (!imageId || !imageUrl) return;
+
+        state.currentViewerImageId = imageId;
+        state.currentViewerImageUrl = imageUrl;
+        state.strokes = [];
         state.redoStrokes = [];
-        redrawCanvas();
-      }
-    });
+        state.notes = [];
+        state.activeNoteId = "";
 
-    socket.on("strokes-added", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId) return;
-      if (Array.isArray(payload.strokes)) {
-        state.strokes.push(...payload.strokes);
+        el.viewerImage.src = imageUrl;
+        el.viewerOverlay.classList.add("open");
+        el.viewerOverlay.setAttribute("aria-hidden", "false");
+        document.body.classList.add("viewer-inline-open");
+
+        fitCanvas();
+
+        socket.emit("get-drawing", { imageId }, function (response) {
+          state.strokes = Array.isArray(response?.strokes) ? response.strokes : [];
+          redrawCanvas();
+        });
+
+        socket.emit("get-notes", { imageId }, function (response) {
+          state.notes = Array.isArray(response?.notes) ? response.notes : [];
+          renderNotes();
+        });
+      }
+
+      function closeViewer() {
+        el.viewerOverlay.classList.remove("open");
+        el.viewerOverlay.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("viewer-inline-open");
+        state.currentViewerImageId = "";
+        state.currentViewerImageUrl = "";
+        state.strokes = [];
         state.redoStrokes = [];
+        state.notes = [];
+        state.activeNoteId = "";
+        closeNoteEditor();
+      }
+
+      function fitCanvas() {
+        const rect = el.drawCanvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        el.drawCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
+        el.drawCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
+        canvasCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
         redrawCanvas();
-      }
-    });
-
-    socket.on("drawing-cleared", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId) return;
-      state.strokes = [];
-      state.redoStrokes = [];
-      redrawCanvas();
-    });
-
-    socket.on("note-added", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId || !payload.note) return;
-      if (!state.notes.some((note) => note.id === payload.note.id)) {
-        state.notes.push(payload.note);
-      }
-      renderNotes();
-    });
-
-    socket.on("note-live-update", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId) return;
-      const note = state.notes.find((item) => item.id === payload.noteId);
-      if (!note) return;
-      Object.assign(note, payload.patch || {});
-      renderNotes();
-      syncNoteEditorFromActive();
-    });
-
-    socket.on("note-updated", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId || !payload.note) return;
-      const index = state.notes.findIndex((item) => item.id === payload.note.id);
-      if (index >= 0) state.notes[index] = payload.note;
-      else state.notes.push(payload.note);
-      renderNotes();
-      syncNoteEditorFromActive();
-    });
-
-    socket.on("note-deleted", (payload) => {
-      if (payload.imageId !== state.currentViewerImageId) return;
-      state.notes = state.notes.filter((item) => item.id !== payload.noteId);
-      if (state.activeNoteId === payload.noteId) closeNoteEditor();
-      renderNotes();
-    });
-  }
-
-  async function sendMessageFromInput(input) {
-    const value = String(input.value || "").trim();
-    if (!value) return;
-    const response = await emitAck("message", { text: value });
-    if (response.ok) {
-      extractSummaryFromText(value);
-      input.value = "";
-    }
-  }
-
-  async function uploadImage(file) {
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("image", file);
-
-    setUploadBusy(true);
-    try {
-      const response = await fetch(state.apiBase + "/upload", {
-        method: "POST",
-        body: formData
-      });
-      const data = await response.json();
-      if (!response.ok || !data.url) {
-        alert(data.error || "업로드에 실패했습니다.");
-        return;
-      }
-
-      const imageAck = await emitAck("image", { url: data.url });
-      if (!imageAck.ok) {
-        alert(imageAck.error || "이미지 메시지 전송에 실패했습니다.");
-      }
-    } catch (error) {
-      alert("업로드 중 오류가 발생했습니다.");
-    } finally {
-      setUploadBusy(false);
-      el.fileInput.value = "";
-    }
-  }
-
-  function updateViewerTopLabel() {
-    const prefix = state.role === "admin" ? "관리자 협업" : "고객 협업";
-    const suffix = state.currentViewerImageId ? state.currentViewerImageId.slice(0, 8) : "";
-    el.viewerTopLeft.textContent = suffix ? (prefix + " · " + suffix) : prefix;
-  }
-
-  function resizeCanvasToStage() {
-    const rect = document.getElementById("imageStage").getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
-    el.drawCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
-    el.drawCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
-    el.drawCanvas.style.width = rect.width + "px";
-    el.drawCanvas.style.height = rect.height + "px";
-    canvasCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    redrawCanvas();
-    renderNotes();
-  }
-
-  function getStageRect() {
-    return document.getElementById("imageStage").getBoundingClientRect();
-  }
-
-  function pointFromEvent(event) {
-    const rect = getStageRect();
-    return {
-      x: clamp(event.clientX - rect.left, 0, rect.width),
-      y: clamp(event.clientY - rect.top, 0, rect.height)
-    };
-  }
-
-  function strokePointToCanvas(point) {
-    return { x: point.x, y: point.y };
-  }
-
-  function drawStroke(ctx, stroke) {
-    if (!stroke || !Array.isArray(stroke.points) || stroke.points.length < 2) return;
-    ctx.save();
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.lineWidth = stroke.width || 3;
-    if (stroke.mode === "erase") {
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.strokeStyle = "rgba(0,0,0,1)";
-    } else {
-      ctx.globalCompositeOperation = "source-over";
-      ctx.strokeStyle = stroke.color || "#ff3b30";
-    }
-    ctx.beginPath();
-    const start = strokePointToCanvas(stroke.points[0]);
-    ctx.moveTo(start.x, start.y);
-    for (let i = 1; i < stroke.points.length; i += 1) {
-      const p = strokePointToCanvas(stroke.points[i]);
-      ctx.lineTo(p.x, p.y);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function redrawCanvas() {
-    const rect = getStageRect();
-    canvasCtx.clearRect(0, 0, rect.width, rect.height);
-    state.strokes.forEach((stroke) => drawStroke(canvasCtx, stroke));
-    if (state.currentStroke && Array.isArray(state.currentStroke.points)) {
-      drawStroke(canvasCtx, state.currentStroke);
-    }
-  }
-
-  function renderNotes() {
-    el.textLayer.innerHTML = "";
-    state.notes.forEach((note) => {
-      const node = document.createElement("button");
-      node.type = "button";
-      node.className = "noteMarker" + (state.activeNoteId === note.id ? " selected" : "");
-      node.style.left = (note.x * 100) + "%";
-      node.style.top = (note.y * 100) + "%";
-      node.dataset.noteId = note.id;
-      node.innerHTML =
-        '<span class="noteDot" style="background:' + escapeHtml(note.color || "#fff7c2") + '"></span>' +
-        '<span class="noteMarkerText">' + escapeHtml((note.text || "메모").slice(0, 30) || "메모") + '</span>';
-      node.addEventListener("click", (event) => {
-        event.preventDefault();
-        openNoteEditor(note.id);
-      });
-      node.addEventListener("pointerdown", onNotePointerDown);
-      el.textLayer.appendChild(node);
-    });
-  }
-
-  function syncNoteEditorFromActive() {
-    if (!el.noteEditorOverlay.classList.contains("open")) return;
-    const active = state.notes.find((note) => note.id === state.activeNoteId);
-    if (!active) return;
-    el.noteEditorTextarea.value = active.text || "";
-    el.noteEditorCounter.textContent = String((active.text || "").length) + " / " + MAX_NOTE_CHARS;
-    setNoteSaveBadge("saved", "저장됨");
-    renderNoteColorRow();
-  }
-
-  function setNoteSaveBadge(type, text) {
-    el.noteEditorSaveBadge.className = type ? (" " + "").trim() : "";
-    el.noteEditorSaveBadge.className = "noteEditorSaveBadge";
-    el.noteEditorSaveBadge.id = "noteEditorSaveBadge";
-    el.noteEditorSaveBadge.classList.remove("pending", "saved", "offline");
-    if (type) el.noteEditorSaveBadge.classList.add(type);
-    el.noteEditorSaveBadge.textContent = text;
-  }
-
-  function renderNoteColorRow() {
-    el.noteEditorColorRow.innerHTML = "";
-    NOTE_COLORS.forEach((color) => {
-      const swatch = document.createElement("button");
-      swatch.type = "button";
-      swatch.className = "noteColorSwatch" + ((getActiveNote() && getActiveNote().color === color) ? " active" : "");
-      swatch.style.background = color;
-      swatch.addEventListener("click", async () => {
-        const active = getActiveNote();
-        if (!active) return;
-        active.color = color;
-        renderNoteColorRow();
         renderNotes();
-        setNoteSaveBadge("pending", "저장 중");
-        const response = await emitAck("update-note", {
+      }
+
+      function redrawCanvas() {
+        const rect = el.drawCanvas.getBoundingClientRect();
+        canvasCtx.clearRect(0, 0, rect.width, rect.height);
+
+        state.strokes.forEach((stroke) => {
+          if (!Array.isArray(stroke.points) || stroke.points.length < 1) return;
+
+          canvasCtx.save();
+          canvasCtx.lineCap = "round";
+          canvasCtx.lineJoin = "round";
+          canvasCtx.lineWidth = Number(stroke.width || 3);
+
+          if (stroke.mode === "erase") {
+            canvasCtx.globalCompositeOperation = "destination-out";
+            canvasCtx.strokeStyle = "rgba(0,0,0,1)";
+          } else {
+            canvasCtx.globalCompositeOperation = "source-over";
+            canvasCtx.strokeStyle = stroke.color || "#ff3b30";
+          }
+
+          canvasCtx.beginPath();
+          const first = stroke.points[0];
+          canvasCtx.moveTo(first.x * rect.width, first.y * rect.height);
+
+          for (let i = 1; i < stroke.points.length; i++) {
+            const point = stroke.points[i];
+            canvasCtx.lineTo(point.x * rect.width, point.y * rect.height);
+          }
+
+          canvasCtx.stroke();
+          canvasCtx.restore();
+        });
+      }
+
+      function pointerToRelative(event) {
+        const rect = el.drawCanvas.getBoundingClientRect();
+        return {
+          x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+          y: clamp((event.clientY - rect.top) / rect.height, 0, 1)
+        };
+      }
+
+      function startStroke(event) {
+        if (!state.currentViewerImageId) return;
+        if (state.mode === "note") return;
+
+        const point = pointerToRelative(event);
+        state.currentStroke = {
+          id: createUuid(),
+          mode: state.mode === "erase" ? "erase" : "draw",
+          color: state.color,
+          width: Number(state.width || 3),
+          points: [point],
+          time: Date.now(),
+          sender: state.role
+        };
+
+        el.drawCanvas.setPointerCapture(event.pointerId);
+      }
+
+      function moveStroke(event) {
+        if (!state.currentStroke) return;
+        const point = pointerToRelative(event);
+        state.currentStroke.points.push(point);
+
+        const preview = state.strokes.concat([state.currentStroke]);
+        const original = state.strokes;
+        state.strokes = preview;
+        redrawCanvas();
+        state.strokes = original;
+      }
+
+      function endStroke() {
+        if (!state.currentStroke) return;
+
+        const finished = state.currentStroke;
+        state.currentStroke = null;
+        state.strokes.push(finished);
+        state.redoStrokes = [];
+        redrawCanvas();
+
+        socket.emit("draw-stroke", {
           imageId: state.currentViewerImageId,
-          noteId: active.id,
-          patch: {
-            color,
-            updatedAt: Date.now(),
+          stroke: finished
+        }, function (response) {
+          if (!response?.ok) alert(response?.error || "드로잉 저장 실패");
+        });
+      }
+
+      function renderNotes() {
+        el.textLayer.innerHTML = "";
+        const rect = el.drawCanvas.getBoundingClientRect();
+
+        state.notes.forEach((note) => {
+          const node = document.createElement("button");
+          node.type = "button";
+          node.className = "noteMarker" + (state.activeNoteId === note.id ? " selected" : "");
+          node.style.left = (note.x * rect.width) + "px";
+          node.style.top = (note.y * rect.height) + "px";
+          node.dataset.noteId = note.id;
+          node.innerHTML = `
+            <span class="noteDot" style="background:${escapeHtml(note.color || "#fff7c2")}"></span>
+            <span class="noteMarkerText">${escapeHtml(note.text || "메모")}</span>
+          `;
+
+          node.addEventListener("click", function () {
+            state.activeNoteId = note.id;
+            openNoteEditor(note.id);
+            renderNotes();
+          });
+
+          node.addEventListener("pointerdown", function (event) {
+            event.stopPropagation();
+            state.draggingNoteId = note.id;
+            state.draggingNotePointerId = event.pointerId;
+
+            const targetRect = node.getBoundingClientRect();
+            state.dragOffsetX = event.clientX - (targetRect.left + targetRect.width / 2);
+            state.dragOffsetY = event.clientY - (targetRect.top + targetRect.height / 2);
+
+            node.setPointerCapture(event.pointerId);
+          });
+
+          node.addEventListener("pointermove", function (event) {
+            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) return;
+
+            const canvasRect = el.drawCanvas.getBoundingClientRect();
+            const x = clamp((event.clientX - canvasRect.left - state.dragOffsetX) / canvasRect.width, 0.06, 0.94);
+            const y = clamp((event.clientY - canvasRect.top - state.dragOffsetY) / canvasRect.height, 0.08, 0.92);
+
+            const found = state.notes.find((item) => item.id === note.id);
+            if (found) {
+              found.x = x;
+              found.y = y;
+              renderNotes();
+            }
+          });
+
+          node.addEventListener("pointerup", function (event) {
+            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) return;
+            state.draggingNoteId = "";
+            state.draggingNotePointerId = null;
+
+            const found = state.notes.find((item) => item.id === note.id);
+            if (!found) return;
+
+            socket.emit("update-note", {
+              imageId: state.currentViewerImageId,
+              noteId: note.id,
+              patch: {
+                x: found.x,
+                y: found.y,
+                updatedByRole: state.role,
+                updatedByName: state.userName
+              }
+            });
+          });
+
+          el.textLayer.appendChild(node);
+        });
+      }
+
+      function addNoteAtCenter() {
+        if (!state.currentViewerImageId) return;
+
+        socket.emit("add-note", {
+          imageId: state.currentViewerImageId,
+          note: {
+            id: createUuid(),
+            x: 0.5,
+            y: 0.5,
+            width: 0.16,
+            height: 0.1,
+            text: "메모를 입력하세요",
+            color: state.noteColor,
+            author: state.role,
             updatedByRole: state.role,
             updatedByName: state.userName
           }
+        }, function (response) {
+          if (response?.ok && response.note) {
+            state.activeNoteId = response.note.id;
+            openNoteEditor(response.note.id);
+          }
         });
-        setNoteSaveBadge(response.ok ? "saved" : "offline", response.ok ? "저장됨" : "오프라인");
-      });
-      el.noteEditorColorRow.appendChild(swatch);
-    });
-  }
-
-  function getActiveNote() {
-    return state.notes.find((note) => note.id === state.activeNoteId);
-  }
-
-  async function openViewer(imageId, imageUrl) {
-    state.currentViewerImageId = imageId;
-    state.currentViewerImageUrl = imageUrl;
-    state.strokes = [];
-    state.redoStrokes = [];
-    state.notes = [];
-    state.currentStroke = null;
-    state.activeNoteId = "";
-    updateViewerTopLabel();
-    el.viewerImage.src = imageUrl;
-    el.viewerOverlay.classList.add("open");
-    document.body.classList.add("viewer-inline-open");
-    resizeCanvasToStage();
-
-    const drawingRes = await emitAck("get-drawing", { imageId });
-    if (drawingRes.ok) {
-      state.strokes = Array.isArray(drawingRes.strokes) ? drawingRes.strokes.slice() : [];
-      redrawCanvas();
-    }
-
-    const notesRes = await emitAck("get-notes", { imageId });
-    if (notesRes.ok) {
-      state.notes = Array.isArray(notesRes.notes) ? notesRes.notes.slice() : [];
-      renderNotes();
-    }
-
-    if (state.isViewerWindow) {
-      appendMessage(buildSystemMessage("새 창 협업 모드로 열렸습니다."), true);
-    }
-  }
-
-  function closeViewer() {
-    el.viewerOverlay.classList.remove("open");
-    document.body.classList.remove("viewer-inline-open");
-    state.currentViewerImageId = "";
-    state.currentViewerImageUrl = "";
-    state.strokes = [];
-    state.redoStrokes = [];
-    state.notes = [];
-    state.currentStroke = null;
-    state.activeNoteId = "";
-    el.textLayer.innerHTML = "";
-    redrawCanvas();
-  }
-
-  function openNoteEditor(noteId) {
-    state.activeNoteId = noteId;
-    const note = getActiveNote();
-    if (!note) return;
-    el.noteEditorOverlay.classList.add("open");
-    el.noteEditorTextarea.value = note.text || "";
-    el.noteEditorCounter.textContent = String((note.text || "").length) + " / " + MAX_NOTE_CHARS;
-    renderNoteColorRow();
-    setNoteSaveBadge("saved", "저장됨");
-    el.noteEditorTextarea.focus();
-    renderNotes();
-  }
-
-  function closeNoteEditor() {
-    el.noteEditorOverlay.classList.remove("open");
-    state.activeNoteId = "";
-    renderNotes();
-  }
-
-  function openColorPopover() {
-    const rect = el.paletteBtn.getBoundingClientRect();
-    el.colorPopover.style.left = Math.max(12, rect.left - 120) + "px";
-    el.colorPopover.style.top = (rect.top - 74) + "px";
-    el.colorPopover.classList.add("open");
-    state.colorPopoverOpen = true;
-  }
-
-  function closeColorPopover() {
-    el.colorPopover.classList.remove("open");
-    state.colorPopoverOpen = false;
-  }
-
-  function renderColorPopover() {
-    el.colorPopoverGrid.innerHTML = "";
-    COLORS.forEach((color) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "colorChip" + (state.color === color ? " active" : "");
-      chip.style.background = color;
-      chip.addEventListener("click", () => {
-        state.color = color;
-        document.documentElement.style.setProperty("--selected-draw-color", color);
-        renderColorPopover();
-        closeColorPopover();
-      });
-      el.colorPopoverGrid.appendChild(chip);
-    });
-  }
-
-  function updateBrushCursor(point) {
-    const size = state.width;
-    el.brushCursor.style.width = size + "px";
-    el.brushCursor.style.height = size + "px";
-    el.brushCursor.style.left = point.x + "px";
-    el.brushCursor.style.top = point.y + "px";
-    el.brushCursor.style.display = state.mode === "note" ? "none" : "block";
-    el.brushCursor.style.background = state.mode === "erase" ? "rgba(255,91,91,.12)" : "rgba(36,145,255,.16)";
-    el.brushCursor.style.borderColor = state.mode === "erase" ? "rgba(255,91,91,.7)" : "rgba(36,145,255,.7)";
-  }
-
-  function beginStroke(point) {
-    state.currentStroke = {
-      id: createUuid(),
-      mode: state.mode === "erase" ? "erase" : "draw",
-      color: state.color,
-      width: state.width,
-      points: [point],
-      time: Date.now(),
-      sender: state.role
-    };
-    redrawCanvas();
-  }
-
-  async function finishStroke() {
-    if (!state.currentStroke || !Array.isArray(state.currentStroke.points) || state.currentStroke.points.length < 2) {
-      state.currentStroke = null;
-      redrawCanvas();
-      return;
-    }
-    const stroke = state.currentStroke;
-    state.currentStroke = null;
-    state.strokes.push(stroke);
-    state.redoStrokes = [];
-    redrawCanvas();
-    await emitAck("draw-stroke", {
-      imageId: state.currentViewerImageId,
-      stroke
-    });
-  }
-
-  function onCanvasPointerDown(event) {
-    if (!state.currentViewerImageId) return;
-    const point = pointFromEvent(event);
-    updateBrushCursor(point);
-
-    if (state.mode === "note") {
-      handleStageTapForNote(point);
-      return;
-    }
-
-    el.drawCanvas.setPointerCapture(event.pointerId);
-    beginStroke(point);
-  }
-
-  function onCanvasPointerMove(event) {
-    const point = pointFromEvent(event);
-    updateBrushCursor(point);
-    if (!state.currentStroke) return;
-    state.currentStroke.points.push(point);
-    redrawCanvas();
-  }
-
-  function onCanvasPointerUp() {
-    finishStroke();
-  }
-
-  function handleStageTapForNote(point) {
-    const now = Date.now();
-    const delta = now - lastTapAt;
-    lastTapAt = now;
-    if (delta > DOUBLE_TAP_MS && !isMobileViewport()) return;
-
-    addNewNote(point);
-  }
-
-  async function addNewNote(point) {
-    const rect = getStageRect();
-    const note = {
-      id: createUuid(),
-      x: clamp(point.x / rect.width, 0.06, 0.94),
-      y: clamp(point.y / rect.height, 0.08, 0.92),
-      width: 0.16,
-      height: 0.1,
-      text: "",
-      color: state.noteColor,
-      author: state.role,
-      updatedAt: Date.now(),
-      updatedByRole: state.role,
-      updatedByName: state.userName
-    };
-
-    const response = await emitAck("add-note", {
-      imageId: state.currentViewerImageId,
-      note
-    });
-
-    if (response.ok && response.note) {
-      state.notes.push(response.note);
-      renderNotes();
-      openNoteEditor(response.note.id);
-    }
-  }
-
-  function onNotePointerDown(event) {
-    const noteId = event.currentTarget.dataset.noteId;
-    const note = state.notes.find((item) => item.id === noteId);
-    if (!note) return;
-    state.draggingNoteId = noteId;
-    state.draggingNotePointerId = event.pointerId;
-    const rect = getStageRect();
-    state.dragOffsetX = event.clientX - (rect.left + note.x * rect.width);
-    state.dragOffsetY = event.clientY - (rect.top + note.y * rect.height);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  async function onStagePointerMove(event) {
-    if (!state.draggingNoteId) return;
-    const note = state.notes.find((item) => item.id === state.draggingNoteId);
-    if (!note) return;
-    const rect = getStageRect();
-    note.x = clamp((event.clientX - rect.left - state.dragOffsetX) / rect.width, 0.06, 0.94);
-    note.y = clamp((event.clientY - rect.top - state.dragOffsetY) / rect.height, 0.08, 0.92);
-    renderNotes();
-    await emitAck("note-live-update", {
-      imageId: state.currentViewerImageId,
-      noteId: note.id,
-      patch: {
-        x: note.x,
-        y: note.y,
-        updatedAt: Date.now(),
-        updatedByRole: state.role,
-        updatedByName: state.userName
       }
-    });
-  }
 
-  async function onStagePointerUp() {
-    if (!state.draggingNoteId) return;
-    const note = state.notes.find((item) => item.id === state.draggingNoteId);
-    const noteId = state.draggingNoteId;
-    state.draggingNoteId = "";
-    state.draggingNotePointerId = null;
-    if (!note) return;
-
-    await emitAck("update-note", {
-      imageId: state.currentViewerImageId,
-      noteId,
-      patch: {
-        x: note.x,
-        y: note.y,
-        updatedAt: Date.now(),
-        updatedByRole: state.role,
-        updatedByName: state.userName
+      function getActiveNote() {
+        return state.notes.find((note) => note.id === state.activeNoteId) || null;
       }
-    });
-  }
 
-  async function syncActiveNoteText() {
-    const active = getActiveNote();
-    if (!active) return;
-    const value = String(el.noteEditorTextarea.value || "").slice(0, MAX_NOTE_CHARS);
-    active.text = value;
-    active.updatedAt = Date.now();
-    active.updatedByRole = state.role;
-    active.updatedByName = state.userName;
-    el.noteEditorCounter.textContent = String(value.length) + " / " + MAX_NOTE_CHARS;
-    renderNotes();
-    setNoteSaveBadge("pending", "저장 중");
+      function setNoteEditorBadge(kind, text) {
+        el.noteEditorSaveBadge.className = "";
+        el.noteEditorSaveBadge.id = "noteEditorSaveBadge";
+        if (kind) el.noteEditorSaveBadge.classList.add(kind);
+        el.noteEditorSaveBadge.textContent = text;
+      }
 
-    clearTimeout(state.noteSaveTimer);
-    state.noteSaveTimer = setTimeout(async () => {
-      const response = await emitAck("update-note", {
-        imageId: state.currentViewerImageId,
-        noteId: active.id,
-        patch: {
-          text: value,
-          updatedAt: Date.now(),
-          updatedByRole: state.role,
-          updatedByName: state.userName
+      function syncActiveNoteEditor() {
+        const note = getActiveNote();
+        if (!note) return;
+        el.noteEditorTextarea.value = note.text || "";
+        el.noteEditorCounter.textContent = `${(note.text || "").length} / ${MAX_NOTE_CHARS}`;
+        paintNoteColorRow(note.color || "#fff7c2");
+      }
+
+      function openNoteEditor(noteId) {
+        state.activeNoteId = noteId;
+        const note = getActiveNote();
+        if (!note) return;
+
+        el.noteEditorOverlay.classList.add("open");
+        el.noteEditorOverlay.setAttribute("aria-hidden", "false");
+        el.noteEditorTextarea.value = note.text || "";
+        el.noteEditorCounter.textContent = `${(note.text || "").length} / ${MAX_NOTE_CHARS}`;
+        paintNoteColorRow(note.color || "#fff7c2");
+        setNoteEditorBadge("", "편집 중");
+        requestAnimationFrame(() => el.noteEditorTextarea.focus());
+      }
+
+      function closeNoteEditor() {
+        el.noteEditorOverlay.classList.remove("open");
+        el.noteEditorOverlay.setAttribute("aria-hidden", "true");
+      }
+
+      function paintNoteColorRow(activeColor) {
+        el.noteEditorColorRow.innerHTML = "";
+        NOTE_COLORS.forEach((color) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "noteColorSwatch" + (color === activeColor ? " active" : "");
+          chip.style.background = color;
+          chip.addEventListener("click", function () {
+            const note = getActiveNote();
+            if (!note) return;
+
+            note.color = color;
+            paintNoteColorRow(color);
+            renderNotes();
+
+            socket.emit("update-note", {
+              imageId: state.currentViewerImageId,
+              noteId: note.id,
+              patch: {
+                color,
+                updatedByRole: state.role,
+                updatedByName: state.userName
+              }
+            });
+
+            setNoteEditorBadge("pending", "저장 중");
+          });
+          el.noteEditorColorRow.appendChild(chip);
+        });
+      }
+
+      function scheduleNoteSave() {
+        clearTimeout(state.noteSaveTimer);
+        setNoteEditorBadge("pending", "저장 중");
+
+        state.noteSaveTimer = setTimeout(function () {
+          const note = getActiveNote();
+          if (!note) return;
+
+          socket.emit("update-note", {
+            imageId: state.currentViewerImageId,
+            noteId: note.id,
+            patch: {
+              text: el.noteEditorTextarea.value.slice(0, MAX_NOTE_CHARS),
+              updatedByRole: state.role,
+              updatedByName: state.userName
+            }
+          }, function (response) {
+            if (response?.ok) setNoteEditorBadge("saved", "저장됨");
+            else setNoteEditorBadge("offline", "저장 실패");
+          });
+        }, 350);
+      }
+
+      function openColorPopover() {
+        const rect = el.paletteBtn.getBoundingClientRect();
+        el.colorPopover.style.left = Math.max(12, rect.left - 110 + rect.width) + "px";
+        el.colorPopover.style.top = Math.max(12, rect.top - 70) + "px";
+        el.colorPopover.classList.add("open");
+        state.colorPopoverOpen = true;
+      }
+
+      function closeColorPopover() {
+        el.colorPopover.classList.remove("open");
+        state.colorPopoverOpen = false;
+      }
+
+      function paintColorPopover() {
+        el.colorPopoverGrid.innerHTML = "";
+        COLORS.forEach((color) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "colorChip" + (color === state.color ? " active" : "");
+          chip.style.background = color;
+          chip.addEventListener("click", function () {
+            state.color = color;
+            document.documentElement.style.setProperty("--selected-draw-color", color);
+            paintColorPopover();
+            closeColorPopover();
+          });
+          el.colorPopoverGrid.appendChild(chip);
+        });
+      }
+
+      function undoStroke() {
+        if (!state.currentViewerImageId || !state.strokes.length) return;
+        const last = state.strokes.pop();
+        state.redoStrokes.push(last);
+        redrawCanvas();
+
+        socket.emit("replace-drawing", {
+          imageId: state.currentViewerImageId,
+          strokes: state.strokes
+        });
+      }
+
+      function redoStroke() {
+        if (!state.currentViewerImageId || !state.redoStrokes.length) return;
+        const last = state.redoStrokes.pop();
+        state.strokes.push(last);
+        redrawCanvas();
+
+        socket.emit("replace-drawing", {
+          imageId: state.currentViewerImageId,
+          strokes: state.strokes
+        });
+      }
+
+      function clearAllStrokes() {
+        if (!state.currentViewerImageId) return;
+        state.strokes = [];
+        state.redoStrokes = [];
+        redrawCanvas();
+        socket.emit("clear-drawing", { imageId: state.currentViewerImageId });
+      }
+
+      function downloadSketch() {
+        if (!state.currentViewerImageUrl) return;
+
+        const rect = el.drawCanvas.getBoundingClientRect();
+        const exportCanvas = document.createElement("canvas");
+        exportCanvas.width = Math.max(1, Math.floor(rect.width));
+        exportCanvas.height = Math.max(1, Math.floor(rect.height));
+        const exportCtx = exportCanvas.getContext("2d");
+
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function () {
+          exportCtx.fillStyle = "#ffffff";
+          exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+          const ratio = Math.min(exportCanvas.width / img.width, exportCanvas.height / img.height);
+          const drawW = img.width * ratio;
+          const drawH = img.height * ratio;
+          const drawX = (exportCanvas.width - drawW) / 2;
+          const drawY = (exportCanvas.height - drawH) / 2;
+
+          exportCtx.drawImage(img, drawX, drawY, drawW, drawH);
+          exportCtx.drawImage(el.drawCanvas, 0, 0, exportCanvas.width, exportCanvas.height);
+
+          const url = exportCanvas.toDataURL("image/png");
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "design-chat-sketch.png";
+          link.click();
+        };
+        img.src = state.currentViewerImageUrl;
+      }
+
+      el.quickChips.forEach((chip) => {
+        chip.addEventListener("click", function () {
+          el.quickChips.forEach((item) => item.classList.remove("active"));
+          chip.classList.add("active");
+          el.msgInput.value = chip.dataset.draft || "";
+          el.msgInput.focus();
+        });
+      });
+
+      el.sendBtn.addEventListener("click", handleMainSend);
+      el.msgInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          handleMainSend();
         }
       });
-      setNoteSaveBadge(response.ok ? "saved" : "offline", response.ok ? "저장됨" : "오프라인");
-    }, 220);
-  }
 
-  async function deleteActiveNote() {
-    const active = getActiveNote();
-    if (!active) return;
-    const response = await emitAck("delete-note", {
-      imageId: state.currentViewerImageId,
-      noteId: active.id
-    });
-    if (response.ok) {
-      state.notes = state.notes.filter((note) => note.id !== active.id);
-      closeNoteEditor();
-      renderNotes();
-    }
-  }
-
-  async function clearCurrentDrawing() {
-    if (!state.currentViewerImageId) return;
-    const response = await emitAck("clear-drawing", { imageId: state.currentViewerImageId });
-    if (response.ok) {
-      state.strokes = [];
-      state.redoStrokes = [];
-      redrawCanvas();
-    }
-  }
-
-  async function applyUndo() {
-    if (!state.strokes.length) return;
-    const item = state.strokes.pop();
-    state.redoStrokes.push(item);
-    redrawCanvas();
-    await emitAck("replace-drawing", {
-      imageId: state.currentViewerImageId,
-      strokes: state.strokes
-    });
-  }
-
-  async function applyRedo() {
-    if (!state.redoStrokes.length) return;
-    const item = state.redoStrokes.pop();
-    state.strokes.push(item);
-    redrawCanvas();
-    await emitAck("replace-drawing", {
-      imageId: state.currentViewerImageId,
-      strokes: state.strokes
-    });
-  }
-
-  function downloadCurrentImage() {
-    if (!state.currentViewerImageUrl) return;
-    const link = document.createElement("a");
-    link.href = state.currentViewerImageUrl;
-    link.download = "design-chat-image";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }
-
-  async function savePhone() {
-    const value = String(el.phoneInput.value || "").trim();
-    if (!value) {
-      showPhoneStatus("연락처를 입력해 주세요.", false);
-      return;
-    }
-    state.phone = value;
-    safeStorageSet(STORAGE_KEYS.phone, value);
-    showPhoneStatus("연락처가 저장되었습니다.", true);
-  }
-
-  function deletePhone() {
-    state.phone = "";
-    safeStorageRemove(STORAGE_KEYS.phone);
-    el.phoneInput.value = "";
-    showPhoneStatus("연락처가 삭제되었습니다.", true);
-  }
-
-  function composeRequestText() {
-    const parts = [];
-    if (state.summary.productName) parts.push("제품: " + state.summary.productName);
-    if (state.summary.requestTypes.length) parts.push("요청: " + state.summary.requestTypes.join(", "));
-    if (state.summary.detailNotes.length) parts.push("상세: " + state.summary.detailNotes.join(" / "));
-    const text = parts.join("\n");
-    if (text) el.msgInput.value = text;
-  }
-
-  function composeQuoteText() {
-    const parts = [];
-    if (state.summary.productName) parts.push(state.summary.productName);
-    if (state.summary.requestTypes.length) parts.push(state.summary.requestTypes.join(", "));
-    if (state.summary.detailNotes.length) parts.push(state.summary.detailNotes.join(", "));
-    const text = "안녕하세요. " + (parts.join(" / ") || "디자인 상담") + " 관련 견적을 요청드립니다.";
-    el.msgInput.value = text;
-  }
-
-  function setMode(nextMode) {
-    state.mode = nextMode;
-    el.penBtn.classList.toggle("active", nextMode === "draw");
-    el.eraserBtn.classList.toggle("active", nextMode === "erase");
-    el.addTextBtn.classList.toggle("active", nextMode === "note");
-  }
-
-  function bootViewerWindowRole() {
-    if (state.isViewerWindow) {
-      document.title = "디자인 상담 · 협업 뷰어";
-    }
-    if (params.get("role") === "admin") {
-      state.role = "admin";
-      safeStorageSet(STORAGE_KEYS.role, "admin");
-    }
-    if (params.get("userName")) {
-      state.userName = params.get("userName").trim() || state.userName;
-      safeStorageSet(STORAGE_KEYS.userName, state.userName);
-    }
-  }
-
-  function bindEvents() {
-    el.quickChips.forEach((chip) => {
-      chip.addEventListener("click", () => {
-        setSelectedQuickChip(chip);
-        const request = chip.dataset.request || chip.textContent.trim();
-        if (!state.summary.requestTypes.includes(request)) {
-          state.summary.requestTypes.push(request);
-          state.summary.requestTypes = state.summary.requestTypes.slice(-5);
+      el.viewerSendBtn.addEventListener("click", handleViewerSend);
+      el.viewerMsgInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          handleViewerSend();
         }
-        const draft = chip.dataset.draft || request;
-        el.msgInput.value = draft;
-        renderSummary();
       });
-    });
 
-    el.summaryToggleBtn.addEventListener("click", () => {
-      state.summaryCollapsed = !state.summaryCollapsed;
-      renderSummary();
-    });
-    el.summaryComposeBtn.addEventListener("click", composeRequestText);
-    el.summaryQuoteBtn.addEventListener("click", composeQuoteText);
+      el.savePhoneBtn.addEventListener("click", function () {
+        state.phone = el.phoneInput.value.trim();
+        safeStorageSet(STORAGE_KEYS.phone, state.phone);
+        showPhoneStatus("연락처를 저장했습니다");
+      });
 
-    el.sendBtn.addEventListener("click", () => sendMessageFromInput(el.msgInput));
-    el.viewerSendBtn.addEventListener("click", () => sendMessageFromInput(el.viewerMsgInput));
-    el.msgInput.addEventListener("compositionstart", () => { composeMain = true; });
-    el.msgInput.addEventListener("compositionend", () => { composeMain = false; });
-    el.viewerMsgInput.addEventListener("compositionstart", () => { composeViewer = true; });
-    el.viewerMsgInput.addEventListener("compositionend", () => { composeViewer = false; });
+      el.deletePhoneBtn.addEventListener("click", function () {
+        state.phone = "";
+        el.phoneInput.value = "";
+        safeStorageRemove(STORAGE_KEYS.phone);
+        showPhoneStatus("연락처를 삭제했습니다");
+      });
 
-    el.msgInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !composeMain) {
-        event.preventDefault();
-        sendMessageFromInput(el.msgInput);
-      }
-    });
-    el.viewerMsgInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !composeViewer) {
-        event.preventDefault();
-        sendMessageFromInput(el.viewerMsgInput);
-      }
-    });
+      el.fileInput.addEventListener("change", function (event) {
+        const file = event.target.files && event.target.files[0];
+        if (file) uploadImage(file);
+      });
 
-    el.fileInput.addEventListener("change", (event) => {
-      const file = event.target.files && event.target.files[0];
-      uploadImage(file);
-    });
+      el.viewerCloseBtn.addEventListener("click", closeViewer);
+      el.downloadSketchBtn.addEventListener("click", downloadSketch);
 
-    el.savePhoneBtn.addEventListener("click", savePhone);
-    el.deletePhoneBtn.addEventListener("click", deletePhone);
+      el.penBtn.addEventListener("click", function () {
+        state.mode = "draw";
+        el.penBtn.classList.add("active");
+        el.eraserBtn.classList.remove("active");
+        el.addTextBtn.classList.remove("active");
+      });
 
-    el.viewerCloseBtn.addEventListener("click", closeViewer);
-    el.downloadSketchBtn.addEventListener("click", downloadCurrentImage);
+      el.eraserBtn.addEventListener("click", function () {
+        state.mode = "erase";
+        el.penBtn.classList.remove("active");
+        el.eraserBtn.classList.add("active");
+        el.addTextBtn.classList.remove("active");
+      });
 
-    el.penBtn.addEventListener("click", () => setMode("draw"));
-    el.eraserBtn.addEventListener("click", () => setMode("erase"));
-    el.addTextBtn.addEventListener("click", () => setMode("note"));
-    el.undoBtn.addEventListener("click", applyUndo);
-    el.redoBtn.addEventListener("click", applyRedo);
-    el.clearBtn.addEventListener("click", clearCurrentDrawing);
+      el.addTextBtn.addEventListener("click", function () {
+        state.mode = "note";
+        el.penBtn.classList.remove("active");
+        el.eraserBtn.classList.remove("active");
+        el.addTextBtn.classList.add("active");
+        addNoteAtCenter();
+      });
 
-    el.paletteBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (state.colorPopoverOpen) closeColorPopover();
-      else openColorPopover();
-    });
-    document.addEventListener("click", (event) => {
-      if (!el.colorPopover.contains(event.target) && !el.paletteBtn.contains(event.target)) {
+      el.thicknessRange.addEventListener("input", function () {
+        state.width = Number(el.thicknessRange.value || 3);
+      });
+
+      el.paletteBtn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        if (state.colorPopoverOpen) closeColorPopover();
+        else openColorPopover();
+      });
+
+      el.undoBtn.addEventListener("click", undoStroke);
+      el.redoBtn.addEventListener("click", redoStroke);
+      el.clearBtn.addEventListener("click", clearAllStrokes);
+
+      document.addEventListener("click", function (event) {
+        if (!state.colorPopoverOpen) return;
+        if (el.colorPopover.contains(event.target) || el.paletteBtn.contains(event.target)) return;
         closeColorPopover();
-      }
-    });
+      });
 
-    el.thicknessRange.addEventListener("input", () => {
-      state.width = clamp(Number(el.thicknessRange.value || 3), 1, 48);
-    });
+      el.drawCanvas.addEventListener("pointerdown", function (event) {
+        if (state.mode === "note") return;
+        startStroke(event);
+      });
+      el.drawCanvas.addEventListener("pointermove", moveStroke);
+      el.drawCanvas.addEventListener("pointerup", endStroke);
+      el.drawCanvas.addEventListener("pointercancel", endStroke);
+      el.drawCanvas.addEventListener("pointerleave", endStroke);
 
-    el.drawCanvas.addEventListener("pointerdown", onCanvasPointerDown);
-    el.drawCanvas.addEventListener("pointermove", onCanvasPointerMove);
-    el.drawCanvas.addEventListener("pointerup", onCanvasPointerUp);
-    el.drawCanvas.addEventListener("pointercancel", onCanvasPointerUp);
-    document.getElementById("imageStage").addEventListener("pointermove", onStagePointerMove);
-    document.getElementById("imageStage").addEventListener("pointerup", onStagePointerUp);
-    document.getElementById("imageStage").addEventListener("pointercancel", onStagePointerUp);
+      el.noteEditorTextarea.addEventListener("input", function () {
+        const note = getActiveNote();
+        if (!note) return;
+        note.text = el.noteEditorTextarea.value.slice(0, MAX_NOTE_CHARS);
+        el.noteEditorCounter.textContent = `${note.text.length} / ${MAX_NOTE_CHARS}`;
+        renderNotes();
+        scheduleNoteSave();
+      });
 
-    el.noteEditorTextarea.addEventListener("input", syncActiveNoteText);
-    el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
-    el.noteDeleteBtn.addEventListener("click", deleteActiveNote);
+      el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
 
-    window.addEventListener("resize", resizeCanvasToStage);
-  }
+      el.noteDeleteBtn.addEventListener("click", function () {
+        const note = getActiveNote();
+        if (!note) return;
 
-  async function init() {
-    bootViewerWindowRole();
-    el.phoneInput.value = state.phone;
-    document.documentElement.style.setProperty("--selected-draw-color", state.color);
-    renderColorPopover();
-    renderSummary();
-    bindEvents();
-    await loadConfig();
-    connectSocket();
-    setMode("draw");
-  }
+        socket.emit("delete-note", {
+          imageId: state.currentViewerImageId,
+          noteId: note.id
+        }, function () {
+          closeNoteEditor();
+        });
+      });
 
-  init();
-})();
-</script>
+      window.addEventListener("resize", fitCanvas);
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          if (el.noteEditorOverlay.classList.contains("open")) closeNoteEditor();
+          else if (el.viewerOverlay.classList.contains("open")) closeViewer();
+        }
+      });
+
+      el.phoneInput.value = state.phone;
+      document.documentElement.style.setProperty("--selected-draw-color", state.color);
+      paintColorPopover();
+
+      loadConfig().then(connectSocket);
+    })();
+  </script>
 </body>
 </html>
