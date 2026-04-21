@@ -472,6 +472,26 @@
       pointer-events:none;
     }
 
+    #brushCursor{
+      position:absolute;
+      left:0;
+      top:0;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:rgba(42,140,255,.12);
+      border:1.5px solid rgba(42,140,255,.55);
+      box-shadow:0 0 0 1px rgba(255,255,255,.55) inset;
+      pointer-events:none;
+      transform:translate(-50%,-50%);
+      display:none;
+      z-index:15;
+    }
+
+    #drawCanvas.cursor-preview{
+      cursor:none;
+    }
+
     .noteMarker{
       position:absolute;
       min-width:56px;
@@ -1022,6 +1042,7 @@
             <img id="viewerImage" alt="상담 이미지" />
             <canvas id="drawCanvas"></canvas>
             <div id="textLayer"></div>
+            <div id="brushCursor"></div>
           </div>
         </div>
 
@@ -1259,6 +1280,7 @@
         viewerImage: document.getElementById("viewerImage"),
         drawCanvas: document.getElementById("drawCanvas"),
         textLayer: document.getElementById("textLayer"),
+        brushCursor: document.getElementById("brushCursor"),
         penBtn: document.getElementById("penBtn"),
         eraserBtn: document.getElementById("eraserBtn"),
         addTextBtn: document.getElementById("addTextBtn"),
@@ -1287,6 +1309,53 @@
 
       const canvasCtx = el.drawCanvas.getContext("2d");
       let socket = null;
+
+
+      function updateBrushCursorSize() {
+        const size = Math.max(8, Number(state.width || 3) * 2);
+        el.brushCursor.style.width = size + "px";
+        el.brushCursor.style.height = size + "px";
+      }
+
+      function updateBrushCursorStyle() {
+        const isVisibleTool = state.mode === "draw" || state.mode === "erase";
+        el.drawCanvas.classList.toggle("cursor-preview", isVisibleTool);
+
+        if (!isVisibleTool) {
+          el.brushCursor.style.display = "none";
+          return;
+        }
+
+        el.brushCursor.style.display = "block";
+        updateBrushCursorSize();
+
+        if (state.mode === "erase") {
+          el.brushCursor.style.background = "rgba(120,130,146,.10)";
+          el.brushCursor.style.border = "1.5px solid rgba(90,102,117,.55)";
+        } else {
+          el.brushCursor.style.background = "rgba(42,140,255,.12)";
+          el.brushCursor.style.border = "1.5px solid rgba(42,140,255,.55)";
+        }
+      }
+
+      function moveBrushCursor(event) {
+        if (!(state.mode === "draw" || state.mode === "erase")) {
+          el.brushCursor.style.display = "none";
+          return;
+        }
+
+        const rect = el.drawCanvas.getBoundingClientRect();
+        const x = clamp(event.clientX - rect.left, 0, rect.width);
+        const y = clamp(event.clientY - rect.top, 0, rect.height);
+
+        el.brushCursor.style.left = x + "px";
+        el.brushCursor.style.top = y + "px";
+        el.brushCursor.style.display = "block";
+      }
+
+      function hideBrushCursor() {
+        el.brushCursor.style.display = "none";
+      }
 
       function setConnectionBadge(text, ok) {
         el.connectionBadge.textContent = text;
@@ -1555,6 +1624,7 @@
         document.body.classList.add("viewer-inline-open");
 
         fitCanvas();
+        updateBrushCursorStyle();
 
         socket.emit("get-drawing", { imageId }, function (response) {
           state.strokes = Array.isArray(response?.strokes) ? response.strokes : [];
@@ -1577,6 +1647,7 @@
         state.redoStrokes = [];
         state.notes = [];
         state.activeNoteId = "";
+        hideBrushCursor();
         closeNoteEditor();
       }
 
@@ -1588,6 +1659,7 @@
         canvasCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
         redrawCanvas();
         renderNotes();
+        updateBrushCursorStyle();
       }
 
       function redrawCanvas() {
@@ -2015,6 +2087,7 @@
         el.penBtn.classList.add("active");
         el.eraserBtn.classList.remove("active");
         el.addTextBtn.classList.remove("active");
+        updateBrushCursorStyle();
       });
 
       el.eraserBtn.addEventListener("click", function () {
@@ -2022,6 +2095,7 @@
         el.penBtn.classList.remove("active");
         el.eraserBtn.classList.add("active");
         el.addTextBtn.classList.remove("active");
+        updateBrushCursorStyle();
       });
 
       el.addTextBtn.addEventListener("click", function () {
@@ -2029,11 +2103,13 @@
         el.penBtn.classList.remove("active");
         el.eraserBtn.classList.remove("active");
         el.addTextBtn.classList.add("active");
+        updateBrushCursorStyle();
         addNoteAtCenter();
       });
 
       el.thicknessRange.addEventListener("input", function () {
         state.width = Number(el.thicknessRange.value || 3);
+        updateBrushCursorSize();
       });
 
       el.paletteBtn.addEventListener("click", function (event) {
@@ -2054,12 +2130,27 @@
 
       el.drawCanvas.addEventListener("pointerdown", function (event) {
         if (state.mode === "note") return;
+        moveBrushCursor(event);
         startStroke(event);
       });
-      el.drawCanvas.addEventListener("pointermove", moveStroke);
-      el.drawCanvas.addEventListener("pointerup", endStroke);
-      el.drawCanvas.addEventListener("pointercancel", endStroke);
-      el.drawCanvas.addEventListener("pointerleave", endStroke);
+      el.drawCanvas.addEventListener("pointermove", function (event) {
+        moveBrushCursor(event);
+        moveStroke(event);
+      });
+      el.drawCanvas.addEventListener("pointerup", function () {
+        endStroke();
+      });
+      el.drawCanvas.addEventListener("pointercancel", function () {
+        endStroke();
+        hideBrushCursor();
+      });
+      el.drawCanvas.addEventListener("pointerleave", function () {
+        endStroke();
+        hideBrushCursor();
+      });
+      el.drawCanvas.addEventListener("pointerenter", function (event) {
+        moveBrushCursor(event);
+      });
 
       el.noteEditorTextarea.addEventListener("input", function () {
         const note = getActiveNote();
@@ -2096,6 +2187,8 @@
       el.phoneInput.value = state.phone;
       document.documentElement.style.setProperty("--selected-draw-color", state.color);
       paintColorPopover();
+      updateBrushCursorStyle();
+      updateBrushCursorSize();
 
       loadConfig().then(connectSocket);
     })();
