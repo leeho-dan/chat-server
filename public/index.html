@@ -6,15 +6,15 @@
   <title>디자인 상담 · RENDER</title>
   <style>
     :root{
-      --bg:#f4f8fc;
-      --bg-soft:#f8fbff;
-      --line:#e3ebf3;
-      --line-strong:#d6e0ea;
-      --text:#17212b;
-      --text-soft:#24313f;
-      --sub:#728292;
-      --primary:#2491ff;
-      --primary-soft:#79c7ff;
+      --bg:#f6f9fc;
+      --bg-soft:#fbfdff;
+      --line:#e7edf4;
+      --line-strong:#d9e2ec;
+      --text:#1a2430;
+      --text-soft:#2a3642;
+      --sub:#738292;
+      --primary:#2a8cff;
+      --primary-soft:#7fc2ff;
       --danger:#ff5b5b;
       --shadow:0 18px 50px rgba(18,36,61,.10);
       --safe-bottom:max(env(safe-area-inset-bottom),0px);
@@ -37,6 +37,7 @@
       overflow:hidden;
       -webkit-text-size-adjust:100%;
       overscroll-behavior:none;
+      font-size:13px;
     }
 
     button,input,textarea,label{font:inherit}
@@ -59,7 +60,7 @@
       backdrop-filter:blur(14px);
       border:1px solid rgba(255,255,255,.82);
       border-radius:28px;
-      box-shadow:var(--shadow);
+      box-shadow:0 12px 30px rgba(18,36,61,.08);
       overflow:hidden;
       display:flex;
       flex-direction:column;
@@ -69,14 +70,14 @@
       height:44px;
       flex-shrink:0;
       border-bottom:1px solid #e3ebf3;
-      background:rgba(255,255,255,.96);
+      background:rgba(255,255,255,.98);
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:0 14px;
+      padding:0 12px;
     }
 
-    #title{font-size:14px;font-weight:800;color:#24313f}
+    #title{font-size:13px;font-weight:700;color:#24313f}
     #connectionBadge{
       height:28px;
       padding:0 10px;
@@ -85,39 +86,40 @@
       color:#53687a;
       display:inline-flex;
       align-items:center;
-      font-size:11px;
+      font-size:10px;
       font-weight:800;
     }
 
     #quickRequestBar{
       flex-shrink:0;
-      padding:10px 14px 8px;
-      background:rgba(255,255,255,.96);
+      padding:8px 12px 6px;
+      background:rgba(255,255,255,.98);
       border-bottom:1px solid #e3ebf3;
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:6px;
     }
 
     #quickRequestTitle{
-      font-size:13px;
+      font-size:12px;
       font-weight:700;
       color:#24313f;
     }
 
     #quickRequestButtons{
       display:flex;
-      gap:6px;
+      gap:5px;
       flex-wrap:wrap;
     }
 
     .quickChip{
       height:34px;
+      min-height:32px;
       padding:0 12px;
       border-radius:999px;
-      background:#edf4fa;
-      color:#425466;
-      font-size:12px;
+      background:#f1f5f9;
+      color:#4b5b6b;
+      font-size:11px;
       font-weight:800;
       display:inline-flex;
       align-items:center;
@@ -133,28 +135,28 @@
       flex:1;
       min-height:0;
       overflow-y:auto;
-      padding:12px 14px 8px;
-      background:#f8fbff;
+      padding:10px 12px 6px;
+      background:#f8fbfe;
     }
 
     #chatInner,#viewerChatInner{
       display:flex;
       flex-direction:column;
-      gap:14px;
+      gap:10px;
       min-height:100%;
     }
 
-    .messageRow{display:flex;flex-direction:column;gap:5px}
+    .messageRow{display:flex;flex-direction:column;gap:4px}
     .messageRow.me{align-items:flex-end}
     .messageRow.other{align-items:flex-start}
     .messageRow.system{align-items:center}
 
     .bubble{
       max-width:86%;
-      padding:12px 16px;
-      border-radius:22px;
-      font-size:15px;
-      line-height:1.52;
+      padding:10px 13px;
+      border-radius:18px;
+      font-size:13px;
+      line-height:1.5;
       letter-spacing:-.02em;
       word-break:break-word;
     }
@@ -167,15 +169,15 @@
     }
 
     .messageRow.other .bubble{
-      background:#fff;
-      border:1px solid #e3ebf3;
+      background:#ffffff;
+      border:1px solid #e7edf4;
       color:#17212b;
       border-bottom-left-radius:8px;
     }
 
     .messageRow.system .bubble{
-      background:#eef5ff;
-      color:#40617d;
+      background:#f2f7ff;
+      color:#4b6784;
       font-size:12px;
       font-weight:700;
       padding:8px 12px;
@@ -192,10 +194,10 @@
       max-width:92%;
       background:#fff;
       border:1px solid #e3ebf3;
-      border-radius:22px;
-      padding:8px;
+      border-radius:18px;
+      padding:6px;
       cursor:pointer;
-      box-shadow:0 8px 18px rgba(18,36,61,.04);
+      box-shadow:0 4px 10px rgba(18,36,61,.04);
     }
 
     .chatImg{
@@ -206,9 +208,9 @@
     }
 
     .imageHint{
-      margin-top:8px;
-      padding:8px 10px;
-      border-radius:12px;
+      margin-top:6px;
+      padding:6px 8px;
+      border-radius:10px;
       background:#f6fbff;
       color:#557086;
       font-size:10px;
@@ -218,21 +220,21 @@
     #inputArea{
       flex-shrink:0;
       border-top:1px solid #e3ebf3;
-      background:rgba(255,255,255,.97);
-      padding:10px 12px calc(12px + var(--safe-bottom));
+      background:rgba(255,255,255,.98);
+      padding:8px 10px calc(10px + var(--safe-bottom));
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:6px;
     }
 
     #phoneRow,#messageRowBar{
       display:flex;
       align-items:center;
-      gap:8px;
-      padding:8px;
-      border:1px solid #e3ebf3;
-      border-radius:16px;
-      background:#fbfdff;
+      gap:6px;
+      padding:6px;
+      border:1px solid #e7edf4;
+      border-radius:14px;
+      background:#fcfdff;
     }
 
     #phoneStatus{
@@ -242,6 +244,13 @@
       padding:0 2px;
     }
     #phoneStatus.show{display:block}
+
+    .inputGuide{
+      font-size:10px;
+      color:#7d8b99;
+      padding:0 2px;
+      line-height:1.4;
+    }
 
     #phoneInput,#msgInput,#viewerMsgInput,#noteEditorTextarea{
       border:1px solid #d6e0ea;
@@ -259,9 +268,10 @@
     #savePhoneBtn,#deletePhoneBtn{
       height:34px;
       min-width:48px;
+      min-height:32px;
       padding:0 10px;
       border-radius:10px;
-      font-size:12px;
+      font-size:11px;
       font-weight:800;
     }
 
@@ -271,8 +281,8 @@
     }
 
     #deletePhoneBtn{
-      background:#edf4fa;
-      color:#425466;
+      background:#f1f5f9;
+      color:#4b5b6b;
     }
 
     #msgInput{
@@ -284,10 +294,16 @@
       font-size:13px;
     }
 
+    #msgInput::placeholder,
+    #viewerMsgInput::placeholder{
+      font-size:12px;
+    }
+
     #sendBtn,#fileLabel{
       width:34px;
       height:34px;
-      min-width:34px;
+      min-width:36px;
+      min-height:36px;
       border-radius:11px;
       font-size:15px;
       display:flex;
@@ -298,6 +314,7 @@
     #sendBtn{
       background:linear-gradient(135deg,#79c7ff,#2491ff);
       color:#fff;
+      box-shadow:none;
     }
 
     #fileInput{display:none}
@@ -337,7 +354,7 @@
       height:52px;
       flex-shrink:0;
       border-bottom:1px solid #e3ebf3;
-      background:rgba(255,255,255,.96);
+      background:rgba(255,255,255,.98);
       display:grid;
       grid-template-columns:1fr auto;
       align-items:center;
@@ -370,14 +387,16 @@
       min-width:40px;
       width:40px;
       height:40px;
+      min-height:36px;
       padding:0;
       border-radius:12px;
-      background:#edf4fa;
-      color:#425466;
+      background:#f1f5f9;
+      color:#4b5b6b;
       display:flex;
       align-items:center;
       justify-content:center;
       font-weight:800;
+      box-shadow:none;
     }
 
     #viewerMain{
@@ -416,7 +435,7 @@
       border-radius:18px;
       background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,251,255,.96));
       border:1px solid #dfe9f3;
-      box-shadow:0 18px 38px rgba(18,36,61,.08);
+      box-shadow:0 10px 24px rgba(18,36,61,.08);
       overflow:hidden;
       z-index:12;
     }
@@ -465,7 +484,7 @@
       background:rgba(255,255,255,.92);
       backdrop-filter:blur(8px);
       border:1px solid rgba(36,145,255,.22);
-      box-shadow:0 10px 18px rgba(18,36,61,.10);
+      box-shadow:0 6px 14px rgba(18,36,61,.10);
       transform:translate(-50%,-50%);
       pointer-events:auto;
       user-select:none;
@@ -500,8 +519,8 @@
     #toolbar{
       flex-shrink:0;
       border-top:1px solid #e3ebf3;
-      background:#fff;
-      padding:10px 12px 12px;
+      background:rgba(255,255,255,.98);
+      padding:8px 10px 10px;
       position:relative;
       z-index:50;
       overflow:visible;
@@ -510,28 +529,43 @@
     #toolbarInline{
       display:flex;
       align-items:center;
-      gap:8px;
+      gap:6px;
       flex-wrap:nowrap;
       overflow-x:auto;
       scrollbar-width:none;
     }
     #toolbarInline::-webkit-scrollbar{display:none}
 
+    .viewerBtn svg,
+    .toolBtn svg{
+      width:18px;
+      height:18px;
+      stroke:currentColor;
+      fill:none;
+      stroke-width:2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      flex-shrink:0;
+    }
+
     .toolBtn{
       min-width:40px;
       width:40px;
       height:40px;
+      min-height:36px;
       padding:0;
       border-radius:12px;
-      background:#edf4fa;
-      color:#425466;
+      background:#f1f5f9;
+      color:#4b5b6b;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      font-size:12px;
       font-weight:800;
       flex:0 0 auto;
       position:relative;
       z-index:51;
+      box-shadow:none;
     }
 
     .toolBtn.active{
@@ -544,7 +578,6 @@
       width:32px;
       height:32px;
       border-radius:10px;
-      font-size:13px;
     }
 
     #thicknessWrap{
@@ -553,8 +586,8 @@
       padding:0 8px;
       height:40px;
       border-radius:12px;
-      background:#f6faff;
-      border:1px solid #e3ebf3;
+      background:#fcfdff;
+      border:1px solid #e7edf4;
       flex:0 0 auto;
     }
 
@@ -648,8 +681,8 @@
       flex:1;
       min-height:0;
       overflow-y:auto;
-      padding:12px;
-      background:#fbfdff;
+      padding:10px;
+      background:#f8fbfe;
     }
 
     #viewerChatInner .meta{display:none}
@@ -657,10 +690,10 @@
     #viewerInputBar{
       flex-shrink:0;
       border-top:1px solid #e3ebf3;
-      padding:12px 14px calc(14px + var(--safe-bottom));
-      background:#fff;
+      padding:10px 12px calc(12px + var(--safe-bottom));
+      background:rgba(255,255,255,.98);
       display:flex;
-      gap:10px;
+      gap:8px;
       position:relative;
       z-index:50;
     }
@@ -670,7 +703,7 @@
       height:46px;
       border-radius:16px;
       padding:0 14px;
-      font-size:15px;
+      font-size:13px;
     }
 
     #viewerSendBtn{
@@ -681,6 +714,7 @@
       color:#fff;
       font-size:18px;
       font-weight:800;
+      box-shadow:none;
     }
 
     #noteEditorHeader{
@@ -692,7 +726,7 @@
       gap:12px;
       padding:12px 14px;
       border-bottom:1px solid #e3ebf3;
-      background:#fff;
+      background:rgba(255,255,255,.98);
     }
 
     #noteEditorTitleWrap{
@@ -768,10 +802,12 @@
       border-radius:20px;
       resize:none;
       padding:16px;
-      font-size:16px;
-      line-height:1.55;
+      font-size:14px;
+      line-height:1.5;
       color:#17212b;
     }
+
+    #noteEditorCounter{font-size:11px}
 
     #uploadLoading{
       position:fixed;
@@ -807,6 +843,11 @@
       animation:spin .85s linear infinite;
     }
 
+    #messageRowBar:focus-within #sendBtn,
+    #viewerInputBar:focus-within #viewerSendBtn{
+      transform:scale(1.03);
+    }
+
     @keyframes spin{to{transform:rotate(360deg)}}
 
     @media (max-width:900px){
@@ -834,7 +875,8 @@
       #phoneRow,#messageRowBar{gap:6px;padding:6px;border-radius:14px}
       #phoneInput{width:100%;max-width:140px;height:30px;padding:0 8px;font-size:11px}
       #savePhoneBtn,#deletePhoneBtn{height:30px;min-width:40px;padding:0 8px;border-radius:9px;font-size:11px}
-      #msgInput{height:32px;border-radius:10px;padding:0 10px;font-size:12px}
+      #msgInput{height:32px;border-radius:10px;padding:0 10px;font-size:16px}
+      #viewerMsgInput{font-size:16px}
       #sendBtn,#fileLabel{width:30px;height:30px;min-width:30px;border-radius:9px}
 
       #viewerMain{
@@ -872,6 +914,16 @@
         padding:8px 10px 10px!important;
       }
 
+      .toolBtn{
+        width:36px;
+        height:36px;
+      }
+
+      .toolBtnSmall{
+        width:30px;
+        height:30px;
+      }
+
       #viewerRight{
         display:flex!important;
         flex-direction:column!important;
@@ -900,7 +952,6 @@
         height:44px!important;
         border-radius:14px!important;
         padding:0 12px!important;
-        font-size:15px!important;
       }
 
       #viewerSendBtn{
@@ -923,11 +974,11 @@
       <div id="quickRequestBar">
         <div id="quickRequestTitle">커스텀 내용을 선택해주세요.</div>
         <div id="quickRequestButtons">
-          <button class="quickChip" type="button" data-draft="색상을 변경하고 싶어요.">색상 변경</button>
-          <button class="quickChip" type="button" data-draft="문구를 추가하고 싶어요.">문구 추가</button>
-          <button class="quickChip" type="button" data-draft="사이즈를 조정하고 싶어요.">사이즈 조정</button>
-          <button class="quickChip" type="button" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정</button>
-          <button class="quickChip" type="button" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 요청</button>
+          <button class="quickChip" type="button" data-draft="색상을 변경하고 싶어요.">색상 바꾸기</button>
+          <button class="quickChip" type="button" data-draft="문구를 추가하고 싶어요.">문구 넣기</button>
+          <button class="quickChip" type="button" data-draft="사이즈를 조정하고 싶어요.">크기 조정</button>
+          <button class="quickChip" type="button" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정 요청</button>
+          <button class="quickChip" type="button" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 받기</button>
         </div>
       </div>
 
@@ -937,19 +988,20 @@
 
       <div id="inputArea">
         <div id="phoneRow">
-          <input id="phoneInput" type="tel" placeholder="연락처를 남겨주세요" />
+          <input id="phoneInput" type="tel" placeholder="상담 결과를 받을 연락처" />
           <button id="savePhoneBtn" type="button">등록</button>
           <button id="deletePhoneBtn" type="button">삭제</button>
         </div>
 
         <div id="messageRowBar">
-          <input id="msgInput" type="text" placeholder="원하는 제품과 수정할 부분을 남겨주세요" autocomplete="off" />
+          <input id="msgInput" type="text" placeholder="예: 플라워샵 벽걸이 램프 색상을 베이지로 바꾸고 싶어요" autocomplete="off" />
           <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
           <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
           <input id="fileInput" type="file" accept="image/*" />
         </div>
 
         <div id="phoneStatus" aria-live="polite"></div>
+        <div class="inputGuide">이미지와 함께 요청하면 더 정확하게 상담할 수 있어요</div>
       </div>
     </section>
   </div>
@@ -975,24 +1027,70 @@
 
         <div id="toolbar">
           <div id="toolbarInline">
-            <button id="penBtn" class="toolBtn active" type="button" aria-label="펜">✎</button>
-            <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개">⌫</button>
-            <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가">T</button>
+            <button id="penBtn" class="toolBtn active" type="button" aria-label="펜" title="펜">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+              </svg>
+            </button>
+
+            <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개" title="지우개">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 20H7"></path>
+                <path d="M7 16l8.5-8.5a2.1 2.1 0 0 1 3 0l1 1a2.1 2.1 0 0 1 0 3L14 17"></path>
+                <path d="M7 16l-3-3a2.1 2.1 0 0 1 0-3l6.5-6.5"></path>
+              </svg>
+            </button>
+
+            <button id="addTextBtn" class="toolBtn" type="button" aria-label="메모 추가" title="메모 추가">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 3h8l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path>
+                <path d="M16 3v5h5"></path>
+                <path d="M9 13h6"></path>
+                <path d="M9 17h4"></path>
+              </svg>
+            </button>
 
             <div id="thicknessWrap">
               <input id="thicknessRange" type="range" min="1" max="24" value="3" aria-label="선 두께 조절" />
             </div>
 
             <div id="paletteWrap">
-              <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택">
-                🎨
+              <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택" title="색상 선택">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3a9 9 0 1 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-1a1.4 1.4 0 0 1 0-2.8H15A6 6 0 0 0 15 3h-3z"></path>
+                  <circle cx="7.5" cy="10" r="1"></circle>
+                  <circle cx="10" cy="7.5" r="1"></circle>
+                  <circle cx="14" cy="7.5" r="1"></circle>
+                  <circle cx="16.5" cy="10" r="1"></circle>
+                </svg>
                 <span id="palettePreview"></span>
               </button>
             </div>
 
-            <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기">↶</button>
-            <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시하기">↷</button>
-            <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 지우기">⌫</button>
+            <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기" title="되돌리기">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 14L4 9l5-5"></path>
+                <path d="M20 20a8 8 0 0 0-8-8H4"></path>
+              </svg>
+            </button>
+
+            <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시하기" title="다시하기">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 14l5-5-5-5"></path>
+                <path d="M4 20a8 8 0 0 1 8-8h8"></path>
+              </svg>
+            </button>
+
+            <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 지우기" title="전체 지우기">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4h8v2"></path>
+                <path d="M19 6l-1 14H6L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+              </svg>
+            </button>
           </div>
         </div>
       </section>
@@ -1003,7 +1101,7 @@
         </div>
 
         <div id="viewerInputBar">
-          <input id="viewerMsgInput" type="text" placeholder="이미지 관련 의견을 남겨주세요" autocomplete="off" />
+          <input id="viewerMsgInput" type="text" placeholder="예: 이 부분 색상을 더 밝게 바꾸고 싶어요" autocomplete="off" />
           <button id="viewerSendBtn" type="button" aria-label="메시지 전송">➤</button>
         </div>
       </aside>
@@ -1238,7 +1336,7 @@
           bubble.dataset.imageUrl = message.imageUrl || "";
           bubble.innerHTML = `
             <img class="chatImg" src="${escapeHtml(message.imageUrl)}" alt="업로드 이미지" />
-            <div class="imageHint">이미지를 눌러 협업창을 여세요</div>
+            <div class="imageHint">이미지를 눌러 수정 위치를 표시하세요</div>
           `;
           bubble.addEventListener("click", function () {
             openViewer(message.imageId, message.imageUrl);
@@ -1426,7 +1524,12 @@
           }
 
           socket.emit("image", { url: data.url }, function (result) {
-            if (!result?.ok) alert(result?.error || "이미지 저장 실패");
+            if (!result?.ok) {
+              alert(result?.error || "이미지 저장 실패");
+              return;
+            }
+
+            sendTextMessage("이미지를 확인했어요. 이미지를 눌러 수정 위치를 표시하거나, 원하는 변경 내용을 채팅으로 남겨주세요.");
           });
         } catch (error) {
           alert(error.message || "이미지 업로드 실패");
