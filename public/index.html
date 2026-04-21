@@ -1002,6 +1002,89 @@
         font-size:18px!important;
       }
     }
+
+    #viewerTopLeft{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      justify-content:center;
+      gap:2px;
+    }
+
+    #viewerTopTitle{
+      font-size:14px;
+      font-weight:800;
+      color:#24313f;
+      line-height:1.1;
+    }
+
+    #viewerTopSub{
+      font-size:11px;
+      color:#728292;
+      line-height:1.2;
+    }
+
+    #toolbarGuide{
+      margin-bottom:8px;
+      font-size:11px;
+      color:#728292;
+      font-weight:700;
+      line-height:1.35;
+    }
+
+    #noteQuickActionRow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .noteQuickChip{
+      height:30px;
+      padding:0 10px;
+      border-radius:999px;
+      background:#eef4fa;
+      color:#4b5b6b;
+      font-size:11px;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .noteQuickChip:hover{
+      background:#e5eef7;
+    }
+
+
+    #floatingToast{
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%) translateY(12px);
+      min-width:220px;
+      max-width:min(88vw,420px);
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(23,33,43,.92);
+      color:#fff;
+      font-size:12px;
+      font-weight:700;
+      line-height:1.4;
+      text-align:center;
+      box-shadow:0 14px 34px rgba(18,36,61,.22);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+      z-index:10050;
+    }
+
+    #floatingToast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
   </style>
 </head>
 <body>
@@ -1049,7 +1132,7 @@
 
   <div id="viewerOverlay" aria-hidden="true">
     <div id="viewerTopbar">
-      <div id="viewerTopLeft">이미지 협업</div>
+      <div id="viewerTopLeft"><div id="viewerTopTitle">이미지 협업</div><div id="viewerTopSub">현재 상담과 연결된 협업 화면입니다</div></div>
       <div id="viewerActions">
         <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="이미지 다운로드">↓</button>
         <button id="viewerCloseBtn" class="viewerBtn" type="button" aria-label="스케치 종료">✕</button>
@@ -1068,6 +1151,7 @@
         </div>
 
         <div id="toolbar">
+          <div id="toolbarGuide">펜으로 표시하고 메모로 수정 내용을 남겨보세요</div>
           <div id="toolbarInline">
             <button id="penBtn" class="toolBtn active" type="button" aria-label="펜" title="펜">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1173,9 +1257,10 @@
           <span id="noteEditorCounter">0 / 500</span>
         </div>
         <div id="noteEditorColorRow"></div>
+        <div id="noteQuickActionRow"></div>
       </div>
 
-      <textarea id="noteEditorTextarea" maxlength="500" placeholder="수정 요청이나 메모를 남겨주세요"></textarea>
+      <textarea id="noteEditorTextarea" maxlength="500" placeholder="예: 색상 변경 / 위치 이동 / 삭제 요청"></textarea>
     </div>
   </div>
 
@@ -1190,6 +1275,8 @@
     </div>
   </div>
 
+  <div id="floatingToast" aria-live="polite"></div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     (function () {
@@ -1203,6 +1290,13 @@
       const MAX_NOTE_CHARS = 500;
       const COLORS = ["#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#30b0c7", "#2491ff", "#5856d6", "#af52de", "#ff2d55", "#17212b"];
       const NOTE_COLORS = ["#fff7c2", "#ffe5e5", "#e4f4ff", "#e8ffe8", "#f3e9ff"];
+      const NOTE_QUICK_ACTIONS = [
+        { label: "색상 변경", text: "색상을 변경해주세요" },
+        { label: "위치 이동", text: "위치를 이동해주세요" },
+        { label: "삭제 요청", text: "이 부분은 삭제해주세요" },
+        { label: "크기 조정", text: "크기를 조정해주세요" },
+        { label: "텍스트 수정", text: "텍스트를 수정해주세요" }
+      ];
       const params = new URLSearchParams(location.search);
 
       function safeStorageGet(key) {
@@ -1331,7 +1425,9 @@
         noteEditorDoneBtn: document.getElementById("noteEditorDoneBtn"),
         noteDeleteBtn: document.getElementById("noteDeleteBtn"),
         noteEditorColorRow: document.getElementById("noteEditorColorRow"),
-        uploadLoading: document.getElementById("uploadLoading")
+        noteQuickActionRow: document.getElementById("noteQuickActionRow"),
+        uploadLoading: document.getElementById("uploadLoading"),
+        floatingToast: document.getElementById("floatingToast")
       };
 
       const canvasCtx = el.drawCanvas.getContext("2d");
@@ -1382,6 +1478,86 @@
 
       function hideBrushCursor() {
         el.brushCursor.style.display = "none";
+      }
+
+
+
+      let pendingMessageQueue = [];
+      let toastTimer = null;
+
+      function showToast(text) {
+        if (!el.floatingToast) return;
+        clearTimeout(toastTimer);
+        el.floatingToast.textContent = text;
+        el.floatingToast.classList.add("show");
+        toastTimer = setTimeout(function () {
+          el.floatingToast.classList.remove("show");
+        }, 2200);
+      }
+
+      function flushPendingMessages() {
+        if (!state.joined || !pendingMessageQueue.length) return;
+        const queue = pendingMessageQueue.slice();
+        pendingMessageQueue = [];
+        queue.forEach(function (text) {
+          sendTextMessage(text);
+        });
+      }
+
+      function getParentTargetOrigin() {
+        const explicit = (params.get("parentOrigin") || "").trim();
+        if (explicit) return explicit;
+
+        try {
+          if (document.referrer) {
+            const inferred = new URL(document.referrer).origin;
+            if (inferred && inferred !== "null") return inferred;
+          }
+        } catch (error) {
+          console.warn("parent origin parse failed", error);
+        }
+        return "";
+      }
+
+      function sendWhenJoined(text) {
+        const value = String(text || "").trim();
+        if (!value) return;
+
+        if (state.joined) {
+          sendTextMessage(value);
+          return;
+        }
+
+        if (pendingMessageQueue[pendingMessageQueue.length - 1] === value) return;
+        pendingMessageQueue.push(value);
+      }
+
+      function renderNoteQuickActions() {
+        if (!el.noteQuickActionRow) return;
+        el.noteQuickActionRow.innerHTML = "";
+
+        NOTE_QUICK_ACTIONS.forEach((item) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "noteQuickChip";
+          chip.textContent = item.label;
+          chip.addEventListener("click", function () {
+            const note = getActiveNote();
+            if (!note) return;
+
+            const text = item.text;
+            const current = String(note.text || "").trim();
+            const lines = current ? current.split("\n").map((line) => line.trim()).filter(Boolean) : [];
+            if (!lines.includes(text)) lines.push(text);
+            note.text = lines.join("\n").slice(0, MAX_NOTE_CHARS);
+            el.noteEditorTextarea.value = note.text;
+            el.noteEditorCounter.textContent = `${note.text.length} / ${MAX_NOTE_CHARS}`;
+            renderNotes();
+            scheduleNoteSave();
+            el.noteEditorTextarea.focus();
+          });
+          el.noteQuickActionRow.appendChild(chip);
+        });
       }
 
       function setConnectionBadge(text, ok) {
@@ -1473,6 +1649,7 @@
           }
         } catch (error) {
           console.warn("config load failed", error);
+          showToast("서버 설정을 불러오지 못했지만 기본 연결을 시도합니다.");
         }
       }
 
@@ -1487,6 +1664,7 @@
         socket.on("connect", function () {
           state.connected = true;
           setConnectionBadge("연결됨", true);
+          showToast("실시간 연결이 복구되었습니다.");
           joinRoom();
         });
 
@@ -1494,6 +1672,11 @@
           state.connected = false;
           state.joined = false;
           setConnectionBadge("연결 끊김", false);
+          showToast("연결이 끊겼습니다. 자동 재연결을 시도합니다.");
+        });
+
+        socket.on("connect_error", function () {
+          setConnectionBadge("연결 재시도 중", false);
         });
 
         socket.on("history", function (payload) {
@@ -1569,12 +1752,13 @@
         }, function (response) {
           if (response?.ok) {
             state.joined = true;
+            flushPendingMessages();
 
             const bootImageId = (params.get("imageId") || "").trim();
             const bootImageUrl = (params.get("imageUrl") || "").trim();
 
             if (state.viewerOnly && bootImageId && bootImageUrl && !state.currentViewerImageId) {
-              openViewer(bootImageId, bootImageUrl);
+              openViewerInline(bootImageId, bootImageUrl);
             }
           }
         });
@@ -1634,7 +1818,7 @@
               return;
             }
 
-            sendTextMessage("이미지를 확인했어요. 이미지를 눌러 수정 위치를 표시하거나, 원하는 변경 내용을 채팅으로 남겨주세요.");
+            sendWhenJoined("이미지를 확인했어요. 이미지를 눌러 수정 위치를 표시하거나, 원하는 내용을 메모로 남겨주세요.");
           });
         } catch (error) {
           alert(error.message || "이미지 업로드 실패");
@@ -1644,45 +1828,7 @@
         }
       }
 
-      function shouldOpenViewerPopup() {
-        return !state.viewerOnly && window.innerWidth > 768;
-      }
-
-      function openViewerPopup(imageId, imageUrl) {
-        const popupWidth = Math.min(1180, Math.max(980, Math.floor(window.outerWidth * 0.72)));
-        const popupHeight = Math.max(820, window.outerHeight || 900);
-        const currentLeft = typeof window.screenX === "number" ? window.screenX : window.screenLeft || 0;
-        const currentTop = typeof window.screenY === "number" ? window.screenY : window.screenTop || 0;
-        const popupLeft = Math.max(0, currentLeft - popupWidth - 16);
-        const popupTop = Math.max(0, currentTop);
-
-        const url = new URL(location.href);
-        url.searchParams.set("viewer", "1");
-        url.searchParams.set("imageId", imageId);
-        url.searchParams.set("imageUrl", imageUrl);
-
-        const popup = window.open(
-          url.toString(),
-          "designChatViewer",
-          `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop},resizable=yes,scrollbars=yes`
-        );
-
-        if (popup) {
-          popup.focus();
-          return true;
-        }
-
-        return false;
-      }
-
-      function openViewer(imageId, imageUrl) {
-        if (!imageId || !imageUrl) return;
-
-        if (shouldOpenViewerPopup()) {
-          const opened = openViewerPopup(imageId, imageUrl);
-          if (opened) return;
-        }
-
+      function openViewerInline(imageId, imageUrl) {
         state.currentViewerImageId = imageId;
         state.currentViewerImageUrl = imageUrl;
         state.strokes = [];
@@ -1707,6 +1853,43 @@
           state.notes = Array.isArray(response?.notes) ? response.notes : [];
           renderNotes();
         });
+      }
+
+      function requestParentViewerLauncher(imageId, imageUrl) {
+        if (!window.parent || window.parent === window) return false;
+
+        const targetOrigin = getParentTargetOrigin();
+        if (!targetOrigin) return false;
+
+        window.parent.postMessage({
+          type: "SHOW_VIEWER_LAUNCHER",
+          roomId: state.roomId,
+          userName: state.userName,
+          imageId: imageId,
+          imageUrl: imageUrl
+        }, targetOrigin);
+
+        return true;
+      }
+
+      function openViewer(imageId, imageUrl) {
+        if (!imageId || !imageUrl) return;
+
+        const isDesktop = window.innerWidth > 768;
+        const isInsideIframe = window.parent && window.parent !== window;
+
+        // 데스크톱 + iframe 환경에서는 부모 페이지가 협업창 열기 버튼을 노출
+        if (isDesktop && isInsideIframe && !state.viewerOnly) {
+          const requested = requestParentViewerLauncher(imageId, imageUrl);
+          if (requested) {
+            showToast("왼쪽의 협업창 열기 버튼을 눌러 큰 화면에서 이어서 작업하세요.");
+            return;
+          }
+          showToast("외부 협업창 요청에 실패해 현재 창에서 협업 화면을 엽니다.");
+        }
+
+        // 모바일 / 단독 실행 / 팝업 전용 창에서는 내부 협업창 유지
+        openViewerInline(imageId, imageUrl);
       }
 
       function closeViewer() {
@@ -1950,6 +2133,7 @@
         el.noteEditorTextarea.value = note.text || "";
         el.noteEditorCounter.textContent = `${(note.text || "").length} / ${MAX_NOTE_CHARS}`;
         paintNoteColorRow(note.color || "#fff7c2");
+        renderNoteQuickActions();
         setNoteEditorBadge("", "편집 중");
         requestAnimationFrame(() => el.noteEditorTextarea.focus());
       }
@@ -2259,6 +2443,7 @@
       el.phoneInput.value = state.phone;
       document.documentElement.style.setProperty("--selected-draw-color", state.color);
       paintColorPopover();
+      renderNoteQuickActions();
       updateBrushCursorStyle();
       updateBrushCursorSize();
 
