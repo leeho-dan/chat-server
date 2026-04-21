@@ -1764,7 +1764,7 @@
           node.dataset.noteId = note.id;
           node.innerHTML = `
             <span class="noteDot" style="background:${escapeHtml(note.color || "#fff7c2")}"></span>
-            <span class="noteMarkerText">${escapeHtml(note.text || "메모")}</span>
+            <span class="noteMarkerText">${escapeHtml(((note.text || "메모").trim().slice(0, 3)) || "메모")}</span>
           `;
 
           node.addEventListener("click", function () {
