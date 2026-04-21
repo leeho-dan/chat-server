@@ -1228,6 +1228,7 @@
         userName: (params.get("userName") || "").trim() || safeStorageGet(STORAGE_KEYS.userName) || "고객",
         role: safeStorageGet(STORAGE_KEYS.role) === "admin" ? "admin" : "user",
         isEmbed: params.get("embed") === "1",
+        viewerOnly: params.get("viewer") === "1",
         connected: false,
         joined: false,
         uploadBusy: false,
@@ -1258,6 +1259,10 @@
       if (state.isEmbed) {
         document.documentElement.style.height = "100%";
         document.body.style.height = "100%";
+      }
+
+      if (state.viewerOnly) {
+        document.getElementById("chatCard").style.display = "none";
       }
 
       const el = {
@@ -1540,7 +1545,16 @@
           role: state.role,
           phone: state.phone
         }, function (response) {
-          if (response?.ok) state.joined = true;
+          if (response?.ok) {
+            state.joined = true;
+
+            const bootImageId = (params.get("imageId") || "").trim();
+            const bootImageUrl = (params.get("imageUrl") || "").trim();
+
+            if (state.viewerOnly && bootImageId && bootImageUrl && !state.currentViewerImageId) {
+              openViewer(bootImageId, bootImageUrl);
+            }
+          }
         });
       }
 
@@ -1608,8 +1622,44 @@
         }
       }
 
+      function isDesktopStandaloneViewer() {
+        return !state.isEmbed && !state.viewerOnly && window.innerWidth > 768;
+      }
+
+      function openViewerPopup(imageId, imageUrl) {
+        const popupWidth = 720;
+        const popupHeight = Math.max(760, window.outerHeight || 820);
+        const currentLeft = typeof window.screenX === "number" ? window.screenX : window.screenLeft || 0;
+        const currentTop = typeof window.screenY === "number" ? window.screenY : window.screenTop || 0;
+        const popupLeft = Math.max(0, currentLeft - popupWidth - 16);
+        const popupTop = Math.max(0, currentTop);
+
+        const url = new URL(location.href);
+        url.searchParams.set("viewer", "1");
+        url.searchParams.set("imageId", imageId);
+        url.searchParams.set("imageUrl", imageUrl);
+
+        const popup = window.open(
+          url.toString(),
+          "designChatViewer",
+          `width=${popupWidth},height=${popupHeight},left=${popupLeft},top=${popupTop},resizable=yes,scrollbars=yes`
+        );
+
+        if (popup) {
+          popup.focus();
+          return true;
+        }
+
+        return false;
+      }
+
       function openViewer(imageId, imageUrl) {
         if (!imageId || !imageUrl) return;
+
+        if (isDesktopStandaloneViewer()) {
+          const opened = openViewerPopup(imageId, imageUrl);
+          if (opened) return;
+        }
 
         state.currentViewerImageId = imageId;
         state.currentViewerImageUrl = imageUrl;
