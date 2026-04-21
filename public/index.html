@@ -1299,6 +1299,13 @@
       ];
       const params = new URLSearchParams(location.search);
 
+      function isHostDesktopView() {
+        const explicit = (params.get("hostView") || "").trim();
+        if (explicit === "desktop") return true;
+        if (explicit === "mobile") return false;
+        return window.innerWidth > 768;
+      }
+
       function safeStorageGet(key) {
         try { return localStorage.getItem(key) || ""; } catch (e) { return ""; }
       }
@@ -1875,7 +1882,7 @@
       function openViewer(imageId, imageUrl) {
         if (!imageId || !imageUrl) return;
 
-        const isDesktop = window.innerWidth > 768;
+        const isDesktop = isHostDesktopView();
         const isInsideIframe = window.parent && window.parent !== window;
 
         // 데스크톱 + iframe 환경에서는 부모 페이지가 협업창 열기 버튼을 노출
