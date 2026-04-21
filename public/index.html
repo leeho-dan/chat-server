@@ -1644,8 +1644,8 @@
         }
       }
 
-      function isDesktopStandaloneViewer() {
-        return !state.isEmbed && !state.viewerOnly && window.innerWidth > 768;
+      function shouldOpenViewerPopup() {
+        return !state.viewerOnly && window.innerWidth > 768;
       }
 
       function openViewerPopup(imageId, imageUrl) {
@@ -1678,7 +1678,7 @@
       function openViewer(imageId, imageUrl) {
         if (!imageId || !imageUrl) return;
 
-        if (isDesktopStandaloneViewer()) {
+        if (shouldOpenViewerPopup()) {
           const opened = openViewerPopup(imageId, imageUrl);
           if (opened) return;
         }
