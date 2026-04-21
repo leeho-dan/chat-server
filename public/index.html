@@ -406,6 +406,27 @@
       grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);
     }
 
+    body.viewer-only-mode #viewerMain{
+      grid-template-columns:minmax(0,1.75fr) minmax(360px,.7fr);
+    }
+
+    body.viewer-only-mode #canvasWrap{
+      padding:16px;
+    }
+
+    body.viewer-only-mode #imageStage{
+      height:min(100%, calc(100dvh - 96px));
+      min-height:560px;
+    }
+
+    body.viewer-only-mode #viewerChatBox{
+      padding:14px;
+    }
+
+    body.viewer-only-mode #viewerInputBar{
+      padding:12px 14px calc(14px + var(--safe-bottom));
+    }
+
     #viewerLeft{
       min-width:0;
       display:flex;
@@ -1263,6 +1284,7 @@
 
       if (state.viewerOnly) {
         document.getElementById("chatCard").style.display = "none";
+        document.body.classList.add("viewer-only-mode");
       }
 
       const el = {
@@ -1627,8 +1649,8 @@
       }
 
       function openViewerPopup(imageId, imageUrl) {
-        const popupWidth = 720;
-        const popupHeight = Math.max(760, window.outerHeight || 820);
+        const popupWidth = Math.min(1180, Math.max(980, Math.floor(window.outerWidth * 0.72)));
+        const popupHeight = Math.max(820, window.outerHeight || 900);
         const currentLeft = typeof window.screenX === "number" ? window.screenX : window.screenLeft || 0;
         const currentTop = typeof window.screenY === "number" ? window.screenY : window.screenTop || 0;
         const popupLeft = Math.max(0, currentLeft - popupWidth - 16);
