@@ -585,14 +585,28 @@
         0 10px 18px rgba(18, 36, 61, 0.12);
     }
 
-    .noteMarkerText {
-      max-width: 132px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12px;
-      font-weight: 800;
-      color: #17212b;
+   .noteMarkerText {
+  max-width: 3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
+  color: #17212b;
+}
+
+.noteMarker.expanded {
+  align-items: flex-start;
+  padding: 10px 12px;
+}
+
+.noteMarker.expanded .noteMarkerText {
+  max-width: 220px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  line-height: 1.45;
+}
     }
 
     .noteDot {
