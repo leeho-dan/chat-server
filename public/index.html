@@ -677,6 +677,19 @@
       border-radius: 10px;
     }
 
+    .noteToolBtn {
+      width: auto !important;
+      padding: 0 12px !important;
+      gap: 6px;
+    }
+
+    .toolBtnLabel {
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
     #thicknessWrap {
       display: flex;
       align-items: center;
@@ -1126,6 +1139,15 @@
         height: 32px !important;
         min-width: 32px !important;
       }
+
+      .toolBtnLabel {
+        display: none;
+      }
+
+      .noteToolBtn {
+        width: 38px !important;
+        padding: 0 !important;
+      }
     }
   </style>
 </head>
@@ -1217,11 +1239,16 @@
               </svg>
             </button>
 
-            <button id="noteBtn" class="toolBtn" type="button" aria-label="메모 추가" title="메모 추가">
+            <button id="noteBtn" class="toolBtn noteToolBtn" type="button" aria-label="메모장" title="메모장">
               <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 5v14"></path>
-                <path d="M5 12h14"></path>
+                <path d="M8 3h8"></path>
+                <path d="M9 3v3"></path>
+                <path d="M15 3v3"></path>
+                <rect x="5" y="5" width="14" height="16" rx="2"></rect>
+                <path d="M8 10h8"></path>
+                <path d="M8 14h6"></path>
               </svg>
+              <span class="toolBtnLabel">메모장</span>
             </button>
 
             <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기" title="되돌리기">
@@ -2310,7 +2337,6 @@
         if (isDesktop && isInsideIframe && !state.viewerOnly) {
           const requested = requestParentViewerPanel(imageId, imageUrl);
           if (requested) {
-            showToast("우측 협업 패널을 여는 중입니다.");
             return;
           }
         }
