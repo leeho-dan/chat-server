@@ -585,28 +585,27 @@
         0 10px 18px rgba(18, 36, 61, 0.12);
     }
 
-   .noteMarkerText {
-  max-width: 3em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-  font-weight: 800;
-  color: #17212b;
-}
+    .noteMarkerText {
+      max-width: 3em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 800;
+      color: #17212b;
+    }
 
-.noteMarker.expanded {
-  align-items: flex-start;
-  padding: 10px 12px;
-}
+    .noteMarker.expanded {
+      align-items: flex-start;
+      padding: 10px 12px;
+    }
 
-.noteMarker.expanded .noteMarkerText {
-  max-width: 220px;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  line-height: 1.45;
-}
+    .noteMarker.expanded .noteMarkerText {
+      max-width: 220px;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      line-height: 1.45;
     }
 
     .noteDot {
@@ -2079,17 +2078,35 @@
         state.notes.forEach(function (note) {
           const node = document.createElement("button");
           node.type = "button";
-          node.className = "noteMarker" + (state.activeNoteId === note.id ? " selected" : "");
+
+          const isExpanded = state.activeNoteId === note.id;
+          const previewText = ((note.text || "메모").trim().slice(0, 3)) || "메모";
+          const fullText = ((note.text || "메모").trim()) || "메모";
+
+          node.className = "noteMarker" + (isExpanded ? " expanded" : "");
           node.style.left = (note.x * rect.width) + "px";
           node.style.top = (note.y * rect.height) + "px";
           node.dataset.noteId = note.id;
 
           node.innerHTML = `
             <span class="noteDot" style="background:${escapeHtml(note.color || "#fff7c2")}"></span>
-            <span class="noteMarkerText">${escapeHtml(((note.text || "메모").trim().slice(0, 14)) || "메모")}</span>
+            <span class="noteMarkerText">${escapeHtml(isExpanded ? fullText : previewText)}</span>
           `;
 
-          node.addEventListener("click", function () {
+          node.addEventListener("click", function (event) {
+            event.stopPropagation();
+
+            if (state.activeNoteId === note.id) {
+              state.activeNoteId = "";
+            } else {
+              state.activeNoteId = note.id;
+            }
+
+            renderNotes();
+          });
+
+          node.addEventListener("dblclick", function (event) {
+            event.stopPropagation();
             state.activeNoteId = note.id;
             openNoteEditor(note.id);
             renderNotes();
@@ -2109,7 +2126,9 @@
           });
 
           node.addEventListener("pointermove", function (event) {
-            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) return;
+            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) {
+              return;
+            }
 
             const canvasRect = el.drawCanvas.getBoundingClientRect();
             const x = clamp(
@@ -2135,7 +2154,9 @@
           });
 
           node.addEventListener("pointerup", function (event) {
-            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) return;
+            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) {
+              return;
+            }
 
             state.draggingNoteId = "";
             state.draggingNotePointerId = null;
