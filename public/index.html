@@ -1512,18 +1512,7 @@
       }
 
       function getParentTargetOrigin() {
-        const explicit = (params.get("parentOrigin") || "").trim();
-        if (explicit) return explicit;
-
-        try {
-          if (document.referrer) {
-            const inferred = new URL(document.referrer).origin;
-            if (inferred && inferred !== "null") return inferred;
-          }
-        } catch (error) {
-          console.warn("parent origin parse failed", error);
-        }
-        return "";
+        return (params.get("parentOrigin") || "").trim();
       }
 
       function sendWhenJoined(text) {
@@ -1862,14 +1851,20 @@
         });
       }
 
-      function requestParentViewerLauncher(imageId, imageUrl) {
+      let lastViewerRequestAt = 0;
+
+      function requestParentViewerPanel(imageId, imageUrl) {
         if (!window.parent || window.parent === window) return false;
+
+        const now = Date.now();
+        if (now - lastViewerRequestAt < 500) return true;
+        lastViewerRequestAt = now;
 
         const targetOrigin = getParentTargetOrigin();
         if (!targetOrigin) return false;
 
         window.parent.postMessage({
-          type: "SHOW_VIEWER_LAUNCHER",
+          type: "OPEN_VIEWER_PANEL",
           roomId: state.roomId,
           userName: state.userName,
           imageId: imageId,
@@ -1887,9 +1882,9 @@
 
         // 데스크톱 + iframe 환경에서는 부모 페이지가 협업창 열기 버튼을 노출
         if (isDesktop && isInsideIframe && !state.viewerOnly) {
-          const requested = requestParentViewerLauncher(imageId, imageUrl);
+          const requested = requestParentViewerPanel(imageId, imageUrl);
           if (requested) {
-            showToast("왼쪽의 협업창 열기 버튼을 눌러 큰 화면에서 이어서 작업하세요.");
+            showToast("오른쪽 협업 패널을 여는 중입니다.");
             return;
           }
           showToast("외부 협업창 요청에 실패해 현재 창에서 협업 화면을 엽니다.");
@@ -1900,6 +1895,14 @@
       }
 
       function closeViewer() {
+        if (state.viewerOnly) {
+          const targetOrigin = getParentTargetOrigin();
+          if (window.parent && window.parent !== window && targetOrigin) {
+            window.parent.postMessage({ type: "CLOSE_VIEWER_PANEL" }, targetOrigin);
+            return;
+          }
+        }
+
         el.viewerOverlay.classList.remove("open");
         el.viewerOverlay.setAttribute("aria-hidden", "true");
         document.body.classList.remove("viewer-inline-open");
@@ -2442,8 +2445,17 @@
 
       document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
-          if (el.noteEditorOverlay.classList.contains("open")) closeNoteEditor();
-          else if (el.viewerOverlay.classList.contains("open")) closeViewer();
+          if (el.noteEditorOverlay.classList.contains("open")) {
+            closeNoteEditor();
+            return;
+          }
+
+          if (state.viewerOnly) {
+            closeViewer();
+            return;
+          }
+
+          if (el.viewerOverlay.classList.contains("open")) closeViewer();
         }
       });
 
@@ -2453,6 +2465,18 @@
       renderNoteQuickActions();
       updateBrushCursorStyle();
       updateBrushCursorSize();
+
+
+      window.addEventListener("message", function (event) {
+        const targetOrigin = getParentTargetOrigin();
+        if (!state.viewerOnly) return;
+        if (!targetOrigin || event.origin !== targetOrigin) return;
+
+        const data = event.data || {};
+        if (data.type === "SELECT_VIEWER_IMAGE" && data.imageId && data.imageUrl) {
+          openViewerInline(data.imageId, data.imageUrl);
+        }
+      });
 
       loadConfig().then(connectSocket);
     })();
