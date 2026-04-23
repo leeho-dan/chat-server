@@ -1157,6 +1157,34 @@
       font-weight: 800;
     }
 
+
+    .mobileOnlyViewerBtn {
+      display: none;
+      position: relative;
+    }
+
+    .viewerBadge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: #ff3b30;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 18px;
+      text-align: center;
+      display: none;
+      box-shadow: 0 2px 8px rgba(18, 36, 61, 0.18);
+    }
+
+    .viewerBadge.show {
+      display: block;
+    }
+
     @media (max-width: 900px) {
       #header {
         height: 70px;
@@ -1452,6 +1480,8 @@
       </div>
 
       <div id="viewerActions">
+        <button id="viewerToolToggleBtn" class="viewerBtn mobileOnlyViewerBtn" type="button" aria-label="도구 열기" aria-expanded="false">🛠</button>
+        <button id="viewerChatToggleBtn" class="viewerBtn mobileOnlyViewerBtn" type="button" aria-label="채팅 열기" aria-expanded="false">💬<span id="viewerChatBadge" class="viewerBadge">0</span></button>
         <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="이미지 다운로드">↓</button>
         <button id="viewerCloseBtn" class="viewerBtn" type="button" aria-label="스케치 종료">✕</button>
       </div>
@@ -1637,6 +1667,9 @@
         viewerMsgInput: document.getElementById("viewerMsgInput"),
         viewerSendBtn: document.getElementById("viewerSendBtn"),
         viewerCloseBtn: document.getElementById("viewerCloseBtn"),
+        viewerToolToggleBtn: document.getElementById("viewerToolToggleBtn"),
+        viewerChatToggleBtn: document.getElementById("viewerChatToggleBtn"),
+        viewerChatBadge: document.getElementById("viewerChatBadge"),
         downloadSketchBtn: document.getElementById("downloadSketchBtn"),
 
         penBtn: document.getElementById("penBtn"),
@@ -1714,7 +1747,10 @@
         noteColor: "#fff7c2",
 
         pendingMessages: [],
-        isFullscreenViewer: false
+        isFullscreenViewer: false,
+        isViewerChatOpen: false,
+        isViewerToolsOpen: false,
+        unreadViewerCount: 0
       };
 
       function createUuid() {
@@ -1808,6 +1844,57 @@
         el.uploadLoading.classList.toggle("show", !!visible);
       }
 
+      function isMobileLandscapeViewerMode() {
+        return isMobileDevice() && document.body.classList.contains("mobile-landscape-mode");
+      }
+
+      function updateViewerChatBadge() {
+        if (!el.viewerChatBadge) return;
+        if (state.unreadViewerCount > 0) {
+          el.viewerChatBadge.textContent = state.unreadViewerCount > 99 ? "99+" : String(state.unreadViewerCount);
+          el.viewerChatBadge.classList.add("show");
+        } else {
+          el.viewerChatBadge.textContent = "0";
+          el.viewerChatBadge.classList.remove("show");
+        }
+      }
+
+      function syncViewerMobilePanels() {
+        document.body.classList.toggle("viewer-chat-open", !!state.isViewerChatOpen);
+        document.body.classList.toggle("viewer-tools-open", !!state.isViewerToolsOpen);
+        if (el.viewerChatToggleBtn) {
+          el.viewerChatToggleBtn.setAttribute("aria-expanded", state.isViewerChatOpen ? "true" : "false");
+        }
+        if (el.viewerToolToggleBtn) {
+          el.viewerToolToggleBtn.setAttribute("aria-expanded", state.isViewerToolsOpen ? "true" : "false");
+        }
+      }
+
+      function closeViewerMobilePanels() {
+        state.isViewerChatOpen = false;
+        state.isViewerToolsOpen = false;
+        syncViewerMobilePanels();
+      }
+
+      function setViewerChatOpen(nextOpen) {
+        state.isViewerChatOpen = !!nextOpen;
+        if (state.isViewerChatOpen) {
+          state.isViewerToolsOpen = false;
+          state.unreadViewerCount = 0;
+          updateViewerChatBadge();
+          scrollToBottom(el.viewerChatBox);
+        }
+        syncViewerMobilePanels();
+      }
+
+      function setViewerToolsOpen(nextOpen) {
+        state.isViewerToolsOpen = !!nextOpen;
+        if (state.isViewerToolsOpen) {
+          state.isViewerChatOpen = false;
+        }
+        syncViewerMobilePanels();
+      }
+
       function scheduleViewerLayoutRefresh() {
         requestAnimationFrame(function () {
           fitCanvas();
@@ -1861,6 +1948,7 @@
           console.warn("orientation unlock failed", error);
         }
         document.body.classList.remove("mobile-landscape-mode");
+        closeViewerMobilePanels();
       }
 
       async function exitViewerFullscreen() {
@@ -1898,6 +1986,8 @@
           closeRotateGuide();
         }
 
+        closeViewerMobilePanels();
+        updateViewerChatBadge();
         scheduleViewerLayoutRefresh();
       }
 
@@ -2219,7 +2309,21 @@
         socket.on("message", function (message) {
           addMessageToUi(message || {});
           scrollToBottom(el.chatBox);
-          scrollToBottom(el.viewerChatBox);
+          if (!isMobileLandscapeViewerMode() || state.isViewerChatOpen) {
+            scrollToBottom(el.viewerChatBox);
+          }
+          if (
+            isMobileLandscapeViewerMode() &&
+            el.viewerOverlay.classList.contains("open") &&
+            !state.isViewerChatOpen &&
+            message &&
+            message.sender &&
+            message.sender !== state.role &&
+            message.type !== "system"
+          ) {
+            state.unreadViewerCount += 1;
+            updateViewerChatBadge();
+          }
         });
 
         socket.on("drawing-replaced", function (payload) {
@@ -2767,6 +2871,9 @@
         state.redoStrokes = [];
         state.notes = [];
         state.activeNoteId = "";
+        state.unreadViewerCount = 0;
+        closeViewerMobilePanels();
+        updateViewerChatBadge();
 
         el.viewerOverlay.classList.add("open");
         el.viewerOverlay.setAttribute("aria-hidden", "false");
@@ -2849,6 +2956,9 @@
         el.viewerOverlay.classList.remove("open");
         el.viewerOverlay.setAttribute("aria-hidden", "true");
         document.body.classList.remove("viewer-inline-open");
+        state.unreadViewerCount = 0;
+        updateViewerChatBadge();
+        closeViewerMobilePanels();
         resetViewerState();
       }
 
@@ -2946,6 +3056,16 @@
         el.viewerCloseBtn.addEventListener("click", closeViewer);
         el.downloadSketchBtn.addEventListener("click", downloadCurrentSketch);
         el.rotateGuideConfirmBtn.addEventListener("click", closeRotateGuide);
+        if (el.viewerChatToggleBtn) {
+          el.viewerChatToggleBtn.addEventListener("click", function () {
+            setViewerChatOpen(!state.isViewerChatOpen);
+          });
+        }
+        if (el.viewerToolToggleBtn) {
+          el.viewerToolToggleBtn.addEventListener("click", function () {
+            setViewerToolsOpen(!state.isViewerToolsOpen);
+          });
+        }
 
         el.penBtn.addEventListener("click", function () {
           state.mode = "draw";
@@ -3050,6 +3170,8 @@
         renderNoteColorRow();
         updateActiveToolButtons();
         updateBrushCursorStyle();
+        updateViewerChatBadge();
+        syncViewerMobilePanels();
 
         if (state.viewerOnly) {
           document.body.classList.add("viewer-only-mode");
