@@ -25,9 +25,7 @@
       --selected-draw-color: #ff3b30;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html,
     body {
@@ -188,6 +186,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      width: 100%;
     }
 
     .messageRow.me {
@@ -202,8 +201,70 @@
       align-items: center;
     }
 
+    .messageBody {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      max-width: 100%;
+    }
+
+    .messageRow.me .messageBody {
+      justify-content: flex-end;
+    }
+
+    .messageRow.other .messageBody {
+      justify-content: flex-start;
+    }
+
+    .senderAvatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: #e7edf6;
+      color: #526171;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .messageStack {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: min(72%, 520px);
+    }
+
+    .messageRow.me .messageStack {
+      align-items: flex-end;
+    }
+
+    .messageRow.other .messageStack {
+      align-items: flex-start;
+    }
+
+    .senderLine {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 2px;
+    }
+
+    .senderName {
+      font-size: 12px;
+      font-weight: 800;
+      color: #2f3d4a;
+    }
+
+    .senderTime {
+      font-size: 11px;
+      color: #95a3b1;
+    }
+
     .bubble {
-      max-width: 82%;
+      max-width: 100%;
       padding: 13px 15px;
       border-radius: 16px;
       font-size: 14px;
@@ -219,8 +280,8 @@
     }
 
     .messageRow.other .bubble {
-      background: #f5f7fb;
-      border: 1px solid #e7edf4;
+      background: #eef2f6;
+      border: 1px solid #e3e9f1;
       color: #17212b;
       border-bottom-left-radius: 10px;
     }
@@ -237,11 +298,19 @@
     .meta {
       font-size: 11px;
       color: #95a3b1;
-      padding: 0 8px;
+      padding: 0 4px;
+    }
+
+    .messageRow.me .meta {
+      text-align: right;
+    }
+
+    .messageRow.other .meta {
+      text-align: left;
     }
 
     .imageBubble {
-      max-width: 92%;
+      max-width: 100%;
       background: #fff;
       border: 1px solid #e3ebf3;
       border-radius: 18px;
@@ -1007,9 +1076,7 @@
     }
 
     @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
+      to { transform: rotate(360deg); }
     }
 
     #floatingToast {
@@ -1039,6 +1106,55 @@
     #floatingToast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+    }
+
+    #rotateGuideOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10060;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(4px);
+      padding: 20px;
+    }
+
+    #rotateGuideOverlay.open {
+      display: flex;
+    }
+
+    #rotateGuideCard {
+      width: min(92vw, 360px);
+      background: rgba(255,255,255,.98);
+      border: 1px solid #e3ebf3;
+      border-radius: 22px;
+      box-shadow: 0 20px 42px rgba(18, 36, 61, 0.18);
+      padding: 20px 18px 16px;
+    }
+
+    #rotateGuideTitle {
+      font-size: 18px;
+      font-weight: 800;
+      color: #17212b;
+      margin-bottom: 8px;
+    }
+
+    #rotateGuideDesc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #5c6f82;
+    }
+
+    #rotateGuideConfirmBtn {
+      margin-top: 16px;
+      width: 100%;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #79c7ff, #2491ff);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
     }
 
     @media (max-width: 900px) {
@@ -1074,8 +1190,17 @@
         padding: 12px;
       }
 
+      .senderAvatar {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+      }
+
+      .messageStack {
+        max-width: min(78%, 100%);
+      }
+
       .bubble {
-        max-width: 86%;
         font-size: 14px;
         padding: 11px 14px;
       }
@@ -1161,6 +1286,24 @@
         width: 38px !important;
         padding: 0 !important;
       }
+
+      body.mobile-landscape-mode #viewerMain {
+        padding: 6px !important;
+        gap: 6px !important;
+      }
+
+      body.mobile-landscape-mode #canvasWrap {
+        padding: 6px !important;
+      }
+
+      body.mobile-landscape-mode #imageStage {
+        min-height: 0 !important;
+        height: 100% !important;
+      }
+
+      body.mobile-landscape-mode #toolbar {
+        padding: 8px !important;
+      }
     }
   </style>
 </head>
@@ -1169,6 +1312,7 @@
   <div id="app">
     <section id="chatCard">
       <div id="header">
+        <div id="title">디자인 상담</div>
         <div id="connectionBadge" aria-live="polite">연결 중</div>
       </div>
 
@@ -1364,6 +1508,17 @@
 
   <div id="floatingToast" aria-live="polite"></div>
 
+  <div id="rotateGuideOverlay" aria-hidden="true">
+    <div id="rotateGuideCard">
+      <div id="rotateGuideTitle">가로 화면 사용 권장</div>
+      <div id="rotateGuideDesc">
+        협업 전 핸드폰 화면 회전 기능이 켜져 있는지 확인해주세요.
+        지원 기기에서는 가로 화면으로 자동 전환을 시도합니다.
+      </div>
+      <button id="rotateGuideConfirmBtn" type="button">확인</button>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     (function () {
@@ -1382,6 +1537,7 @@
 
         viewerOverlay: document.getElementById("viewerOverlay"),
         viewerImage: document.getElementById("viewerImage"),
+        imageStage: document.getElementById("imageStage"),
         drawCanvas: document.getElementById("drawCanvas"),
         textLayer: document.getElementById("textLayer"),
         brushCursor: document.getElementById("brushCursor"),
@@ -1412,7 +1568,10 @@
         noteEditorColorRow: document.getElementById("noteEditorColorRow"),
 
         floatingToast: document.getElementById("floatingToast"),
-        uploadLoading: document.getElementById("uploadLoading")
+        uploadLoading: document.getElementById("uploadLoading"),
+
+        rotateGuideOverlay: document.getElementById("rotateGuideOverlay"),
+        rotateGuideConfirmBtn: document.getElementById("rotateGuideConfirmBtn")
       };
 
       const canvasCtx = el.drawCanvas.getContext("2d");
@@ -1422,25 +1581,13 @@
       let lastViewerRequestAt = 0;
 
       const DRAW_COLORS = [
-        "#ff3b30",
-        "#ff9500",
-        "#ffd60a",
-        "#34c759",
-        "#0a84ff",
-        "#5e5ce6",
-        "#bf5af2",
-        "#ff2d55",
-        "#111827",
-        "#ffffff"
+        "#ff3b30", "#ff9500", "#ffd60a", "#34c759", "#0a84ff",
+        "#5e5ce6", "#bf5af2", "#ff2d55", "#111827", "#ffffff"
       ];
 
       const NOTE_COLORS = [
-        "#fff7c2",
-        "#dff7d6",
-        "#d8ecff",
-        "#ffe1d6",
-        "#f2ddff",
-        "#ffe6f1"
+        "#fff7c2", "#dff7d6", "#d8ecff",
+        "#ffe1d6", "#f2ddff", "#ffe6f1"
       ];
 
       const state = {
@@ -1476,7 +1623,9 @@
         width: 4,
         noteColor: "#fff7c2",
 
-        pendingMessages: []
+        pendingMessages: [],
+        pendingMobileRotateGuide: false,
+        isFullscreenViewer: false
       };
 
       function createUuid() {
@@ -1488,6 +1637,57 @@
 
       function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
+      }
+
+      function getImageDisplayRect() {
+        const stageRect = el.imageStage.getBoundingClientRect();
+        const img = el.viewerImage;
+
+        if (!img || !img.naturalWidth || !img.naturalHeight) {
+          return {
+            left: 0,
+            top: 0,
+            width: stageRect.width,
+            height: stageRect.height
+          };
+        }
+
+        const maxWidth = stageRect.width * 0.92;
+        const maxHeight = stageRect.height * 0.88;
+
+        const scale = Math.min(
+          maxWidth / img.naturalWidth,
+          maxHeight / img.naturalHeight,
+          1
+        );
+
+        const width = img.naturalWidth * scale;
+        const height = img.naturalHeight * scale;
+
+        return {
+          left: (stageRect.width - width) / 2,
+          top: (stageRect.height - height) / 2,
+          width: width,
+          height: height
+        };
+      }
+
+      function relativePointToStagePoint(x, y) {
+        const imageRect = getImageDisplayRect();
+        return {
+          x: imageRect.left + x * imageRect.width,
+          y: imageRect.top + y * imageRect.height
+        };
+      }
+
+      function clientPointToImageRelative(clientX, clientY) {
+        const stageRect = el.imageStage.getBoundingClientRect();
+        const imageRect = getImageDisplayRect();
+
+        return {
+          x: clamp((clientX - stageRect.left - imageRect.left) / imageRect.width, 0, 1),
+          y: clamp((clientY - stageRect.top - imageRect.top) / imageRect.height, 0, 1)
+        };
       }
 
       function escapeHtml(value) {
@@ -1530,6 +1730,100 @@
 
       function showUploadLoading(visible) {
         el.uploadLoading.classList.toggle("show", !!visible);
+      }
+
+      function isMobileDevice() {
+        return window.matchMedia("(max-width: 900px)").matches;
+      }
+
+      function openRotateGuide() {
+        el.rotateGuideOverlay.classList.add("open");
+        el.rotateGuideOverlay.setAttribute("aria-hidden", "false");
+      }
+
+      function closeRotateGuide() {
+        el.rotateGuideOverlay.classList.remove("open");
+        el.rotateGuideOverlay.setAttribute("aria-hidden", "true");
+      }
+
+      async function enterViewerFullscreen() {
+        if (!document.fullscreenElement && el.viewerOverlay.requestFullscreen) {
+          await el.viewerOverlay.requestFullscreen();
+          state.isFullscreenViewer = true;
+        }
+      }
+
+      async function lockLandscapeOrientation() {
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock("landscape");
+          document.body.classList.add("mobile-landscape-mode");
+          return true;
+        }
+        return false;
+      }
+
+      async function unlockOrientation() {
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch (error) {
+          console.warn("orientation unlock failed", error);
+        }
+        document.body.classList.remove("mobile-landscape-mode");
+      }
+
+      async function exitViewerFullscreen() {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            await document.exitFullscreen();
+          }
+        } catch (error) {
+          console.warn("exit fullscreen failed", error);
+        }
+        state.isFullscreenViewer = false;
+      }
+
+      async function prepareMobileLandscapeViewer() {
+        if (!isMobileDevice()) return;
+
+        openRotateGuide();
+
+        try {
+          await enterViewerFullscreen();
+        } catch (error) {
+          console.warn("fullscreen request failed", error);
+        }
+
+        try {
+          const locked = await lockLandscapeOrientation();
+          if (!locked) {
+            showToast("자동 회전에 실패했습니다. 화면 회전 기능을 켜고 가로로 돌려주세요.");
+          }
+        } catch (error) {
+          console.warn("orientation lock failed", error);
+          showToast("자동 회전에 실패했습니다. 화면 회전 기능을 켜고 가로로 돌려주세요.");
+        }
+
+        setTimeout(function () {
+          closeRotateGuide();
+        }, 900);
+      }
+
+      async function restoreMobilePortraitViewer() {
+        if (!isMobileDevice()) return;
+
+        await unlockOrientation();
+
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock("portrait");
+          }
+        } catch (error) {
+          console.warn("portrait lock failed", error);
+        }
+
+        await exitViewerFullscreen();
       }
 
       function setConnectionBadge(text, ok) {
@@ -1658,7 +1952,6 @@
       }
 
       function addMessageToUi(message) {
-        const row = document.createElement("div");
         const kind =
           message.type === "system"
             ? "system"
@@ -1666,7 +1959,51 @@
               ? "me"
               : "other";
 
+        const row = document.createElement("div");
         row.className = "messageRow " + kind;
+
+        if (kind === "system") {
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+          bubble.innerHTML = escapeHtml(message.text || "");
+          row.appendChild(bubble);
+
+          el.chatInner.appendChild(row);
+
+          const clone = row.cloneNode(true);
+          el.viewerChatInner.appendChild(clone);
+          return;
+        }
+
+        const body = document.createElement("div");
+        body.className = "messageBody";
+
+        if (kind === "other") {
+          const avatar = document.createElement("div");
+          avatar.className = "senderAvatar";
+          avatar.textContent = ((message.senderName || "상").trim().charAt(0) || "상");
+          body.appendChild(avatar);
+        }
+
+        const stack = document.createElement("div");
+        stack.className = "messageStack";
+
+        if (kind === "other") {
+          const senderLine = document.createElement("div");
+          senderLine.className = "senderLine";
+
+          const senderName = document.createElement("span");
+          senderName.className = "senderName";
+          senderName.textContent = message.senderName || "상담";
+
+          const senderTime = document.createElement("span");
+          senderTime.className = "senderTime";
+          senderTime.textContent = formatTime(message.time);
+
+          senderLine.appendChild(senderName);
+          senderLine.appendChild(senderTime);
+          stack.appendChild(senderLine);
+        }
 
         if (message.type === "image" && message.imageUrl) {
           const bubble = document.createElement("div");
@@ -1680,18 +2017,25 @@
           bubble.addEventListener("click", function () {
             openViewer(message.imageId, message.imageUrl);
           });
-          row.appendChild(bubble);
+          stack.appendChild(bubble);
         } else {
           const bubble = document.createElement("div");
           bubble.className = "bubble";
           bubble.innerHTML = escapeHtml(message.text || "");
-          row.appendChild(bubble);
+          stack.appendChild(bubble);
         }
 
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        meta.textContent = (message.senderName || "") + " · " + formatTime(message.time);
-        row.appendChild(meta);
+        if (kind === "me") {
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = formatTime(message.time);
+          stack.appendChild(meta);
+        }
+
+        body.appendChild(stack);
+        row.appendChild(body);
+
+        el.chatInner.appendChild(row);
 
         const clone = row.cloneNode(true);
         const cloneBubble = clone.querySelector(".imageBubble");
@@ -1700,8 +2044,6 @@
             openViewer(message.imageId, message.imageUrl);
           });
         }
-
-        el.chatInner.appendChild(row);
         el.viewerChatInner.appendChild(clone);
       }
 
@@ -1937,13 +2279,19 @@
       }
 
       function redrawCanvas() {
-        const rect = el.drawCanvas.getBoundingClientRect();
-        canvasCtx.clearRect(0, 0, rect.width, rect.height);
+        const stageRect = el.imageStage.getBoundingClientRect();
+        const imageRect = getImageDisplayRect();
+
+        canvasCtx.clearRect(0, 0, stageRect.width, stageRect.height);
 
         state.strokes.forEach(function (stroke) {
           if (!Array.isArray(stroke.points) || stroke.points.length < 1) return;
 
           canvasCtx.save();
+          canvasCtx.beginPath();
+          canvasCtx.rect(imageRect.left, imageRect.top, imageRect.width, imageRect.height);
+          canvasCtx.clip();
+
           canvasCtx.lineCap = "round";
           canvasCtx.lineJoin = "round";
           canvasCtx.lineWidth = Number(stroke.width || 3);
@@ -1956,13 +2304,14 @@
             canvasCtx.strokeStyle = stroke.color || "#ff3b30";
           }
 
+          const first = relativePointToStagePoint(stroke.points[0].x, stroke.points[0].y);
+
           canvasCtx.beginPath();
-          const first = stroke.points[0];
-          canvasCtx.moveTo(first.x * rect.width, first.y * rect.height);
+          canvasCtx.moveTo(first.x, first.y);
 
           for (let i = 1; i < stroke.points.length; i++) {
-            const point = stroke.points[i];
-            canvasCtx.lineTo(point.x * rect.width, point.y * rect.height);
+            const point = relativePointToStagePoint(stroke.points[i].x, stroke.points[i].y);
+            canvasCtx.lineTo(point.x, point.y);
           }
 
           canvasCtx.stroke();
@@ -1971,11 +2320,7 @@
       }
 
       function pointerToRelative(event) {
-        const rect = el.drawCanvas.getBoundingClientRect();
-        return {
-          x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
-          y: clamp((event.clientY - rect.top) / rect.height, 0, 1)
-        };
+        return clientPointToImageRelative(event.clientX, event.clientY);
       }
 
       function startStroke(event) {
@@ -2072,7 +2417,7 @@
 
       function renderNotes() {
         el.textLayer.innerHTML = "";
-        const rect = el.drawCanvas.getBoundingClientRect();
+        const imageRect = getImageDisplayRect();
 
         state.notes.forEach(function (note) {
           const node = document.createElement("button");
@@ -2082,9 +2427,9 @@
           const previewText = ((note.text || "메모").trim().slice(0, 3)) || "메모";
           const fullText = ((note.text || "메모").trim()) || "메모";
 
-          node.className = "noteMarker" + (isExpanded ? " expanded" : "");
-          node.style.left = (note.x * rect.width) + "px";
-          node.style.top = (note.y * rect.height) + "px";
+          node.className = "noteMarker" + (isExpanded ? " expanded selected" : "");
+          node.style.left = (imageRect.left + note.x * imageRect.width) + "px";
+          node.style.top = (imageRect.top + note.y * imageRect.height) + "px";
           node.dataset.noteId = note.id;
 
           node.innerHTML = `
@@ -2129,16 +2474,19 @@
               return;
             }
 
-            const canvasRect = el.drawCanvas.getBoundingClientRect();
+            const stageRect = el.imageStage.getBoundingClientRect();
+            const currentImageRect = getImageDisplayRect();
+
             const x = clamp(
-              (event.clientX - canvasRect.left - state.dragOffsetX) / canvasRect.width,
-              0.06,
-              0.94
+              (event.clientX - stageRect.left - state.dragOffsetX - currentImageRect.left) / currentImageRect.width,
+              0.02,
+              0.98
             );
+
             const y = clamp(
-              (event.clientY - canvasRect.top - state.dragOffsetY) / canvasRect.height,
-              0.08,
-              0.92
+              (event.clientY - stageRect.top - state.dragOffsetY - currentImageRect.top) / currentImageRect.height,
+              0.02,
+              0.98
             );
 
             const found = state.notes.find(function (item) {
@@ -2311,7 +2659,7 @@
         );
       }
 
-      function openViewerInline(imageId, imageUrl) {
+      async function openViewerInline(imageId, imageUrl) {
         state.currentViewerImageId = imageId;
         state.currentViewerImageUrl = imageUrl;
         state.strokes = [];
@@ -2319,23 +2667,30 @@
         state.notes = [];
         state.activeNoteId = "";
 
+        el.viewerImage.onload = function () {
+          fitCanvas();
+
+          socket.emit("get-drawing", { imageId: imageId }, function (response) {
+            state.strokes = Array.isArray(response && response.strokes) ? response.strokes : [];
+            redrawCanvas();
+          });
+
+          socket.emit("get-notes", { imageId: imageId }, function (response) {
+            state.notes = Array.isArray(response && response.notes) ? response.notes : [];
+            renderNotes();
+          });
+        };
+
         el.viewerImage.src = imageUrl;
         el.viewerOverlay.classList.add("open");
         el.viewerOverlay.setAttribute("aria-hidden", "false");
         document.body.classList.add("viewer-inline-open");
 
-        fitCanvas();
         updateBrushCursorStyle();
 
-        socket.emit("get-drawing", { imageId: imageId }, function (response) {
-          state.strokes = Array.isArray(response && response.strokes) ? response.strokes : [];
-          redrawCanvas();
-        });
-
-        socket.emit("get-notes", { imageId: imageId }, function (response) {
-          state.notes = Array.isArray(response && response.notes) ? response.notes : [];
-          renderNotes();
-        });
+        if (isMobileDevice()) {
+          await prepareMobileLandscapeViewer();
+        }
       }
 
       function requestParentViewerPanel(imageId, imageUrl) {
@@ -2378,12 +2733,16 @@
         openViewerInline(imageId, imageUrl);
       }
 
-      function closeViewer() {
+      async function closeViewer() {
         const isInsideIframe = window.parent && window.parent !== window;
 
         if (window.innerWidth > 768 && isInsideIframe && state.viewerOnly) {
           window.parent.postMessage({ type: "CLOSE_VIEWER_PANEL" }, getParentTargetOrigin() || "*");
           return;
+        }
+
+        if (isMobileDevice()) {
+          await restoreMobilePortraitViewer();
         }
 
         el.viewerOverlay.classList.remove("open");
@@ -2411,9 +2770,7 @@
             ctx.save();
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            ctx.lineWidth =
-              Number(stroke.width || 3) *
-              (img.width / Math.max(1, el.drawCanvas.getBoundingClientRect().width));
+            ctx.lineWidth = Number(stroke.width || 3);
 
             if (stroke.mode === "erase") {
               ctx.globalCompositeOperation = "destination-out";
@@ -2489,7 +2846,10 @@
           el.msgInput.focus();
         });
 
-        el.viewerCloseBtn.addEventListener("click", closeViewer);
+        el.viewerCloseBtn.addEventListener("click", function () {
+          closeViewer();
+        });
+
         el.downloadSketchBtn.addEventListener("click", downloadCurrentSketch);
 
         el.penBtn.addEventListener("click", function () {
@@ -2542,9 +2902,9 @@
         });
 
         el.drawCanvas.addEventListener("pointermove", function (event) {
-          const rect = el.drawCanvas.getBoundingClientRect();
-          el.brushCursor.style.left = event.clientX - rect.left + "px";
-          el.brushCursor.style.top = event.clientY - rect.top + "px";
+          const stageRect = el.imageStage.getBoundingClientRect();
+          el.brushCursor.style.left = event.clientX - stageRect.left + "px";
+          el.brushCursor.style.top = event.clientY - stageRect.top + "px";
           moveStroke(event);
         });
 
@@ -2555,6 +2915,8 @@
         el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
         el.noteEditorDeleteBtn.addEventListener("click", deleteActiveNote);
 
+        el.rotateGuideConfirmBtn.addEventListener("click", closeRotateGuide);
+
         window.addEventListener("resize", function () {
           if (state.currentViewerImageId) {
             fitCanvas();
@@ -2562,6 +2924,12 @@
         });
 
         window.addEventListener("message", handleParentMessages);
+
+        document.addEventListener("fullscreenchange", function () {
+          if (!document.fullscreenElement) {
+            state.isFullscreenViewer = false;
+          }
+        });
 
         window.addEventListener("keydown", function (event) {
           if (event.key === "Escape") {
