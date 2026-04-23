@@ -1247,37 +1247,50 @@
         display: none;
       }
 
+      body.mobile-landscape-mode #viewerOverlay {
+        width: 100vw !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        overflow: hidden !important;
+      }
+
       body.mobile-landscape-mode #viewerTopbar {
-        height: 56px !important;
-        padding: 0 10px !important;
+        height: 48px !important;
+        padding: 0 8px !important;
       }
 
-      body.mobile-landscape-mode #viewerTopTitle {
-        font-size: 16px !important;
+      body.mobile-landscape-mode #viewerTopLeft {
+        display: none !important;
       }
 
-      body.mobile-landscape-mode #viewerTopSub {
-        font-size: 11px !important;
+      body.mobile-landscape-mode #viewerActions {
+        margin-left: auto !important;
       }
 
       body.mobile-landscape-mode #viewerMain {
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) 168px !important;
+        grid-template-columns: minmax(0, 1fr) clamp(108px, 28vw, 148px) !important;
         gap: 6px !important;
         padding: 6px !important;
-        height: calc(100dvh - 56px) !important;
+        height: calc(100dvh - 48px) !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
       }
 
       body.mobile-landscape-mode #viewerLeft,
       body.mobile-landscape-mode #viewerRight {
+        min-width: 0 !important;
         min-height: 0 !important;
+        overflow: hidden !important;
         border-radius: 14px !important;
       }
 
       body.mobile-landscape-mode #viewerRight {
         display: flex !important;
-        min-width: 168px !important;
-        max-width: 168px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
       }
 
       body.mobile-landscape-mode #viewerChatBox {
@@ -1340,17 +1353,22 @@
       }
 
       body.mobile-landscape-mode #canvasWrap {
-        padding: 6px !important;
+        padding: 4px !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
       }
 
       body.mobile-landscape-mode #imageStage {
         min-height: 0 !important;
         height: 100% !important;
+        max-height: 100% !important;
         border-radius: 14px !important;
+        overflow: hidden !important;
       }
 
       body.mobile-landscape-mode #toolbar {
-        padding: 8px !important;
+        padding: 6px !important;
       }
 
       body.mobile-landscape-mode #toolbarGuide {
@@ -1790,6 +1808,20 @@
         el.uploadLoading.classList.toggle("show", !!visible);
       }
 
+      function scheduleViewerLayoutRefresh() {
+        requestAnimationFrame(function () {
+          fitCanvas();
+          requestAnimationFrame(function () {
+            fitCanvas();
+            setTimeout(function () {
+              if (state.currentViewerImageId) {
+                fitCanvas();
+              }
+            }, 180);
+          });
+        });
+      }
+
       function isMobileDevice() {
         return window.matchMedia("(max-width: 900px)").matches;
       }
@@ -1845,7 +1877,7 @@
       async function prepareMobileLandscapeViewer() {
         if (!isMobileDevice()) return;
 
-        openRotateGuide();
+        let orientationLocked = false;
 
         try {
           await enterViewerFullscreen();
@@ -1854,18 +1886,19 @@
         }
 
         try {
-          const locked = await lockLandscapeOrientation();
-          if (!locked) {
-            showToast("자동 회전에 실패했습니다. 화면 회전 기능을 켜고 가로로 돌려주세요.");
-          }
+          orientationLocked = await lockLandscapeOrientation();
         } catch (error) {
           console.warn("orientation lock failed", error);
-          showToast("자동 회전에 실패했습니다. 화면 회전 기능을 켜고 가로로 돌려주세요.");
         }
 
-        setTimeout(function () {
+        if (!orientationLocked) {
+          openRotateGuide();
+          showToast("자동 회전에 실패했습니다. 화면 회전 기능을 켜고 가로로 돌려주세요.");
+        } else {
           closeRotateGuide();
-        }, 900);
+        }
+
+        scheduleViewerLayoutRefresh();
       }
 
       async function restoreMobilePortraitViewer() {
@@ -2742,29 +2775,23 @@
         updateBrushCursorStyle();
 
         el.viewerImage.onload = function () {
-          requestAnimationFrame(function () {
-            fitCanvas();
+          scheduleViewerLayoutRefresh();
 
-            requestAnimationFrame(function () {
-              fitCanvas();
+          socket.emit("get-drawing", { imageId: imageId }, function (response) {
+            state.strokes = Array.isArray(response && response.strokes) ? response.strokes : [];
+            redrawCanvas();
+          });
 
-              socket.emit("get-drawing", { imageId: imageId }, function (response) {
-                state.strokes = Array.isArray(response && response.strokes) ? response.strokes : [];
-                redrawCanvas();
-              });
-
-              socket.emit("get-notes", { imageId: imageId }, function (response) {
-                state.notes = Array.isArray(response && response.notes) ? response.notes : [];
-                renderNotes();
-              });
-            });
+          socket.emit("get-notes", { imageId: imageId }, function (response) {
+            state.notes = Array.isArray(response && response.notes) ? response.notes : [];
+            renderNotes();
           });
         };
 
         el.viewerImage.src = imageUrl;
 
         if (isMobileDevice()) {
-          await prepareMobileLandscapeViewer();
+          prepareMobileLandscapeViewer();
         }
       }
 
@@ -2818,6 +2845,7 @@
           await restoreMobilePortraitViewer();
         }
 
+        closeRotateGuide();
         el.viewerOverlay.classList.remove("open");
         el.viewerOverlay.setAttribute("aria-hidden", "true");
         document.body.classList.remove("viewer-inline-open");
@@ -2984,24 +3012,12 @@
 
         el.viewerImage.addEventListener("load", function () {
           if (!state.currentViewerImageId) return;
-
-          requestAnimationFrame(function () {
-            fitCanvas();
-            requestAnimationFrame(function () {
-              fitCanvas();
-            });
-          });
+          scheduleViewerLayoutRefresh();
         });
 
         window.addEventListener("resize", function () {
           if (!state.currentViewerImageId) return;
-
-          requestAnimationFrame(function () {
-            fitCanvas();
-            requestAnimationFrame(function () {
-              fitCanvas();
-            });
-          });
+          scheduleViewerLayoutRefresh();
         });
 
         window.addEventListener("message", handleParentMessages);
@@ -3010,6 +3026,8 @@
           if (!document.fullscreenElement) {
             state.isFullscreenViewer = false;
             document.body.classList.remove("mobile-landscape-mode");
+          } else if (state.currentViewerImageId) {
+            scheduleViewerLayoutRefresh();
           }
         });
 
