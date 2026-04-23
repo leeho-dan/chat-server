@@ -1,815 +1,831 @@
-<!--@layout(/layout/basic/layout.html)-->
-<!--@js(/layout/basic/js/main.js)-->
-<!--@css(/layout/basic/css/main.css)-->
-<!--@import(/smart-banner/shop1/smart-banner-admin-RES00001.html)-->
-<section class="section main_image_text_gallery" data-ez-item-length="1" data-ez-module="image-gallery/2" data-ez-role="style.background" data-ez="contents-1j8t1sq-1">
-<ez-prop data-version="1.0.0" type="layout">
-<ez-var data-namespace="ez.module.image-gallery.image" data-prop="image">
-<ez-item data-id="size" data-mobile="396 240" data-pc="396 240"></ez-item>
-</ez-var>
-<ez-var data-namespace="ez.module.image-gallery.display" data-prop="display">
-<ez-item data-id="item" data-max="10"></ez-item>
-</ez-var>
-<ez-var data-namespace="ez.module.image-gallery.layout" data-prop="layout">
-<ez-item data-default="slide" data-id="mobile">
-<ez-item data-id="options" data-type="array">
-<ez-item data-id="slide" data-name="슬라이드"></ez-item>
-<ez-item data-id="more" data-name="더보기"></ez-item>
-<ez-item data-id="none" data-name="사용안함"></ez-item>
-</ez-item>
-</ez-item>
-</ez-var>
-</ez-prop>
-<div class="main_title ez-align-center" data-ez-align="center" data-ez-role="ez-align">
-<div class="main_title_txt01" data-ez-role="title">공간을 바꾸는 마법</div>
-<div class="main_title_txt02" data-ez-role="desc">당신의 일상을 더욱 풍요롭게 만들 홈데코 아이템.</div>
-</div>
-<div class="main_3dan_banner ez-mobile-layout-slide" data-ez-mobile-layout="slide" data-ez-role="ez-mobile-layout">
-<ul class="ez-column-3" data-ez-column="3" data-ez-role="image-list ez-column"><li data-ez-role="image-item ez-align">
-<a data-ez-role="a" href="/product/%ED%94%8C%EB%9D%BC%EC%9B%8C%EC%83%B5/35/category/59/display/1/" target="_self">
-<picture>
-<source data-ez-role="img-pc" media="(max-width: 1024px)" srcset="/web/upload/ezst/image/ez-image-contents-1j8t1sq-1-0enwmbm-3.jpg?v=1770183724555" data-ez-eb loading="lazy" ez-prevent="img">
-<img data-ez-role="img-mobile" data-raw-loading="lazy" src="/web/upload/ezst/image/ez-image-contents-1j8t1sq-1-0enwmbm-3.jpg?v=1770183724555" loading="lazy" ez-prevent="img">
-</picture>
-<div class="main_banner_txt">
-<div class="main_banner_txt01" data-ez-role="title" style="color: rgb(58, 58, 58);">플라워샵 벽결이 램프</div>
-<div class="main_banner_more" data-ez-role="desc" style="color: rgb(51, 51, 51);">플라워샵 커스텀하러 가기</div>
-</div>
-</a>
-</li></ul>
-<div class="main_image_text_gallery_more"><a class="main_image_text_gallery_more_btn" href="#none">더보기</a></div>
-</div>
-</section>
-<!--@import(/smart-banner/shop1/smart-banner-admin-RES00002.html)-->
-<section class="section main_product_category" data-ez-initialized data-ez-layout="grid4" data-ez-module="product-list-category/2" data-ez="contents-0vgpnsw-1">
-<ez-prop data-version="1.0.0" type="layout">
-<ez-var data-namespace="ez.module.product-list-category.layout" data-prop="layout" data-type="array">
-<ez-item data-id="grid3" data-name="일반3단형(PC 3열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid4" data-name="일반4단형(PC 4열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid5" data-name="일반5단형(PC 5열/MOBILE 3열)"></ez-item>
-<ez-item data-id="grid3 list_gallery" data-name="이미지강조3단형(PC 3열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid4 list_gallery" data-name="이미지강조4단형(PC 4열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid5 list_gallery" data-name="이미지강조5단형(PC 5열/MOBILE 3열)"></ez-item>
-</ez-var>
-</ez-prop>
-<div class="main_product_inner">
-<div class="main_title ez-align-center" data-ez-align="center" data-ez-role="ez-align">
-<div class="main_title_txt01" data-ez-role="title">카테고리별 추천 가구</div>
-<div class="main_title_txt02" data-ez-role="subtitle">지금 가장 사랑받는 가구들을 추천해 드릴게요.</div>
-</div>
-<ul class="main_product_tab" data-ez-role="tab-list">
-<li data-ez-role="tab-item"><button class="button" data-ez-role="name" data-id="tabContent1" data-name="베스트셀러" type="button">베스트셀러</button></li>
-<li data-ez-role="tab-item"><button class="button" data-ez-role="name" data-id="tabContent2" data-name="신혼부부 추천" type="button">신혼부부 추천</button></li>
-<li data-ez-role="tab-item"><button class="button" data-ez-role="name" data-id="tabContent3" data-name="1인 가구 특가" type="button">1인 가구 특가</button></li>
-<li data-ez-role="tab-item"><button class="button" data-ez-role="name" data-id="tabContent4" data-name="MD 강력 추천" type="button">MD 강력 추천</button></li>
-</ul>
-</div>
-<div class="content_list" data-ez-role="content-list">
-<div class="tabcontent" data-ez-role="content-item" id="tabContent1">
-<div data-ez-holder="product_listmain">
-<div class="ec-base-product" module="product_listmain_1">
-<!--
-						$count = 100
-						$basket_result = /product/add_basket.html
-						$basket_option = /product/basket_option.html
-						$moreview = yes
-						$cache = yes
-					-->
-<ul class="prdList grid4" data-ez-role="layout ez-discount-tag">
-<!--@import(/product/list_product.html)-->
-</ul>
-</div>
-<div class="more" module="product_listmore_1">
-<a class="btnMore" href="#none" onclick="{$more_action}">
-						상품 더보기<div>(<span id="more_current_page_{$display_group}">{$current_page}</span>/<span id="more_total_page_{$display_group}">{$total_page}</span>)</div>
-</a>
-</div>
-</div>
-</div>
-<div class="tabcontent" data-ez-role="content-item" id="tabContent2">
-<div data-ez-holder="product_listmain">
-<div class="ec-base-product" module="product_listmain_2">
-<!--
-						$count = 100
-						$basket_result = /product/add_basket.html
-						$basket_option = /product/basket_option.html
-						$moreview = yes
-						$cache = yes
-					-->
-<ul class="prdList grid4" data-ez-role="layout ez-discount-tag">
-<!--@import(/product/list_product.html)-->
-</ul>
-</div>
-<div class="more" module="product_listmore_2">
-<a class="btnMore" href="#none" onclick="{$more_action}">
-						상품 더보기<div>(<span id="more_current_page_{$display_group}">{$current_page}</span>/<span id="more_total_page_{$display_group}">{$total_page}</span>)</div>
-</a>
-</div>
-</div>
-</div>
-<div class="tabcontent" data-ez-role="content-item" id="tabContent3">
-<div data-ez-holder="product_listmain">
-<div class="ec-base-product" module="product_listmain_3">
-<!--
-						$count = 100
-						$basket_result = /product/add_basket.html
-						$basket_option = /product/basket_option.html
-						$moreview = yes
-						$cache = yes
-					-->
-<ul class="prdList grid4" data-ez-role="layout ez-discount-tag">
-<!--@import(/product/list_product.html)-->
-</ul>
-</div>
-<div class="more" module="product_listmore_3">
-<a class="btnMore" href="#none" onclick="{$more_action}">
-						상품 더보기<div>(<span id="more_current_page_{$display_group}">{$current_page}</span>/<span id="more_total_page_{$display_group}">{$total_page}</span>)</div>
-</a>
-</div>
-</div>
-</div>
-<div class="tabcontent" data-ez-role="content-item" id="tabContent4">
-<div data-ez-holder="product_listmain">
-<div class="ec-base-product" module="product_listmain_4">
-<!--
-						$count = 100
-						$basket_result = /product/add_basket.html
-						$basket_option = /product/basket_option.html
-						$moreview = yes
-						$cache = yes
-					-->
-<ul class="prdList grid4" data-ez-role="layout ez-discount-tag">
-<!--@import(/product/list_product.html)-->
-</ul>
-</div>
-<div class="more" module="product_listmore_4">
-<a class="btnMore" href="#none" onclick="{$more_action}">
-						상품 더보기<div>(<span id="more_current_page_{$display_group}">{$current_page}</span>/<span id="more_total_page_{$display_group}">{$total_page}</span>)</div>
-</a>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section class="section main_product_slide" data-ez-initialized data-ez-layout="grid5_slide" data-ez-module="product-list-slide/2" data-ez="contents-0gconq0-1">
-<ez-prop data-version="1.0.0" type="layout">
-<ez-var data-namespace="ez.module.product-list.layout" data-prop="layout" data-type="array">
-<ez-item data-id="grid3_slide" data-name="일반3단형(PC 3열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid4_slide" data-name="일반4단형(PC 4열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid5_slide" data-name="일반5단형(PC 5열/MOBILE 3열)"></ez-item>
-<ez-item data-id="grid3_slide list_gallery" data-name="이미지강조3단형(PC 3열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid4_slide list_gallery" data-name="이미지강조4단형(PC 4열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid5_slide list_gallery" data-name="이미지강조5단형(PC 5열/MOBILE 3열)"></ez-item>
-</ez-var>
-</ez-prop>
-<div class="main_title ez-align-center" data-ez-align="center" data-ez-role="ez-align">
-<div class="main_title_txt01" data-ez-role="title">감각적인 인테리어의 완성</div>
-<div class="main_title_txt02" data-ez-role="subtitle">트렌디한 홈데코 아이템으로 공간을 채워보세요.</div>
-</div>
-<div data-ez-holder="product_listmain">
-<div class="ec-base-product swiper-container special_slide" module="product_listmain_3">
-<ul class="swiper-wrapper prdList grid5_slide" data-ez-role="layout ez-discount-tag">
-<!--@import(/product/list_product_slide.html)-->
-</ul>
-<div class="swiper-scrollbar"></div>
-</div>
-</div>
-<div class="swiper-button-prev swiper-button-prev-special_slide"></div>
-<div class="swiper-button-next swiper-button-next-special_slide"></div>
-</section>
-<section class="section main_product_list" data-ez-initialized data-ez-layout="grid4" data-ez-module="product-list/1" data-ez="contents-1627kok-1">
-<ez-prop data-version="1.0.0" type="layout">
-<ez-var data-namespace="ez.module.product-list.layout" data-prop="layout" data-type="array">
-<ez-item data-id="grid3" data-name="일반3단형(PC 3열/MOBILE 1열)"></ez-item>
-<ez-item data-id="grid4" data-name="일반4단형(PC 4열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid5" data-name="일반5단형(PC 5열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid3 list_gallery" data-name="이미지강조3단형(PC 3열/MOBILE 1열)"></ez-item>
-<ez-item data-id="grid4 list_gallery" data-name="이미지강조4단형(PC 4열/MOBILE 2열)"></ez-item>
-<ez-item data-id="grid5 list_gallery" data-name="이미지강조5단형(PC 5열/MOBILE 2열)"></ez-item>
-</ez-var>
-</ez-prop>
-<div class="main_title ez-align-center" data-ez-align="center" data-ez-role="ez-align">
-<div class="main_title_txt01" data-ez-role="title">당신의 공간을 특별하게</div>
-<div class="main_title_txt02" data-ez-role="subtitle">일상에 감성을 더하는 디자인 가구를 만나보세요.</div>
-</div>
-<div data-ez-holder="product_listmain">
-<div class="ec-base-product" module="product_listmain_2">
-<!--
-				$count = 8
-				$basket_result = /product/add_basket.html
-				$basket_option = /product/basket_option.html
-				$moreview = yes
-				$cache = yes
-			-->
-<ul class="prdList grid4" data-ez-role="layout ez-discount-tag">
-<!--@import(/product/list_product.html)-->
-</ul>
-</div>
-<div class="more" module="product_listmore_1">
-<a class="btnMore" href="#none" onclick="{$more_action}">
-				상품 더보기<div>(<span id="more_current_page_{$display_group}">{$current_page}</span>/<span id="more_total_page_{$display_group}">{$total_page}</span>)</div>
-</a>
-</div>
-</div>
-</section>
-<section class="section main_text ez-textsize-medium ez-align-center" data-ez-align="center" data-ez-module="text/1" data-ez-role="style.background" data-ez-textsize="medium" data-ez="contents-18xgza8-1">
-<div class="main_text_title" data-ez-role="title">나만의 홈스타일링</div>
-<div class="main_text_txt" data-ez-role="desc"><p><span>작은 변화가 큰 차이를 만듭니다. 감각적인 소품 하나로 평범했던 공간을 특별하게 바꾸고, 나만의 개성을 표현해보세요.</span></p></div>
-<div class="main_text_link"><a data-ez-role="a" href="#" target="_self">자세히 보기</a></div>
-</section>
-<section class="section main_map ez-align-left" data-ez-align="left" data-ez-module="map/1" data-ez="contents-1hsroyx-1">
-<ez-prop data-version="1.0.0" type="layout">
-<ez-var data-namespace="ez.module.map.image" data-prop="image">
-<ez-item data-id="size" data-mobile="650 480" data-pc="650 480"></ez-item>
-</ez-var>
-</ez-prop>
-<div class="main_map_banner">
-<div class="main_map_banner_txt_box">
-<div class="main_map_banner_txt">
-<div class="main_map_banner_txt01" data-ez-role="title" style="font-weight: bold; color: rgb(58, 58, 58);">OFFLINE SHOP</div>
-<div class="main_map_banner_txt02" data-ez-role="desc" style="color: rgb(138, 138, 138);">
-<p>매장에서는 고객 여러분을 따뜻하게 맞이하고</p>
-<p>기프트 구매를 위한 맞춤형 컨설팅을 제공해드립니다.<br><br></p>
-<p><span style="color: rgb(0, 0, 0);">운영시간 : 평일 09:00-18:00</span></p>
-<p><span style="color: rgb(0, 0, 0);">서울특별시 동작구 보라매로0길 00</span></p>
-</div>
-<div class="main_long_banner_link"><span class="displaynone" data-ez-role="address">서울특별시 동작구 보라매로0길 00</span><a data-ez-role="a" href="https://www.google.com/maps/dir/서울특별시%20동작구%20보라매로0길%2000" target="_blank">VIEW MORE</a></div>
-</div>
-</div>
-<picture>
-<source data-ez-role="img-pc" media="(max-width: 1024px)" srcset="/web/upload/NNEditor/20251212/a260f71008db7882f596995c016ce877.jpg" loading="lazy" ez-prevent="img">
-<img data-ez-role="img-mobile" data-raw-loading="lazy" src="/web/upload/NNEditor/20251212/a260f71008db7882f596995c016ce877.jpg" loading="lazy" ez-prevent="img">
-</picture>
-</div>
-</section>
-<div data-ez-module="user-defined/1" data-ez-name="USER DEFINED" data-ez-type="plain" data-ez="module-design-chat-launcher-1">
-  <div
-    id="chat-launcher"
-    class="dh-chat-launcher"
-    role="button"
-    tabindex="0"
-    aria-controls="dh-chat-modal"
-    aria-expanded="false"
-    aria-label="디자인 상담 열기"
-    title="디자인 상담 열기"
-  >
-    <span class="dh-chat-launcher-icon">💬</span>
-    <span class="dh-chat-launcher-text">상담</span>
-  </div>
+const PORT = Number(process.env.PORT || 3000);
+const HOST = "0.0.0.0";
+const PUBLIC_DIR = path.join(__dirname, "public");
+const APP_VERSION = process.env.APP_VERSION || "20260424-1";
 
-  <div id="dh-chat-modal" class="dh-chat-hidden" aria-hidden="true">
-    <div class="dh-chat-overlay"></div>
+const MAX_MESSAGES_PER_ROOM = Number(process.env.MAX_MESSAGES_PER_ROOM || 300);
+const MAX_NOTES_PER_IMAGE = Number(process.env.MAX_NOTES_PER_IMAGE || 80);
+const MAX_STROKES_PER_IMAGE = Number(process.env.MAX_STROKES_PER_IMAGE || 500);
 
-    <!-- 상담창 -->
-    <div class="dh-chat-container" role="dialog" aria-modal="true" aria-labelledby="dh-chat-title">
-      <div class="dh-chat-header">
-        <div class="dh-chat-title-wrap">
-          <div class="dh-chat-title" id="dh-chat-title">디자인 상담</div>
-          <div class="dh-chat-subtitle" id="dh-chat-room-label">상담 코드 준비 중</div>
-        </div>
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUD_NAME || "";
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || process.env.CLOUD_KEY || "";
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || process.env.CLOUD_SECRET || "";
 
-        <div class="dh-chat-header-actions">
-          <button
-            type="button"
-            id="dh-copy-room-btn"
-            class="dh-chat-header-btn"
-            aria-label="상담 코드 복사"
-            title="상담 코드 복사"
-          >
-            ⧉
-          </button>
-          <button
-            type="button"
-            id="dh-close-chat-btn"
-            class="dh-chat-header-btn"
-            aria-label="닫기"
-            title="닫기"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
+const ALLOWED_ORIGINS = String(process.env.CLIENT_ORIGIN || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
-      <section class="dh-chat-panel dh-chat-panel-chat">
-        <div class="dh-chat-panel-caption">
-          <div class="dh-chat-panel-caption-title">상담 채팅</div>
-          <div class="dh-chat-panel-caption-sub">요청 내용을 작성하고 이미지를 업로드하세요</div>
-        </div>
+function corsOriginHandler(origin, callback) {
+  if (!origin) return callback(null, true);
+  if (ALLOWED_ORIGINS.length === 0) return callback(null, true);
+  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  return callback(new Error("CORS not allowed"));
+}
 
-        <div class="dh-chat-frame-wrap">
-          <iframe
-            id="dh-chat-frame"
-            src="about:blank"
-            title="디자인 상담 채팅"
-            loading="lazy"
-            allow="fullscreen; clipboard-read; clipboard-write"
-            allowfullscreen
-            referrerpolicy="strict-origin-when-cross-origin"
-          ></iframe>
-        </div>
-      </section>
-    </div>
+app.use(cors({ origin: corsOriginHandler, credentials: false }));
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true }));
 
-    <!-- 협업창: 상담창 외부 -->
-    <aside
-      id="dh-viewer-sidepanel"
-      class="dh-viewer-sidepanel dh-viewer-sidepanel-hidden"
-      aria-hidden="true"
-    >
-      <div class="dh-viewer-sidepanel-header">
-        <div class="dh-viewer-sidepanel-title-wrap">
-          <div class="dh-viewer-sidepanel-title">이미지 협업</div>
-          <div class="dh-viewer-sidepanel-subtitle">선택한 이미지의 수정 위치를 표시할 수 있어요</div>
-        </div>
+if (process.env.NODE_ENV !== "production") {
+  app.use((req, res, next) => {
+    console.log("[REQ]", req.method, req.url);
+    next();
+  });
+}
 
-        <button
-          type="button"
-          id="dh-viewer-sidepanel-close-btn"
-          class="dh-viewer-sidepanel-close-btn"
-          aria-label="협업 패널 닫기"
-          title="협업 패널 닫기"
-        >
-          ✕
-        </button>
-      </div>
+const io = new Server(server, {
+  cors: {
+    origin: ALLOWED_ORIGINS.length ? ALLOWED_ORIGINS : true,
+    methods: ["GET", "POST"]
+  },
+  transports: ["websocket", "polling"]
+});
 
-      <div class="dh-viewer-sidepanel-frame-wrap">
-        <iframe
-          id="dh-viewer-sidepanel-frame"
-          src="about:blank"
-          title="이미지 협업 패널"
-          loading="lazy"
-          allow="fullscreen; clipboard-read; clipboard-write"
-          allowfullscreen
-          referrerpolicy="strict-origin-when-cross-origin"
-        ></iframe>
-      </div>
-    </aside>
-  </div>
+app.use(express.static(PUBLIC_DIR));
 
-  <style>
-    .dh-chat-hidden { display: none !important; }
-    .dh-chat-lock { overflow: hidden !important; }
+app.get("/", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
 
-    .dh-chat-launcher {
-      position: fixed;
-      right: 20px;
-      bottom: 20px;
-      width: 84px;
-      height: 84px;
-      background: linear-gradient(135deg, #68beff, #2491ff);
-      color: #fff;
-      border-radius: 26px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
-      z-index: 99999;
-      box-shadow: 0 20px 42px rgba(36, 145, 255, 0.3);
-      user-select: none;
+app.get(/^\/(index\.html)?$/, (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+let mongoEnabled = false;
+let mongoAvailable = false;
+let cloudinaryEnabled = false;
+
+app.get("/health", async (req, res) => {
+  res.json({
+    ok: true,
+    version: APP_VERSION,
+    uptime: process.uptime(),
+    mongoEnabled,
+    mongoReady: mongoose.connection.readyState === 1,
+    cloudinaryEnabled
+  });
+});
+
+app.get("/config", (req, res) => {
+  res.json({
+    ok: true,
+    version: APP_VERSION,
+    socketPath: "/socket.io",
+    maxUploadMb: 20,
+    mongoEnabled,
+    mongoReady: mongoose.connection.readyState === 1,
+    cloudinaryEnabled
+  });
+});
+
+const hasCloudinaryEnv =
+  CLOUDINARY_CLOUD_NAME &&
+  CLOUDINARY_API_KEY &&
+  CLOUDINARY_API_SECRET;
+
+if (hasCloudinaryEnv) {
+  cloudinary.config({
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET,
+    secure: true
+  });
+  cloudinaryEnabled = true;
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file || !file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("이미지 파일만 업로드할 수 있습니다."));
     }
+    cb(null, true);
+  }
+});
 
-    .dh-chat-launcher-icon {
-      font-size: 26px;
-      line-height: 1;
-    }
+const messageSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, required: true, index: true },
+    type: { type: String, enum: ["text", "image", "system"], required: true },
+    text: { type: String, default: "" },
+    imageId: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
+    sender: { type: String, enum: ["user", "admin", "system"], required: true },
+    senderName: { type: String, required: true },
+    time: { type: Number, required: true, index: true }
+  },
+  { versionKey: false }
+);
 
-    .dh-chat-launcher-text {
-      font-size: 13px;
-      font-weight: 800;
-      line-height: 1;
-    }
+const drawingSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, required: true, index: true },
+    imageId: { type: String, required: true, index: true },
+    strokes: { type: Array, default: [] },
+    updatedAt: { type: Number, default: Date.now }
+  },
+  { versionKey: false }
+);
 
-    #dh-chat-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-    }
+drawingSchema.index({ roomId: 1, imageId: 1 }, { unique: true });
 
-    .dh-chat-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.28);
-      backdrop-filter: blur(2px);
-    }
+const noteSchema = new mongoose.Schema(
+  {
+    roomId: { type: String, required: true, index: true },
+    imageId: { type: String, required: true, index: true },
+    noteId: { type: String, required: true },
+    x: { type: Number, default: 0.14 },
+    y: { type: Number, default: 0.16 },
+    width: { type: Number, default: 0.16 },
+    height: { type: Number, default: 0.1 },
+    text: { type: String, default: "" },
+    color: { type: String, default: "#fff7c2" },
+    author: { type: String, enum: ["user", "admin"], default: "user" },
+    updatedAt: { type: Number, default: Date.now },
+    updatedByRole: { type: String, enum: ["user", "admin"], default: "user" },
+    updatedByName: { type: String, default: "고객" }
+  },
+  { versionKey: false }
+);
 
-    .dh-chat-container {
-      position: absolute;
-      right: 20px;
-      bottom: 20px;
-      width: 460px;
-      height: 760px;
-      background: #f5f7fb;
-      border-radius: 24px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
-      border: 1px solid #e7edf5;
-      z-index: 3;
-    }
+noteSchema.index({ roomId: 1, imageId: 1, noteId: 1 }, { unique: true });
 
-    .dh-chat-header {
-      height: 68px;
-      flex-shrink: 0;
-      background: #fff;
-      border-bottom: 1px solid #e7edf5;
-      color: #17212b;
-      padding: 0 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
+const Message = mongoose.model("Message", messageSchema);
+const Drawing = mongoose.model("Drawing", drawingSchema);
+const Note = mongoose.model("Note", noteSchema);
 
-    .dh-chat-title {
-      font-size: 20px;
-      font-weight: 800;
-    }
+const memoryStore = {
+  rooms: new Map()
+};
 
-    .dh-chat-subtitle {
-      font-size: 12px;
-      color: #6c7a89;
-      margin-top: 2px;
-    }
+function getMemoryRoom(roomId) {
+  if (!memoryStore.rooms.has(roomId)) {
+    memoryStore.rooms.set(roomId, {
+      messages: [],
+      drawings: new Map(),
+      notes: new Map()
+    });
+  }
+  return memoryStore.rooms.get(roomId);
+}
 
-    .dh-chat-header-actions {
-      display: flex;
-      gap: 8px;
-    }
+function sanitizeRole(role) {
+  return role === "admin" ? "admin" : "user";
+}
 
-    .dh-chat-header-btn {
-      width: 40px;
-      height: 40px;
-      border: none;
-      border-radius: 12px;
-      background: #edf4fa;
-      color: #425466;
-      cursor: pointer;
-      font-size: 18px;
-      font-weight: 800;
-    }
+function sanitizeUserName(userName, role) {
+  const name = String(userName || "").trim().slice(0, 60);
+  if (role === "admin") return "관리자";
+  return name || "고객";
+}
 
-    .dh-chat-panel-chat {
-      flex: 1;
-      min-height: 0;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-    }
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
 
-    .dh-chat-panel-caption {
-      flex-shrink: 0;
-      padding: 14px 16px;
-      border-bottom: 1px solid #eef3f8;
-      background: #ffffff;
-    }
+function normalizeMessage(message = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const sender = sanitizeRole(message.sender || fallbackRole);
+  const senderName = sender === "admin" ? "관리자" : sanitizeUserName(message.senderName || fallbackUserName, sender);
+  const type = ["text", "image", "system"].includes(message.type) ? message.type : "text";
 
-    .dh-chat-panel-caption-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #17212b;
-    }
+  return {
+    type,
+    text: String(message.text || "").slice(0, 5000),
+    imageId: String(message.imageId || "").slice(0, 120),
+    imageUrl: String(message.imageUrl || "").slice(0, 5000),
+    sender: type === "system" ? "system" : sender,
+    senderName: type === "system" ? "시스템" : senderName,
+    time: typeof message.time === "number" ? message.time : Date.now()
+  };
+}
 
-    .dh-chat-panel-caption-sub {
-      margin-top: 4px;
-      font-size: 12px;
-      color: #728292;
-      line-height: 1.45;
-    }
+function normalizePoint(point = {}) {
+  return {
+    x: clamp(Number(point.x || 0), 0, 1),
+    y: clamp(Number(point.y || 0), 0, 1)
+  };
+}
 
-    .dh-chat-frame-wrap,
-    .dh-viewer-sidepanel-frame-wrap {
-      flex: 1;
-      min-height: 0;
-      background: #fff;
-    }
+function normalizeStroke(stroke = {}) {
+  const mode = stroke.mode === "erase" ? "erase" : "draw";
+  const color = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(stroke.color || ""))
+    ? String(stroke.color)
+    : "#ff3b30";
+  const width = clamp(Number(stroke.width || 3), 1, 24);
+  const points = Array.isArray(stroke.points) ? stroke.points.slice(0, 200).map(normalizePoint) : [];
 
-    #dh-chat-frame,
-    #dh-viewer-sidepanel-frame {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #fff;
-    }
+  return {
+    id: String(stroke.id || uuidv4()),
+    mode,
+    color,
+    width,
+    points,
+    time: typeof stroke.time === "number" ? stroke.time : Date.now(),
+    sender: sanitizeRole(stroke.sender || "user")
+  };
+}
 
-    .dh-viewer-sidepanel {
-      position: absolute;
-      top: 50%;
-      left: calc(100% - 1220px);
-      transform: translateY(-50%);
-      width: 720px;
-      height: 760px;
-      background: #fff;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
-      border: 1px solid #e7edf5;
-      display: flex;
-      flex-direction: column;
-      z-index: 2;
-    }
+function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const updatedByRole = sanitizeRole(note.updatedByRole || fallbackRole);
+  const updatedByName =
+    updatedByRole === "admin"
+      ? "관리자"
+      : sanitizeUserName(note.updatedByName || fallbackUserName, updatedByRole);
 
-    .dh-viewer-sidepanel-hidden {
-      display: none !important;
-    }
+  return {
+    noteId: String(note.id || note.noteId || uuidv4()),
+    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
+    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
+    width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.3) : 0.16,
+    height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.1,
+    text: String(note.text || "").slice(0, 500),
+    color: /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(note.color || "")) ? String(note.color) : "#fff7c2",
+    author: sanitizeRole(note.author || fallbackRole),
+    updatedAt: typeof note.updatedAt === "number" ? note.updatedAt : Date.now(),
+    updatedByRole,
+    updatedByName
+  };
+}
 
-    .dh-viewer-sidepanel-header {
-      height: 82px;
-      flex-shrink: 0;
-      padding: 0 22px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      border-bottom: 1px solid #e7edf5;
-      background: #fff;
-    }
+function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
+  const next = {};
 
-    .dh-viewer-sidepanel-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #17212b;
-    }
+  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
+  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
+  if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.3);
+  if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
+  if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
+  if (typeof patch.color === "string" && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(patch.color)) next.color = patch.color;
 
-    .dh-viewer-sidepanel-subtitle {
-      margin-top: 4px;
-      font-size: 13px;
-      color: #6c7a89;
-      line-height: 1.45;
-    }
+  next.updatedAt = typeof patch.updatedAt === "number" ? patch.updatedAt : Date.now();
 
-    .dh-viewer-sidepanel-close-btn {
-      width: 42px;
-      height: 42px;
-      border: none;
-      border-radius: 14px;
-      background: #edf4fa;
-      color: #425466;
-      cursor: pointer;
-      font-size: 18px;
-      font-weight: 800;
-    }
+  const updatedByRole = sanitizeRole(patch.updatedByRole || fallbackRole);
+  next.updatedByRole = updatedByRole;
+  next.updatedByName =
+    updatedByRole === "admin"
+      ? "관리자"
+      : sanitizeUserName(patch.updatedByName || fallbackUserName, updatedByRole);
 
-    @media (max-width: 1024px) {
-      .dh-chat-container {
-        right: 12px;
-        bottom: 12px;
-        width: min(100vw - 24px, 460px);
-        height: min(100dvh - 24px, 760px);
-        border-radius: 18px;
-      }
+  return next;
+}
 
-      .dh-viewer-sidepanel {
-        display: none !important;
+async function ensureMongoConnected() {
+  const uri = process.env.MONGODB_URI;
+  mongoEnabled = Boolean(uri);
+
+  if (!uri) {
+    console.warn("[MONGO] MONGODB_URI 없음. 메모리 모드로 실행합니다.");
+    mongoAvailable = false;
+    return;
+  }
+
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    mongoAvailable = true;
+    return;
+  }
+
+  try {
+    await mongoose.connect(uri, {
+      autoIndex: true,
+      serverSelectionTimeoutMS: 8000
+    });
+    mongoAvailable = true;
+    console.log("[MONGO] connected");
+  } catch (error) {
+    mongoAvailable = false;
+    console.error("[MONGO] connect failed. 메모리 모드로 계속 실행합니다.", error.message);
+  }
+}
+
+async function getMessageHistory(roomId) {
+  if (mongoAvailable) {
+    return Message.find({ roomId }).sort({ time: 1 }).limit(MAX_MESSAGES_PER_ROOM).lean();
+  }
+  return getMemoryRoom(roomId).messages.slice(-MAX_MESSAGES_PER_ROOM);
+}
+
+async function appendMessage(roomId, message) {
+  const normalized = normalizeMessage(message, message.sender, message.senderName);
+
+  if (mongoAvailable) {
+    await Message.create({ roomId, ...normalized });
+
+    const count = await Message.countDocuments({ roomId });
+    if (count > MAX_MESSAGES_PER_ROOM) {
+      const overflow = count - MAX_MESSAGES_PER_ROOM;
+      const oldDocs = await Message.find({ roomId })
+        .sort({ time: 1 })
+        .limit(overflow)
+        .select("_id")
+        .lean();
+
+      if (oldDocs.length) {
+        await Message.deleteMany({ _id: { $in: oldDocs.map((doc) => doc._id) } });
       }
     }
 
-    @media (max-width: 768px) {
-      .dh-chat-launcher {
-        right: 14px;
-        bottom: 16px;
-        width: 72px;
-        height: 72px;
-        border-radius: 22px;
-      }
+    return normalized;
+  }
 
-      .dh-chat-launcher-icon {
-        font-size: 22px;
-      }
+  const room = getMemoryRoom(roomId);
+  room.messages.push(normalized);
+  if (room.messages.length > MAX_MESSAGES_PER_ROOM) {
+    room.messages.splice(0, room.messages.length - MAX_MESSAGES_PER_ROOM);
+  }
+  return normalized;
+}
 
-      .dh-chat-launcher-text {
-        font-size: 12px;
-      }
+async function getDrawingHistory(roomId, imageId) {
+  if (mongoAvailable) {
+    const doc = await Drawing.findOne({ roomId, imageId }).lean();
+    return doc?.strokes || [];
+  }
+  return getMemoryRoom(roomId).drawings.get(imageId) || [];
+}
 
-      .dh-chat-container {
-        right: 0;
-        bottom: 0;
-        width: 100vw;
-        height: 100dvh;
-        border-radius: 0;
-      }
+async function replaceDrawingHistory(roomId, imageId, strokes) {
+  const safeStrokes = Array.isArray(strokes)
+    ? strokes.slice(-MAX_STROKES_PER_IMAGE).map(normalizeStroke)
+    : [];
 
-      .dh-chat-header {
-        height: 60px;
-        padding: 0 14px;
-      }
+  if (mongoAvailable) {
+    await Drawing.findOneAndUpdate(
+      { roomId, imageId },
+      { $set: { strokes: safeStrokes, updatedAt: Date.now() } },
+      { upsert: true, new: true }
+    );
+    return safeStrokes;
+  }
 
-      .dh-chat-header-btn {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
-      }
+  const room = getMemoryRoom(roomId);
+  room.drawings.set(imageId, safeStrokes);
+  return safeStrokes;
+}
+
+async function appendDrawStroke(roomId, imageId, stroke) {
+  const current = await getDrawingHistory(roomId, imageId);
+  current.push(normalizeStroke(stroke));
+  return replaceDrawingHistory(roomId, imageId, current);
+}
+
+async function clearDrawingHistory(roomId, imageId) {
+  if (mongoAvailable) {
+    await Drawing.findOneAndUpdate(
+      { roomId, imageId },
+      { $set: { strokes: [], updatedAt: Date.now() } },
+      { upsert: true, new: true }
+    );
+    return;
+  }
+
+  getMemoryRoom(roomId).drawings.set(imageId, []);
+}
+
+async function getNotes(roomId, imageId) {
+  if (mongoAvailable) {
+    const docs = await Note.find({ roomId, imageId }).sort({ updatedAt: 1 }).lean();
+    return docs.map((note) => ({
+      id: note.noteId,
+      x: note.x,
+      y: note.y,
+      width: note.width,
+      height: note.height,
+      text: note.text,
+      color: note.color,
+      author: note.author,
+      updatedAt: note.updatedAt,
+      updatedByRole: note.updatedByRole,
+      updatedByName: note.updatedByName
+    }));
+  }
+
+  const items = Array.from((getMemoryRoom(roomId).notes.get(imageId) || new Map()).values());
+  return items.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+}
+
+async function addOrGetNote(roomId, imageId, normalized) {
+  if (mongoAvailable) {
+    const existing = await Note.findOne({ roomId, imageId, noteId: normalized.noteId }).lean();
+    if (existing) {
+      return {
+        id: existing.noteId,
+        x: existing.x,
+        y: existing.y,
+        width: existing.width,
+        height: existing.height,
+        text: existing.text,
+        color: existing.color,
+        author: existing.author,
+        updatedAt: existing.updatedAt,
+        updatedByRole: existing.updatedByRole,
+        updatedByName: existing.updatedByName
+      };
     }
-  </style>
 
-  <script>
-    (function () {
-      var VERSION = "20260423-cafe24-stable";
-      var RENDER_ORIGIN = "https://chat-server-ilcq.onrender.com";
-      var RENDER_BASE = new URL(RENDER_ORIGIN).origin;
+    const noteCount = await Note.countDocuments({ roomId, imageId });
+    if (noteCount >= MAX_NOTES_PER_IMAGE) {
+      throw new Error("메모 개수가 너무 많습니다. 오래된 메모를 정리해 주세요.");
+    }
 
-      function getHostView() {
-        return window.innerWidth > 900 ? "desktop" : "mobile";
-      }
-      var ROOM_KEY = "designChat.roomId";
-      var USER_KEY = "designChat.userName";
-      var MODAL_KEY = "designChat.modalOpen";
+    const created = await Note.create({ roomId, imageId, ...normalized });
+    return {
+      id: created.noteId,
+      x: created.x,
+      y: created.y,
+      width: created.width,
+      height: created.height,
+      text: created.text,
+      color: created.color,
+      author: created.author,
+      updatedAt: created.updatedAt,
+      updatedByRole: created.updatedByRole,
+      updatedByName: created.updatedByName
+    };
+  }
 
-      var launcher = document.getElementById("chat-launcher");
-      var modal = document.getElementById("dh-chat-modal");
-      var frame = document.getElementById("dh-chat-frame");
-      var closeBtn = document.getElementById("dh-close-chat-btn");
-      var copyBtn = document.getElementById("dh-copy-room-btn");
-      var roomLabel = document.getElementById("dh-chat-room-label");
-      var overlay = modal ? modal.querySelector(".dh-chat-overlay") : null;
+  const room = getMemoryRoom(roomId);
+  const imageMap = room.notes.get(imageId) || new Map();
+  room.notes.set(imageId, imageMap);
 
-      var viewerSidepanel = document.getElementById("dh-viewer-sidepanel");
-      var viewerSidepanelFrame = document.getElementById("dh-viewer-sidepanel-frame");
-      var viewerSidepanelCloseBtn = document.getElementById("dh-viewer-sidepanel-close-btn");
+  if (imageMap.has(normalized.noteId)) {
+    return imageMap.get(normalized.noteId);
+  }
 
-      var hasLoadedFrame = false;
-      var viewerFrameLoaded = false;
-      var pendingViewerPayload = null;
+  if (imageMap.size >= MAX_NOTES_PER_IMAGE) {
+    throw new Error("메모 개수가 너무 많습니다. 오래된 메모를 정리해 주세요.");
+  }
 
-      function getRoomId() {
-        var existing = localStorage.getItem(ROOM_KEY);
-        if (existing) return existing;
+  const note = {
+    id: normalized.noteId,
+    x: normalized.x,
+    y: normalized.y,
+    width: normalized.width,
+    height: normalized.height,
+    text: normalized.text,
+    color: normalized.color,
+    author: normalized.author,
+    updatedAt: normalized.updatedAt,
+    updatedByRole: normalized.updatedByRole,
+    updatedByName: normalized.updatedByName
+  };
 
-        var next = window.crypto && window.crypto.randomUUID
-          ? window.crypto.randomUUID()
-          : "room-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  imageMap.set(note.id, note);
+  return note;
+}
 
-        localStorage.setItem(ROOM_KEY, next);
-        return next;
-      }
+async function updateNote(roomId, imageId, noteId, patch) {
+  if (mongoAvailable) {
+    const updated = await Note.findOneAndUpdate(
+      { roomId, imageId, noteId },
+      { $set: patch },
+      { new: true }
+    ).lean();
 
-      function getUserName() {
-        var existing = localStorage.getItem(USER_KEY);
-        if (existing) return existing;
+    if (!updated) return null;
 
-        localStorage.setItem(USER_KEY, "고객");
-        return "고객";
-      }
+    return {
+      id: updated.noteId,
+      x: updated.x,
+      y: updated.y,
+      width: updated.width,
+      height: updated.height,
+      text: updated.text,
+      color: updated.color,
+      author: updated.author,
+      updatedAt: updated.updatedAt,
+      updatedByRole: updated.updatedByRole,
+      updatedByName: updated.updatedByName
+    };
+  }
 
-      function updateRoomLabel(text) {
-        roomLabel.textContent = text || ("상담 코드 " + getRoomId().slice(0, 8).toUpperCase());
-      }
+  const room = getMemoryRoom(roomId);
+  const imageMap = room.notes.get(imageId) || new Map();
+  if (!imageMap.has(noteId)) return null;
 
-      function buildChatUrl(embedMode) {
-        var url = new URL(RENDER_ORIGIN + "/");
-        url.searchParams.set("roomId", getRoomId());
-        url.searchParams.set("userName", getUserName());
-        url.searchParams.set("parentOrigin", window.location.origin);
-        url.searchParams.set("hostView", getHostView());
-        url.searchParams.set("v", VERSION);
-        if (embedMode) url.searchParams.set("embed", "1");
-        return url.toString();
-      }
+  const current = imageMap.get(noteId);
+  const updated = { ...current, ...patch };
+  imageMap.set(noteId, updated);
+  return updated;
+}
 
-      function buildViewerUrl(payload) {
-        var url = new URL(RENDER_ORIGIN + "/");
-        url.searchParams.set("viewerOnly", "1");
-        url.searchParams.set("roomId", payload.roomId || getRoomId());
-        url.searchParams.set("userName", payload.userName || getUserName());
-        url.searchParams.set("parentOrigin", window.location.origin);
-        url.searchParams.set("hostView", getHostView());
-        url.searchParams.set("imageId", payload.imageId || "");
-        url.searchParams.set("imageUrl", payload.imageUrl || "");
-        url.searchParams.set("v", VERSION);
-        url.searchParams.set("embed", "1");
-        return url.toString();
-      }
+async function deleteNote(roomId, imageId, noteId) {
+  if (mongoAvailable) {
+    await Note.deleteOne({ roomId, imageId, noteId });
+    return;
+  }
 
-      function openModal() {
-        modal.classList.remove("dh-chat-hidden");
-        modal.setAttribute("aria-hidden", "false");
-        launcher.setAttribute("aria-expanded", "true");
-        document.body.classList.add("dh-chat-lock");
-        localStorage.setItem(MODAL_KEY, "1");
+  const room = getMemoryRoom(roomId);
+  const imageMap = room.notes.get(imageId) || new Map();
+  imageMap.delete(noteId);
+}
 
-        updateRoomLabel();
-        hideViewerSidepanel();
+app.post(
+  "/upload",
+  (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+      if (!err) return next();
 
-        if (!hasLoadedFrame) {
-          frame.src = buildChatUrl(true);
-          hasLoadedFrame = true;
+      if (err instanceof multer.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({
+            error: "이미지 용량이 너무 큽니다. 20MB 이하만 가능합니다."
+          });
         }
+        return res.status(400).json({ error: "업로드 처리 중 오류가 발생했습니다." });
       }
 
-      function closeModal() {
-        modal.classList.add("dh-chat-hidden");
-        modal.setAttribute("aria-hidden", "true");
-        launcher.setAttribute("aria-expanded", "false");
-        document.body.classList.remove("dh-chat-lock");
-        localStorage.setItem(MODAL_KEY, "0");
-        hideViewerSidepanel();
+      return res.status(400).json({ error: err.message || "업로드 실패" });
+    });
+  },
+  async (req, res) => {
+    try {
+      if (!cloudinaryEnabled) {
+        return res.status(500).json({ error: "Cloudinary 환경변수가 설정되지 않았습니다." });
       }
 
-      function hideViewerSidepanel() {
-        viewerSidepanel.classList.add("dh-viewer-sidepanel-hidden");
-        viewerSidepanel.setAttribute("aria-hidden", "true");
+      if (!req.file) {
+        return res.status(400).json({ error: "파일 없음" });
       }
 
-      function postSelectedViewerImage() {
-        if (!viewerFrameLoaded || !pendingViewerPayload || !viewerSidepanelFrame.contentWindow) return;
-
-        viewerSidepanelFrame.contentWindow.postMessage(
+      const uploaded = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
           {
-            type: "SELECT_VIEWER_IMAGE",
-            imageId: pendingViewerPayload.imageId,
-            imageUrl: pendingViewerPayload.imageUrl
+            folder: "design-chat",
+            resource_type: "image"
           },
-          RENDER_BASE
-        );
-      }
-
-      function ensureViewerFrame(payload) {
-        var nextSrc = buildViewerUrl(payload);
-
-        if (viewerSidepanelFrame.src !== nextSrc) {
-          viewerFrameLoaded = false;
-          viewerSidepanelFrame.src = nextSrc;
-        } else {
-          postSelectedViewerImage();
-        }
-      }
-
-      function openViewerSidepanelDirect(payload) {
-        if (!payload || !payload.imageId || !payload.imageUrl) return;
-        if (window.innerWidth <= 1024) return;
-
-        pendingViewerPayload = payload;
-        viewerSidepanel.classList.remove("dh-viewer-sidepanel-hidden");
-        viewerSidepanel.setAttribute("aria-hidden", "false");
-        ensureViewerFrame(payload);
-      }
-
-      launcher.addEventListener("click", openModal);
-      closeBtn.addEventListener("click", closeModal);
-      overlay.addEventListener("click", closeModal);
-      viewerSidepanelCloseBtn.addEventListener("click", hideViewerSidepanel);
-
-      launcher.addEventListener("keydown", function (event) {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          openModal();
-        }
-      });
-
-      copyBtn.addEventListener("click", async function () {
-        try {
-          await navigator.clipboard.writeText(getRoomId());
-          updateRoomLabel("상담 코드를 복사했습니다");
-          setTimeout(function () { updateRoomLabel(); }, 1500);
-        } catch (e) {
-          updateRoomLabel("복사 권한이 필요합니다");
-          setTimeout(function () { updateRoomLabel(); }, 1500);
-        }
-      });
-
-      viewerSidepanelFrame.addEventListener("load", function () {
-        viewerFrameLoaded = true;
-        postSelectedViewerImage();
-      });
-
-      window.addEventListener("message", function (event) {
-        if (event.origin !== RENDER_BASE) return;
-
-        var data = event.data || {};
-
-        if (data.type === "OPEN_VIEWER_PANEL") {
-          openViewerSidepanelDirect(data);
-          return;
-        }
-
-        if (data.type === "CLOSE_VIEWER_PANEL") {
-          hideViewerSidepanel();
-        }
-      });
-
-      window.addEventListener("keydown", function (event) {
-        if (event.key !== "Escape") return;
-
-        if (modal.getAttribute("aria-hidden") === "false") {
-          if (viewerSidepanel.getAttribute("aria-hidden") === "false") {
-            hideViewerSidepanel();
-            return;
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
           }
-          closeModal();
-        }
+        );
+
+        stream.end(req.file.buffer);
       });
 
-      updateRoomLabel();
-      hideViewerSidepanel();
+      return res.json({
+        ok: true,
+        url: uploaded.secure_url
+      });
+    } catch (error) {
+      console.error("upload error:", error);
+      return res.status(500).json({ error: "이미지 업로드 실패" });
+    }
+  }
+);
 
-      if (localStorage.getItem(MODAL_KEY) === "1") {
-        openModal();
+function emitErrorAck(ack, error) {
+  if (ack) ack({ ok: false, error });
+}
+
+io.on("connection", (socket) => {
+  socket.data.roomId = "";
+  socket.data.role = "user";
+  socket.data.userName = "고객";
+
+  socket.on("join", async (payload = {}, ack) => {
+    try {
+      const roomId = String(payload.roomId || "").trim();
+      if (!roomId) return emitErrorAck(ack, "roomId 필요");
+
+      const role = sanitizeRole(payload.role || "user");
+      const userName = sanitizeUserName(payload.userName || "고객", role);
+
+      if (socket.data.roomId) {
+        socket.leave(socket.data.roomId);
       }
-    })();
-  </script>
-</div>
-<!--#ez="1/2"-->
+
+      socket.join(roomId);
+      socket.data.roomId = roomId;
+      socket.data.role = role;
+      socket.data.userName = userName;
+
+      const messages = await getMessageHistory(roomId);
+      socket.emit("history", { messages });
+
+      if (ack) ack({ ok: true, roomId, role, userName });
+    } catch (error) {
+      console.error("join error:", error);
+      emitErrorAck(ack, "입장 오류");
+    }
+  });
+
+  socket.on("message", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      if (!roomId) return emitErrorAck(ack, "join 필요");
+
+      const text = String(payload.text || "").trim();
+      if (!text) return emitErrorAck(ack, "메시지 없음");
+
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
+
+      const message = await appendMessage(roomId, {
+        type: "text",
+        text,
+        sender: role,
+        senderName: userName,
+        time: Date.now()
+      });
+
+      io.to(roomId).emit("message", message);
+      if (ack) ack({ ok: true, message });
+    } catch (error) {
+      console.error("message error:", error);
+      emitErrorAck(ack, "메시지 저장 오류");
+    }
+  });
+
+  socket.on("image", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      if (!roomId) return emitErrorAck(ack, "join 필요");
+
+      const imageUrl = String(payload.url || "").trim();
+      if (!imageUrl) return emitErrorAck(ack, "이미지 URL 없음");
+
+      const role = sanitizeRole(socket.data.role);
+      const userName = sanitizeUserName(socket.data.userName, role);
+      const imageId = uuidv4();
+
+      const message = await appendMessage(roomId, {
+        type: "image",
+        imageId,
+        imageUrl,
+        sender: role,
+        senderName: userName,
+        time: Date.now()
+      });
+
+      io.to(roomId).emit("message", message);
+      if (ack) ack({ ok: true, imageId, message });
+    } catch (error) {
+      console.error("image error:", error);
+      emitErrorAck(ack, "이미지 저장 오류");
+    }
+  });
+
+  socket.on("get-drawing", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      const strokes = await getDrawingHistory(roomId, imageId);
+      if (ack) ack({ ok: true, strokes });
+    } catch (error) {
+      console.error("get-drawing error:", error);
+      emitErrorAck(ack, "드로잉 불러오기 오류");
+    }
+  });
+
+  socket.on("replace-drawing", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      const strokes = await replaceDrawingHistory(roomId, imageId, payload.strokes || []);
+      io.to(roomId).emit("drawing-replaced", { imageId, strokes });
+      if (ack) ack({ ok: true, strokes });
+    } catch (error) {
+      console.error("replace-drawing error:", error);
+      emitErrorAck(ack, "드로잉 저장 오류");
+    }
+  });
+
+  socket.on("draw-stroke", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      const stroke = normalizeStroke(payload.stroke || {});
+      await appendDrawStroke(roomId, imageId, stroke);
+
+      io.to(roomId).emit("draw-stroke", { imageId, stroke });
+      if (ack) ack({ ok: true, stroke });
+    } catch (error) {
+      console.error("draw-stroke error:", error);
+      emitErrorAck(ack, "드로잉 저장 오류");
+    }
+  });
+
+  socket.on("clear-drawing", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      await clearDrawingHistory(roomId, imageId);
+      io.to(roomId).emit("drawing-cleared", { imageId });
+      if (ack) ack({ ok: true });
+    } catch (error) {
+      console.error("clear-drawing error:", error);
+      emitErrorAck(ack, "드로잉 초기화 오류");
+    }
+  });
+
+  socket.on("get-notes", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      const notes = await getNotes(roomId, imageId);
+      if (ack) ack({ ok: true, notes });
+      else socket.emit("notes", { imageId, notes });
+    } catch (error) {
+      console.error("get-notes error:", error);
+      emitErrorAck(ack, "메모 불러오기 오류");
+    }
+  });
+
+  socket.on("add-note", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      if (!roomId || !imageId) return emitErrorAck(ack, "필수값 없음");
+
+      const note = await addOrGetNote(
+        roomId,
+        imageId,
+        normalizeNote(payload.note || {}, socket.data.role, socket.data.userName)
+      );
+
+      io.to(roomId).emit("note-added", { imageId, note });
+      if (ack) ack({ ok: true, note });
+    } catch (error) {
+      console.error("add-note error:", error);
+      emitErrorAck(ack, "메모 추가 오류");
+    }
+  });
+
+  socket.on("update-note", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const noteId = String(payload.noteId || "").trim();
+      if (!roomId || !imageId || !noteId) return emitErrorAck(ack, "필수값 없음");
+
+      const patch = normalizeNotePatch(payload.patch || {}, socket.data.role, socket.data.userName);
+      const note = await updateNote(roomId, imageId, noteId, patch);
+      if (!note) return emitErrorAck(ack, "메모를 찾을 수 없습니다.");
+
+      io.to(roomId).emit("note-updated", { imageId, note });
+      if (ack) ack({ ok: true, note });
+    } catch (error) {
+      console.error("update-note error:", error);
+      emitErrorAck(ack, "메모 수정 오류");
+    }
+  });
+
+  socket.on("delete-note", async (payload = {}, ack) => {
+    try {
+      const roomId = socket.data.roomId;
+      const imageId = String(payload.imageId || "").trim();
+      const noteId = String(payload.noteId || "").trim();
+      if (!roomId || !imageId || !noteId) return emitErrorAck(ack, "필수값 없음");
+
+      await deleteNote(roomId, imageId, noteId);
+      io.to(roomId).emit("note-deleted", { imageId, noteId });
+      if (ack) ack({ ok: true });
+    } catch (error) {
+      console.error("delete-note error:", error);
+      emitErrorAck(ack, "메모 삭제 오류");
+    }
+  });
+});
+
+app.get("*", (req, res, next) => {
+  if (
+    req.path.startsWith("/socket.io") ||
+    req.path.startsWith("/upload") ||
+    req.path.startsWith("/health") ||
+    req.path.startsWith("/config")
+  ) {
+    return next();
+  }
+
+  if (req.method === "GET") {
+    return res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+  }
+
+  next();
+});
+
+async function start() {
+  await ensureMongoConnected();
+
+  server.listen(PORT, HOST, () => {
+    console.log(`[SERVER] listening on http://${HOST}:${PORT}`);
+    console.log(`[SERVER] version=${APP_VERSION}`);
+  });
+}
+
+start().catch((error) => {
+  console.error("[SERVER] startup failed:", error);
+  process.exit(1);
+});
