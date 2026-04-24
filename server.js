@@ -249,8 +249,8 @@ function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고
 
   return {
     noteId: String(note.id || note.noteId || uuidv4()),
-    x: typeof note.x === "number" ? clamp(note.x, 0.06, 0.94) : 0.14,
-    y: typeof note.y === "number" ? clamp(note.y, 0.08, 0.92) : 0.16,
+    x: typeof note.x === "number" ? clamp(note.x, 0, 1) : 0.14,
+    y: typeof note.y === "number" ? clamp(note.y, 0, 1) : 0.16,
     width: typeof note.width === "number" ? clamp(note.width, 0.12, 0.3) : 0.16,
     height: typeof note.height === "number" ? clamp(note.height, 0.09, 0.28) : 0.1,
     text: String(note.text || "").slice(0, 500),
@@ -265,8 +265,8 @@ function normalizeNote(note = {}, fallbackRole = "user", fallbackUserName = "고
 function normalizeNotePatch(patch = {}, fallbackRole = "user", fallbackUserName = "고객") {
   const next = {};
 
-  if (typeof patch.x === "number") next.x = clamp(patch.x, 0.06, 0.94);
-  if (typeof patch.y === "number") next.y = clamp(patch.y, 0.08, 0.92);
+  if (typeof patch.x === "number") next.x = clamp(patch.x, 0, 1);
+  if (typeof patch.y === "number") next.y = clamp(patch.y, 0, 1);
   if (typeof patch.width === "number") next.width = clamp(patch.width, 0.12, 0.3);
   if (typeof patch.height === "number") next.height = clamp(patch.height, 0.09, 0.28);
   if (typeof patch.text === "string") next.text = patch.text.slice(0, 500);
