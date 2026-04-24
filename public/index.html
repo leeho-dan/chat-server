@@ -2,27 +2,24 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-  <title>디자인 상담 · RENDER</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>디자인 상담</title>
   <style>
     :root {
-      --bg: #f3f6fa;
+      --bg: #f4f7fb;
       --panel: #ffffff;
-      --panel-soft: #f8fbfe;
-      --line: #e3ebf3;
-      --line-strong: #d9e2ec;
+      --panel-soft: #f8fbff;
+      --line: #e3ebf4;
       --text: #17212b;
-      --sub: #728292;
-      --primary: #2491ff;
-      --primary-soft: #79c7ff;
-      --danger: #ff5b5b;
-      --shadow: 0 18px 40px rgba(18, 36, 61, 0.08);
+      --muted: #697a8c;
+      --primary: #2388ff;
+      --primary-dark: #1169d6;
+      --danger: #ff4d4f;
+      --shadow: 0 18px 45px rgba(15, 35, 60, 0.16);
+      --safe-top: max(env(safe-area-inset-top), 0px);
+      --safe-right: max(env(safe-area-inset-right), 0px);
       --safe-bottom: max(env(safe-area-inset-bottom), 0px);
-      --selected-draw-color: #ff3b30;
+      --safe-left: max(env(safe-area-inset-left), 0px);
     }
 
     * { box-sizing: border-box; }
@@ -32,32 +29,23 @@
       margin: 0;
       width: 100%;
       height: 100%;
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Apple SD Gothic Neo",
-        "Noto Sans KR",
-        sans-serif;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
       color: var(--text);
       background: var(--bg);
-    }
-
-    body {
-      overflow: hidden;
       -webkit-text-size-adjust: 100%;
       overscroll-behavior: none;
-      font-size: 14px;
     }
 
     button,
     input,
     textarea,
-    label {
+    select {
       font: inherit;
     }
 
     button {
-      border: none;
+      border: 0;
       cursor: pointer;
     }
 
@@ -66,2237 +54,1405 @@
       cursor: not-allowed;
     }
 
-    input,
-    textarea {
-      outline: none;
-    }
-
     #app {
       width: 100%;
       height: 100%;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
+      position: relative;
+      background: var(--bg);
     }
 
-    #chatCard {
+    #chatPanel {
       width: 100%;
       height: 100%;
-      background: #fff;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      background: var(--panel);
     }
 
-    #header {
-      height: 84px;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--line);
-      background: #fff;
+    body.viewer-only #chatPanel {
+      display: none;
+    }
+
+    #chatHeader {
+      height: 72px;
+      flex: 0 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 22px;
-      box-shadow: 0 1px 0 rgba(18, 36, 61, 0.04);
+      gap: 16px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
     }
 
-    #title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #24313f;
+    #chatTitle {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+    }
+
+    #chatSubtitle {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
     }
 
     #connectionBadge {
-      height: 32px;
-      padding: 0 12px;
-      border-radius: 999px;
-      background: #edf4fa;
-      color: #53687a;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
+      height: 30px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: #edf4fb;
+      color: #506477;
       font-size: 12px;
       font-weight: 800;
+      white-space: nowrap;
+    }
+
+    #connectionBadge.connected {
+      color: #10703a;
+      background: #e7f8ee;
     }
 
     #quickRequestBar {
-      flex-shrink: 0;
-      padding: 12px 18px 10px;
-      background: #fff;
+      flex: 0 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
       border-bottom: 1px solid var(--line);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    #quickRequestTitle {
-      font-size: 13px;
-      font-weight: 800;
-      color: #24313f;
-    }
-
-    #quickRequestButtons {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      background: #fff;
+      -webkit-overflow-scrolling: touch;
     }
 
     .quickChip {
+      flex: 0 0 auto;
       height: 36px;
       padding: 0 14px;
       border-radius: 999px;
       background: #f1f5f9;
-      color: #4b5b6b;
+      color: #405265;
       font-size: 12px;
       font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition:
-        transform 0.15s ease,
-        background 0.15s ease,
-        box-shadow 0.15s ease;
     }
 
-    .quickChip:hover {
-      background: #eaf2fb;
+    .quickChip:hover,
+    .quickChip:focus-visible {
+      background: #e8f2ff;
+      color: var(--primary-dark);
     }
 
-    .quickChip.active {
-      background: linear-gradient(135deg, #79c7ff, #2491ff);
-      color: #fff;
-    }
-
-    #chatBox {
-      flex: 1;
+    #messageList {
+      flex: 1 1 auto;
       min-height: 0;
       overflow-y: auto;
-      padding: 16px 18px 10px;
-      background: #fff;
+      padding: 18px 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     }
 
-    #chatInner,
+    #messageInner,
     #viewerChatInner {
+      min-height: 100%;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      min-height: 100%;
     }
 
     .messageRow {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       width: 100%;
     }
 
-    .messageRow.me {
-      align-items: flex-end;
-    }
+    .messageRow.me { align-items: flex-end; }
+    .messageRow.other { align-items: flex-start; }
+    .messageRow.system { align-items: center; }
 
-    .messageRow.other {
-      align-items: flex-start;
-    }
-
-    .messageRow.system {
-      align-items: center;
-    }
-
-    .messageBody {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      max-width: 100%;
-    }
-
-    .messageRow.me .messageBody {
-      justify-content: flex-end;
-    }
-
-    .messageRow.other .messageBody {
-      justify-content: flex-start;
-    }
-
-    .senderAvatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 999px;
-      background: #e7edf6;
-      color: #526171;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 800;
-      flex: 0 0 auto;
-    }
-
-    .messageStack {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-width: min(72%, 520px);
-    }
-
-    .messageRow.me .messageStack {
-      align-items: flex-end;
-    }
-
-    .messageRow.other .messageStack {
-      align-items: flex-start;
-    }
-
-    .senderLine {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 2px;
-    }
-
-    .senderName {
-      font-size: 12px;
-      font-weight: 800;
-      color: #2f3d4a;
-    }
-
-    .senderTime {
+    .messageMeta {
+      color: #7c8b9a;
       font-size: 11px;
-      color: #95a3b1;
-    }
-
-    .bubble {
-      max-width: 100%;
-      padding: 13px 15px;
-      border-radius: 16px;
-      font-size: 14px;
-      line-height: 1.55;
-      letter-spacing: -0.02em;
-      word-break: break-word;
-    }
-
-    .messageRow.me .bubble {
-      background: linear-gradient(135deg, #79c7ff, #2491ff);
-      color: #fff;
-      border-bottom-right-radius: 10px;
-    }
-
-    .messageRow.other .bubble {
-      background: #eef2f6;
-      border: 1px solid #e3e9f1;
-      color: #17212b;
-      border-bottom-left-radius: 10px;
-    }
-
-    .messageRow.system .bubble {
-      background: #f2f7ff;
-      color: #4b6784;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 8px 12px;
-      max-width: 92%;
-    }
-
-    .meta {
-      font-size: 11px;
-      color: #95a3b1;
+      font-weight: 750;
       padding: 0 4px;
     }
 
-    .messageRow.me .meta {
-      text-align: right;
+    .bubble {
+      max-width: min(76%, 560px);
+      border-radius: 18px;
+      padding: 11px 13px;
+      font-size: 14px;
+      line-height: 1.48;
+      word-break: break-word;
+      box-shadow: 0 6px 18px rgba(23, 33, 43, 0.06);
     }
 
-    .messageRow.other .meta {
-      text-align: left;
+    .messageRow.me .bubble {
+      background: linear-gradient(135deg, var(--primary), #60b7ff);
+      color: #fff;
+      border-bottom-right-radius: 6px;
+    }
+
+    .messageRow.other .bubble {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-bottom-left-radius: 6px;
+    }
+
+    .messageRow.system .bubble {
+      max-width: 90%;
+      padding: 8px 12px;
+      color: #647587;
+      background: #eef4fa;
+      box-shadow: none;
+      font-size: 12px;
+      font-weight: 800;
     }
 
     .imageBubble {
-      max-width: 100%;
-      background: #fff;
-      border: 1px solid #e3ebf3;
-      border-radius: 18px;
-      padding: 6px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(18, 36, 61, 0.04);
+      padding: 8px;
+      background: #fff !important;
+      border: 1px solid var(--line);
+      color: var(--text) !important;
     }
 
-    .chatImg {
+    .chatImageButton {
+      display: block;
+      padding: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #eef4fa;
+      max-width: min(260px, 68vw);
+    }
+
+    .chatImageButton img {
       display: block;
       width: 100%;
-      max-width: 360px;
-      border-radius: 14px;
+      height: auto;
+      max-height: 320px;
+      object-fit: contain;
     }
 
     .imageHint {
-      margin-top: 6px;
-      padding: 6px 8px;
-      border-radius: 10px;
-      background: #f6fbff;
-      color: #557086;
-      font-size: 10px;
+      padding: 8px 4px 2px;
+      color: #607286;
+      font-size: 12px;
       font-weight: 800;
     }
 
-    #inputArea {
-      flex-shrink: 0;
-      border-top: 1px solid var(--line);
-      background: #fff;
-      padding: 12px 18px calc(18px + var(--safe-bottom));
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    #messageRowBar {
+    #inputBar {
+      flex: 0 0 auto;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px;
-      border: 1px solid #dfe7f0;
-      border-radius: 18px;
-      background: #fff;
-      box-shadow: 0 8px 18px rgba(18, 36, 61, 0.04);
-    }
-
-    .inputGuide {
-      font-size: 11px;
-      color: #7d8b99;
-      padding: 0 2px;
-      line-height: 1.5;
-    }
-
-    #msgInput,
-    #viewerMsgInput,
-    #noteEditorTextarea {
-      border: 1px solid #d6e0ea;
+      gap: 9px;
+      padding: 12px 14px calc(12px + var(--safe-bottom));
+      border-top: 1px solid var(--line);
       background: #fff;
     }
 
-    #msgInput {
-      flex: 1;
+    #messageInput,
+    #viewerMessageInput {
       min-width: 0;
+      flex: 1 1 auto;
       height: 44px;
+      border: 1px solid #d9e4ef;
       border-radius: 14px;
-      padding: 0 12px;
-      font-size: 14px;
+      background: #f8fbff;
+      color: var(--text);
+      padding: 0 13px;
+      outline: none;
     }
 
-    #msgInput::placeholder,
-    #viewerMsgInput::placeholder {
-      font-size: 13px;
+    #messageInput:focus,
+    #viewerMessageInput:focus {
+      border-color: var(--primary);
+      background: #fff;
     }
 
-    #sendBtn,
-    #fileLabel {
+    .iconBtn,
+    #sendButton,
+    #viewerSendButton {
+      flex: 0 0 auto;
       width: 44px;
       height: 44px;
-      min-width: 44px;
-      min-height: 44px;
       border-radius: 14px;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #sendBtn {
-      background: linear-gradient(135deg, #79c7ff, #2491ff);
-      color: #fff;
-    }
-
-    #fileInput {
-      display: none;
-    }
-
-    #fileLabel {
-      background: #f2f6fa;
-      color: #7b8d9f;
-      border: 1px solid #e5edf4;
-    }
-
-    #viewerOverlay,
-    #noteEditorOverlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-      width: 100vw;
-      height: 100dvh;
-      min-height: 100dvh;
-      background: var(--bg);
-    }
-
-    #viewerOverlay {
-      opacity: 0;
-      transform: translateY(8px);
-      transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
-    }
-
-    #viewerOverlay.open {
-      display: flex;
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    #noteEditorOverlay.open {
-      display: flex;
-    }
-
-    body.viewer-inline-open {
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    #viewerTopbar {
-      height: 84px;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--line);
-      background: #fff;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 8px;
-      padding: 0 22px;
-      position: relative;
-      z-index: 40;
-      box-shadow: 0 1px 0 rgba(18, 36, 61, 0.04);
-    }
-
-    #viewerTopLeft {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    #viewerTopTitle {
-      font-size: 22px;
-      font-weight: 800;
-      color: #24313f;
-      line-height: 1.1;
-    }
-
-    #viewerTopSub {
-      font-size: 13px;
-      color: #728292;
-      line-height: 1.2;
-    }
-
-    #viewerActions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 41;
-    }
-
-    .viewerBtn,
-    .toolBtn {
-      transition:
-        transform 0.15s ease,
-        background 0.15s ease,
-        box-shadow 0.15s ease;
-    }
-
-    .viewerBtn:hover,
-    .toolBtn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 14px rgba(18, 36, 61, 0.08);
-    }
-
-    .viewerBtn {
-      min-width: 42px;
-      width: 42px;
-      height: 42px;
-      min-height: 42px;
-      padding: 0;
-      border-radius: 14px;
-      background: #f1f5f9;
-      color: #4b5b6b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-    }
-
-    #viewerMain {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.7fr);
-      gap: 18px;
-      padding: 18px;
-    }
-
-    body.viewer-only-mode #viewerMain {
-      grid-template-columns: minmax(0, 1.75fr) minmax(360px, 0.7fr);
-    }
-
-    #viewerLeft,
-    #viewerRight {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      overflow: hidden;
-      background: #fff;
-      box-shadow: var(--shadow);
-      position: relative;
-      z-index: 10;
-    }
-
-    #canvasWrap {
-      flex: 1;
-      min-height: 0;
-      padding: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      z-index: 11;
-      background: #fff;
-    }
-
-    #imageStage {
-      position: relative;
-      width: 100%;
-      height: min(100%, 760px);
-      min-height: 420px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(247,251,255,.96));
-      border: 1px solid #dfe9f3;
-      overflow: hidden;
-      z-index: 12;
-    }
-
-    #viewerImage {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      max-width: 92%;
-      max-height: 88%;
-      border-radius: 18px;
-      pointer-events: none;
-      user-select: none;
-      -webkit-user-drag: none;
-      z-index: 1;
-    }
-
-    #drawCanvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border-radius: 22px;
-      touch-action: none;
-      z-index: 2;
-    }
-
-    #textLayer {
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-    }
-
-    #brushCursor {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: rgba(42, 140, 255, 0.12);
-      border: 1.5px solid rgba(42, 140, 255, 0.55);
-      box-shadow: 0 0 0 1px rgba(255,255,255,.55) inset;
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-      display: none;
-      z-index: 15;
-    }
-
-    #drawCanvas.cursor-preview {
-      cursor: none;
-    }
-
-    .noteMarker {
-      position: absolute;
-      min-width: 56px;
-      min-height: 42px;
-      padding: 0 12px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,.92);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(36,145,255,.22);
-      box-shadow: 0 6px 14px rgba(18, 36, 61, 0.10);
-      transform: translate(-50%, -50%);
-      pointer-events: auto;
-      user-select: none;
-      z-index: 20;
-      touch-action: none;
-      cursor: grab;
-    }
-
-    .noteMarker.selected {
-      border-color: rgba(255,139,61,.55);
-      box-shadow:
-        0 0 0 3px rgba(255,139,61,.14),
-        0 10px 18px rgba(18, 36, 61, 0.12);
-    }
-
-    .noteMarkerText {
-      max-width: 3em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12px;
-      font-weight: 800;
-      color: #17212b;
-    }
-
-    .noteMarker.expanded {
-      align-items: flex-start;
-      padding: 10px 12px;
-    }
-
-    .noteMarker.expanded .noteMarkerText {
-      max-width: 220px;
-      white-space: normal;
-      overflow: visible;
-      text-overflow: unset;
-      line-height: 1.45;
-    }
-
-    .noteDot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex: 0 0 auto;
-      border: 1px solid rgba(0,0,0,.1);
-    }
-
-    #toolbar {
-      flex-shrink: 0;
-      border-top: 1px solid var(--line);
-      background: #fff;
-      padding: 12px 14px 14px;
-      position: relative;
-      z-index: 50;
-      overflow: visible;
-    }
-
-    #toolbarGuide {
-      margin-bottom: 8px;
-      font-size: 11px;
-      color: #728292;
-      font-weight: 700;
-      line-height: 1.35;
-    }
-
-    #toolbarInline {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    #toolbarInline::-webkit-scrollbar {
-      display: none;
-    }
-
-    .viewerBtn svg,
-    .toolBtn svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      flex-shrink: 0;
-    }
-
-    .toolBtn {
-      min-width: 40px;
-      width: 40px;
-      height: 40px;
-      min-height: 40px;
-      padding: 0;
-      border-radius: 12px;
-      background: #f1f5f9;
-      color: #4b5b6b;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      font-weight: 800;
-      flex: 0 0 auto;
-      position: relative;
-      z-index: 51;
+      font-weight: 900;
+      background: #eef4fb;
+      color: #405265;
     }
 
-    .toolBtn.active {
-      background: linear-gradient(135deg, #79c7ff, #2491ff);
+    #sendButton,
+    #viewerSendButton {
+      background: var(--primary);
       color: #fff;
     }
 
-    .toolBtnSmall {
-      min-width: 32px;
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-    }
-
-    .noteToolBtn {
-      width: auto !important;
-      padding: 0 12px !important;
-      gap: 6px;
-    }
-
-    .toolBtnLabel {
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1;
-      white-space: nowrap;
-    }
-
-    #thicknessWrap {
-      display: flex;
-      align-items: center;
-      padding: 0 8px;
-      height: 40px;
-      border-radius: 12px;
-      background: #fcfdff;
-      border: 1px solid #e7edf4;
-      flex: 0 0 auto;
-    }
-
-    #thicknessRange {
-      width: 88px;
-    }
-
-    #paletteWrap {
-      position: relative;
-      z-index: 60;
-      flex: 0 0 auto;
-    }
-
-    #paletteBtn {
-      position: relative;
-      overflow: visible;
-      background: #edf4fa;
-      color: #425466;
-      z-index: 61;
-    }
-
-    #palettePreview {
-      position: absolute;
-      right: 4px;
-      bottom: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--selected-draw-color, #ff3b30);
-      border: 1px solid rgba(255,255,255,.92);
-      box-shadow: 0 1px 4px rgba(18, 36, 61, 0.16);
-      z-index: 3;
-      pointer-events: none;
-    }
-
-    #colorPopover {
-      position: fixed;
-      left: 0;
-      top: 0;
-      display: none;
-      width: 172px;
-      padding: 10px;
-      border-radius: 16px;
-      background: rgba(255,255,255,.99);
-      border: 1px solid #dfe7f0;
-      box-shadow: 0 18px 36px rgba(18, 36, 61, 0.18);
-      z-index: 999999;
-    }
-
-    #colorPopover.open {
-      display: block;
-    }
-
-    #colorPopoverGrid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-    }
-
-    .colorChip {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,.95);
-      box-shadow: 0 0 0 1px rgba(18, 36, 61, 0.12);
-      cursor: pointer;
-    }
-
-    .colorChip.active {
-      box-shadow:
-        0 0 0 3px rgba(36,145,255,.20),
-        0 0 0 1px rgba(18, 36, 61, 0.12);
-    }
-
-    .noteColorSwatch {
-      border-radius: 50%;
-      box-shadow: 0 0 0 1px rgba(0,0,0,.10);
-      display: inline-flex;
-      width: 22px;
-      height: 22px;
-      cursor: pointer;
-    }
-
-    .noteColorSwatch.active {
-      box-shadow: 0 0 0 3px rgba(36,145,255,.18);
-    }
-
-    #viewerChatBox {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 14px;
-      background: #fff;
-    }
-
-    #viewerChatInner .meta {
+    #uploadInput {
       display: none;
     }
 
-    #viewerInputBar {
-      flex-shrink: 0;
-      border-top: 1px solid var(--line);
-      padding: 12px 14px calc(14px + var(--safe-bottom));
-      background: #fff;
-      display: flex;
-      gap: 8px;
-      position: relative;
-      z-index: 50;
-      box-shadow: 0 8px 18px rgba(18, 36, 61, 0.04);
-    }
-
-    #viewerMsgInput {
-      flex: 1;
-      height: 46px;
-      border-radius: 16px;
-      padding: 0 14px;
-      font-size: 14px;
-    }
-
-    #viewerSendBtn {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #79c7ff, #2491ff);
-      color: #fff;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    #noteEditorHeader {
-      min-height: 70px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      background: #fff;
-    }
-
-    #noteEditorTitleWrap {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    #noteEditorTitle {
-      font-size: 17px;
-      font-weight: 800;
-    }
-
-    #noteEditorMeta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    #noteEditorSaveBadge {
-      height: 24px;
-      padding: 0 8px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      background: #eef4fa;
-      color: #587085;
-      font-size: 11px;
-      font-weight: 800;
-    }
-
-    #noteEditorSaveBadge.pending {
-      background: #fff7ea;
-      color: #9a6500;
-    }
-
-    #noteEditorSaveBadge.saved {
-      background: #ebf9ee;
-      color: #2f7b42;
-    }
-
-    #noteEditorSaveBadge.offline {
-      background: #fff3f3;
-      color: #c74242;
-    }
-
-    #noteEditorActions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .noteEditorDangerBtn,
-    #noteEditorDoneBtn {
-      height: 38px;
-      padding: 0 12px;
-      border-radius: 12px;
-      font-weight: 800;
-    }
-
-    .noteEditorDangerBtn {
-      background: #fff1f1;
-      color: #c74242;
-    }
-
-    #noteEditorDoneBtn {
-      background: linear-gradient(135deg, #79c7ff, #2491ff);
-      color: #fff;
-    }
-
-    #noteEditorBody {
-      flex: 1;
-      min-height: 0;
-      padding: 14px;
-      background: #f7fbff;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #noteEditorTools {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    #noteEditorColorRow {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    #noteEditorMetaLine {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      color: #728292;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    #noteEditorTextarea {
-      width: 100%;
-      height: 100%;
-      border-radius: 20px;
-      resize: none;
-      padding: 16px;
-      font-size: 14px;
-      line-height: 1.5;
-      color: #17212b;
-    }
-
-    #noteEditorCounter {
-      font-size: 11px;
-    }
-
-    #uploadLoading {
-      position: fixed;
-      inset: 0;
-      z-index: 260;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(245,248,252,.72);
-      backdrop-filter: blur(4px);
-    }
-
-    #uploadLoading.show {
-      display: flex;
-    }
-
-    #uploadLoadingCard {
-      min-width: 180px;
-      padding: 18px 20px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.96);
-      border: 1px solid #e3ebf3;
-      box-shadow: 0 18px 40px rgba(18, 36, 61, 0.12);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .uploadSpinner {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: 2px solid rgba(36,145,255,.18);
-      border-top-color: #2491ff;
-      animation: spin .85s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    #floatingToast {
+    #toast {
       position: fixed;
       left: 50%;
-      bottom: 24px;
+      bottom: calc(18px + var(--safe-bottom));
       transform: translateX(-50%) translateY(12px);
-      min-width: 220px;
-      max-width: min(88vw, 420px);
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: rgba(23,33,43,.92);
+      z-index: 10000;
+      max-width: min(92vw, 420px);
+      padding: 10px 14px;
+      border-radius: 999px;
       color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      line-height: 1.4;
-      text-align: center;
-      box-shadow: 0 14px 34px rgba(18, 36, 61, 0.22);
+      background: rgba(23, 33, 43, 0.88);
+      font-size: 13px;
+      font-weight: 800;
       opacity: 0;
       pointer-events: none;
-      transition:
-        opacity .18s ease,
-        transform .18s ease;
-      z-index: 10050;
+      transition: opacity 0.18s ease, transform 0.18s ease;
     }
 
-    #floatingToast.show {
+    #toast.visible {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
 
-    #rotateGuideOverlay {
+    #viewerOverlay {
       position: fixed;
       inset: 0;
-      z-index: 10060;
+      z-index: 5000;
       display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(15, 23, 42, 0.42);
-      backdrop-filter: blur(4px);
-      padding: 20px;
-    }
-
-    #rotateGuideOverlay.open {
-      display: flex;
-    }
-
-    #rotateGuideCard {
-      width: min(92vw, 360px);
-      background: rgba(255,255,255,.98);
-      border: 1px solid #e3ebf3;
-      border-radius: 22px;
-      box-shadow: 0 20px 42px rgba(18, 36, 61, 0.18);
-      padding: 20px 18px 16px;
-    }
-
-    #rotateGuideTitle {
-      font-size: 18px;
-      font-weight: 800;
-      color: #17212b;
-      margin-bottom: 8px;
-    }
-
-    #rotateGuideDesc {
-      font-size: 13px;
-      line-height: 1.6;
-      color: #5c6f82;
-    }
-
-    #rotateGuideConfirmBtn {
-      margin-top: 16px;
-      width: 100%;
-      height: 46px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #79c7ff, #2491ff);
+      background: #0b1118;
       color: #fff;
-      font-size: 14px;
-      font-weight: 800;
     }
 
-
-    .mobileOnlyViewerBtn {
-      display: none;
-      position: relative;
-    }
-
-    .viewerBadge {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
-      border-radius: 999px;
-      background: #ff3b30;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 800;
-      line-height: 18px;
-      text-align: center;
-      display: none;
-      box-shadow: 0 2px 8px rgba(18, 36, 61, 0.18);
-    }
-
-    .viewerBadge.show {
+    body.viewer-open #viewerOverlay {
       display: block;
     }
 
-    /* ==========================================================
-       MOBILE BASE + SINGLE LANDSCAPE WORKSPACE
-       Old duplicated mobile-landscape grid/flex rules were removed.
-       This is now the only mobile workspace rule-set.
-    ========================================================== */
-    @media (max-width: 900px) {
-      #header { height: 70px; padding: 0 16px; }
-      #title { font-size: 18px; }
-      #quickRequestBar { padding: 10px 12px 8px; }
-      #quickRequestButtons { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-      #quickRequestButtons::-webkit-scrollbar { display: none; }
-      .quickChip { flex: 0 0 auto; }
-      #chatBox { padding: 12px; }
-      .senderAvatar { width: 34px; height: 34px; font-size: 15px; }
-      .messageStack { max-width: min(78%, 100%); }
-      .bubble { font-size: 14px; padding: 11px 14px; }
-      .chatImg { max-width: 220px; }
-      #inputArea { padding: 10px 12px calc(12px + var(--safe-bottom)); }
-      #messageRowBar { padding: 8px; border-radius: 14px; }
-      #msgInput { height: 42px; }
-
-      #viewerTopbar { height: 72px; padding: 0 16px; }
-      #viewerTopTitle { font-size: 18px; }
-      #viewerTopSub { font-size: 12px; }
-      #viewerMain { display: flex !important; flex-direction: column !important; gap: 10px !important; padding: 10px !important; height: calc(100dvh - 72px) !important; }
-      #viewerRight { display: none; }
-      #viewerLeft { flex: 1 1 auto !important; min-height: 0 !important; }
-      #canvasWrap { padding: 10px !important; }
-      #imageStage { min-height: 360px !important; height: 100% !important; border-radius: 16px !important; }
-      #toolbar { padding: 10px !important; }
-      .toolBtn { width: 38px !important; height: 38px !important; min-width: 38px !important; }
-      .toolBtnSmall { width: 32px !important; height: 32px !important; min-width: 32px !important; }
-      .toolBtnLabel { display: none; }
-      .noteToolBtn { width: 38px !important; padding: 0 !important; }
+    #viewerStage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(35, 136, 255, 0.18), transparent 28%),
+        #0b1118;
+      touch-action: none;
     }
 
-    /* Mobile landscape workspace: class-based, not media-dependent.
-       JS adds mobile-landscape-mode immediately when a mobile viewer opens,
-       so this works even before orientation APIs finish. */
-    body.mobile-landscape-mode #viewerOverlay {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100dvh !important;
-      min-height: 100dvh !important;
+    #imageStage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #viewerImage,
+    #drawCanvas,
+    #connectorLayer,
+    #noteLayer {
+      position: absolute;
+    }
+
+    #viewerImage {
+      display: block;
+      object-fit: fill;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.34);
+      background: #111923;
+    }
+
+    #drawCanvas {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #connectorLayer,
+    #noteLayer {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .floatingBtn {
+      position: fixed;
+      z-index: 5020;
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: rgba(18, 26, 36, 0.88);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(14px);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    #viewerCloseButton {
+      top: calc(16px + var(--safe-top));
+      right: calc(16px + var(--safe-right));
+    }
+
+    #viewerToolsButton {
+      top: calc(16px + var(--safe-top));
+      left: calc(16px + var(--safe-left));
+    }
+
+    #viewerChatButton {
+      top: calc(72px + var(--safe-top));
+      left: calc(16px + var(--safe-left));
+    }
+
+    #viewerChatBadge {
+      position: absolute;
+      right: -7px;
+      top: -7px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 999px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: var(--danger);
+      font-size: 11px;
+      line-height: 20px;
+      font-weight: 900;
+    }
+
+    #viewerChatBadge.visible {
+      display: inline-flex;
+    }
+
+    #toolPanel,
+    #viewerChatPanel {
+      position: fixed;
+      z-index: 5015;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      background: rgba(16, 24, 34, 0.92);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      color: #fff;
+    }
+
+    #toolPanel {
+      left: calc(16px + var(--safe-left));
+      bottom: calc(16px + var(--safe-bottom));
+      width: min(440px, calc(100vw - 32px));
+      padding: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #viewerChatPanel {
+      right: calc(16px + var(--safe-right));
+      top: calc(76px + var(--safe-top));
+      bottom: calc(16px + var(--safe-bottom));
+      width: min(360px, calc(100vw - 32px));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .toolButton {
+      height: 38px;
+      min-width: 58px;
+      padding: 0 12px;
+      border-radius: 12px;
+      color: #eaf3ff;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .toolButton.active {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    #colorPicker {
+      width: 42px;
+      height: 38px;
+      padding: 3px;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    #thicknessRange {
+      width: 110px;
+      accent-color: var(--primary);
+    }
+
+    #thicknessLabel {
+      min-width: 34px;
+      color: #d8e7f8;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    #viewerChatHeader {
+      flex: 0 0 auto;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    #viewerChatCloseButton {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      font-weight: 900;
+    }
+
+    #viewerChatList {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    #viewerChatInputBar {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #viewerMessageInput {
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    #viewerSendButton {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+    }
+
+    .note {
+      position: absolute;
+      min-width: 112px;
+      min-height: 72px;
+      border-radius: 12px;
+      overflow: hidden;
+      color: #17212b;
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .noteHeader {
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 7px 0 9px;
+      background: rgba(0, 0, 0, 0.08);
+      cursor: grab;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .noteDelete {
+      width: 20px;
+      height: 20px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.45);
+      color: #17212b;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .noteText {
+      width: 100%;
+      height: calc(100% - 26px);
+      min-height: 46px;
+      resize: none;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #17212b;
+      padding: 8px 9px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    body.mobile-landscape-mode {
+      width: 100vw;
+      height: 100dvh;
       overflow: hidden !important;
-      background: #f3f6fa !important;
+      background: #0b1118;
     }
 
-    body.mobile-landscape-mode #viewerTopbar {
-      position: fixed !important;
-      top: max(6px, env(safe-area-inset-top)) !important;
-      right: max(8px, env(safe-area-inset-right)) !important;
-      left: auto !important;
-      width: auto !important;
-      height: auto !important;
-      min-height: 0 !important;
-      padding: 0 !important;
-      border: 0 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-      display: flex !important;
-      justify-content: flex-end !important;
-      z-index: 10040 !important;
-      pointer-events: none !important;
+    body.mobile-landscape-mode #viewerOverlay,
+    body.mobile-landscape-mode #viewerStage {
+      width: 100vw;
+      height: 100dvh;
     }
 
-    body.mobile-landscape-mode #viewerTopLeft,
-    body.mobile-landscape-mode #viewerTopTitle,
-    body.mobile-landscape-mode #viewerTopSub {
-      display: none !important;
+    body.mobile-landscape-mode #toolPanel,
+    body.mobile-landscape-mode #viewerChatPanel {
+      display: none;
     }
 
-    body.mobile-landscape-mode #viewerActions {
-      display: flex !important;
-      gap: 6px !important;
-      margin-left: auto !important;
-      pointer-events: auto !important;
+    body.mobile-landscape-mode.viewer-tools-open #toolPanel {
+      display: flex;
+      top: calc(68px + var(--safe-top));
+      left: calc(10px + var(--safe-left));
+      bottom: auto;
+      max-width: min(420px, calc(100vw - 20px - var(--safe-left) - var(--safe-right)));
+      max-height: calc(100dvh - 84px - var(--safe-top) - var(--safe-bottom));
+      overflow: auto;
     }
 
-    body.mobile-landscape-mode .mobileOnlyViewerBtn {
-      display: inline-flex !important;
+    body.mobile-landscape-mode.viewer-chat-open #viewerChatPanel {
+      display: flex;
+      top: calc(10px + var(--safe-top));
+      right: calc(10px + var(--safe-right));
+      bottom: calc(10px + var(--safe-bottom));
+      width: min(360px, 52vw);
+      max-width: calc(100vw - 20px - var(--safe-left) - var(--safe-right));
     }
 
-    body.mobile-landscape-mode .viewerBtn {
-      width: 42px !important;
-      min-width: 42px !important;
-      height: 42px !important;
-      min-height: 42px !important;
-      border-radius: 14px !important;
-      background: rgba(241, 245, 249, 0.94) !important;
-      box-shadow: 0 8px 18px rgba(18, 36, 61, 0.12) !important;
-      backdrop-filter: blur(10px) !important;
+    body.mobile-landscape-mode #viewerCloseButton {
+      top: calc(10px + var(--safe-top));
+      right: calc(10px + var(--safe-right));
     }
 
-    body.mobile-landscape-mode #viewerMain {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100dvh !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      display: block !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      overflow: hidden !important;
-      box-sizing: border-box !important;
+    body.mobile-landscape-mode #viewerToolsButton {
+      top: calc(10px + var(--safe-top));
+      left: calc(10px + var(--safe-left));
     }
 
-    body.mobile-landscape-mode #viewerLeft {
-      position: absolute !important;
-      inset: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      overflow: hidden !important;
-      background: #f3f6fa !important;
+    body.mobile-landscape-mode #viewerChatButton {
+      top: calc(62px + var(--safe-top));
+      left: calc(10px + var(--safe-left));
     }
 
-    body.mobile-landscape-mode #canvasWrap {
-      position: absolute !important;
-      inset: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      padding: 4px !important;
-      overflow: hidden !important;
-      background: #f3f6fa !important;
+    @media (max-width: 640px) {
+      #chatHeader {
+        height: 62px;
+        padding: 0 14px;
+      }
+
+      #chatTitle { font-size: 18px; }
+      #quickRequestBar { padding: 10px 12px; }
+      #messageList { padding: 14px 12px; }
+      .bubble { max-width: 84%; }
     }
-
-    body.mobile-landscape-mode #imageStage {
-      width: 100% !important;
-      height: 100% !important;
-      min-height: 0 !important;
-      max-height: 100% !important;
-      border-radius: 16px !important;
-      overflow: hidden !important;
-    }
-
-    body.mobile-landscape-mode #viewerRight {
-      position: fixed !important;
-      top: calc(max(6px, env(safe-area-inset-top)) + 50px) !important;
-      right: max(8px, env(safe-area-inset-right)) !important;
-      bottom: max(8px, env(safe-area-inset-bottom)) !important;
-      left: auto !important;
-      width: min(340px, 42vw) !important;
-      min-width: 220px !important;
-      max-width: calc(100vw - 24px) !important;
-      height: auto !important;
-      min-height: 0 !important;
-      display: none !important;
-      border-radius: 18px !important;
-      overflow: hidden !important;
-      z-index: 10030 !important;
-      box-shadow: 0 18px 42px rgba(18, 36, 61, 0.18) !important;
-      background: #fff !important;
-    }
-
-    body.mobile-landscape-mode.viewer-chat-open #viewerRight {
-      display: flex !important;
-    }
-
-    body.mobile-landscape-mode #viewerChatBox { padding: 10px !important; }
-    body.mobile-landscape-mode #viewerInputBar { padding: 8px !important; }
-    body.mobile-landscape-mode #viewerMsgInput { height: 40px !important; font-size: 13px !important; }
-    body.mobile-landscape-mode #viewerSendBtn { width: 40px !important; min-width: 40px !important; height: 40px !important; border-radius: 12px !important; }
-
-    body.mobile-landscape-mode #toolbar {
-      position: fixed !important;
-      top: calc(max(6px, env(safe-area-inset-top)) + 50px) !important;
-      right: max(8px, env(safe-area-inset-right)) !important;
-      left: auto !important;
-      bottom: auto !important;
-      width: min(320px, 42vw) !important;
-      max-width: calc(100vw - 24px) !important;
-      max-height: calc(100dvh - 68px) !important;
-      overflow-y: auto !important;
-      display: none !important;
-      padding: 10px !important;
-      border: 1px solid rgba(223, 231, 240, 0.95) !important;
-      border-radius: 18px !important;
-      background: rgba(255, 255, 255, 0.96) !important;
-      box-shadow: 0 18px 42px rgba(18, 36, 61, 0.18) !important;
-      z-index: 10031 !important;
-      backdrop-filter: blur(12px) !important;
-    }
-
-    body.mobile-landscape-mode.viewer-tools-open #toolbar {
-      display: block !important;
-    }
-
-    body.mobile-landscape-mode #toolbarGuide { display: none !important; }
-    body.mobile-landscape-mode #toolbarInline { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; overflow: visible !important; }
-    body.mobile-landscape-mode .toolBtn { width: 38px !important; min-width: 38px !important; height: 38px !important; min-height: 38px !important; border-radius: 12px !important; }
-    body.mobile-landscape-mode .noteToolBtn { width: auto !important; min-width: 38px !important; padding: 0 10px !important; }
-    body.mobile-landscape-mode .toolBtnLabel { display: inline !important; font-size: 11px !important; }
-    body.mobile-landscape-mode #thicknessWrap { height: 38px !important; padding: 0 8px !important; }
-    body.mobile-landscape-mode #thicknessRange { width: 82px !important; }
-
   </style>
 </head>
-
 <body>
   <div id="app">
-    <section id="chatCard">
-      <div id="header">
-        <div id="title">디자인 상담</div>
-        <div id="connectionBadge" aria-live="polite">연결 중</div>
+    <section id="chatPanel" aria-label="상담 채팅">
+      <header id="chatHeader">
+        <div>
+          <h1 id="chatTitle">디자인 상담</h1>
+          <div id="chatSubtitle">이미지를 올리고 필요한 부분을 함께 표시해 주세요</div>
+        </div>
+        <div id="connectionBadge">연결 중</div>
+      </header>
+
+      <div id="quickRequestBar" aria-label="빠른 요청">
+        <button class="quickChip" type="button" data-text="공간에 어울리는 제품을 추천해 주세요.">제품 추천</button>
+        <button class="quickChip" type="button" data-text="사진 속 공간 기준으로 배치 상담을 받고 싶어요.">배치 상담</button>
+        <button class="quickChip" type="button" data-text="색상과 소재 조합을 같이 봐 주세요.">색상 상담</button>
+        <button class="quickChip" type="button" data-text="업로드한 이미지에서 수정할 부분을 표시할게요.">이미지 표시</button>
       </div>
 
-      <div id="quickRequestBar">
-        <div id="quickRequestTitle">커스텀 내용을 선택해주세요.</div>
-        <div id="quickRequestButtons">
-          <button class="quickChip" type="button" data-draft="색상을 변경하고 싶어요.">색상 바꾸기</button>
-          <button class="quickChip" type="button" data-draft="문구를 추가하고 싶어요.">문구 넣기</button>
-          <button class="quickChip" type="button" data-draft="사이즈를 조정하고 싶어요.">크기 조정</button>
-          <button class="quickChip" type="button" data-draft="디자인 일부를 수정하고 싶어요.">디자인 수정 요청</button>
-          <button class="quickChip" type="button" data-draft="제 취향에 맞는 추천을 받고 싶어요.">추천 받기</button>
-        </div>
-      </div>
+      <main id="messageList" aria-live="polite">
+        <div id="messageInner"></div>
+      </main>
 
-      <div id="chatBox">
-        <div id="chatInner"></div>
-      </div>
+      <form id="inputBar">
+        <label class="iconBtn" for="uploadInput" title="이미지 업로드" aria-label="이미지 업로드">+</label>
+        <input id="uploadInput" type="file" accept="image/*" />
+        <input id="messageInput" type="text" autocomplete="off" placeholder="상담 내용을 입력하세요" />
+        <button id="sendButton" type="submit" aria-label="전송">전송</button>
+      </form>
+    </section>
 
-      <div id="inputArea">
-        <div id="messageRowBar">
-          <input
-            id="msgInput"
-            type="text"
-            placeholder="예: 플라워샵 벽걸이 램프 색상을 베이지로 바꾸고 싶어요"
-            autocomplete="off"
-          />
-          <button id="sendBtn" type="button" aria-label="메시지 전송">➤</button>
-          <label id="fileLabel" for="fileInput" aria-label="이미지 첨부">📎</label>
-          <input id="fileInput" type="file" accept="image/*" />
+    <section id="viewerOverlay" aria-hidden="true" aria-label="이미지 협업 뷰어">
+      <div id="viewerStage">
+        <div id="imageStage">
+          <img id="viewerImage" alt="협업 이미지" />
+          <canvas id="drawCanvas"></canvas>
+          <svg id="connectorLayer" aria-hidden="true"></svg>
+          <div id="noteLayer"></div>
         </div>
 
-        <div class="inputGuide">
-          이미지와 함께 요청하면 더 정확하게 상담할 수 있어요.
-          모바일에서는 이미지를 누르면 전체화면 협업으로 전환됩니다.
-        </div>
+        <button id="viewerCloseButton" class="floatingBtn" type="button" aria-label="닫기">닫기</button>
+        <button id="viewerToolsButton" class="floatingBtn" type="button" aria-label="도구">도구</button>
+        <button id="viewerChatButton" class="floatingBtn" type="button" aria-label="채팅">
+          채팅
+          <span id="viewerChatBadge">0</span>
+        </button>
+
+        <aside id="toolPanel" aria-label="협업 도구">
+          <button class="toolButton active" id="penTool" type="button" data-tool="pen">펜</button>
+          <button class="toolButton" id="eraserTool" type="button" data-tool="eraser">지우개</button>
+          <button class="toolButton" id="noteTool" type="button" data-tool="note">메모</button>
+          <button class="toolButton" id="undoButton" type="button">실행취소</button>
+          <button class="toolButton" id="redoButton" type="button">다시실행</button>
+          <button class="toolButton" id="clearButton" type="button">전체삭제</button>
+          <input id="colorPicker" type="color" value="#ff3b30" aria-label="펜 색상" />
+          <input id="thicknessRange" type="range" min="1" max="24" value="4" aria-label="펜 두께" />
+          <span id="thicknessLabel">4px</span>
+        </aside>
+
+        <aside id="viewerChatPanel" aria-label="협업 채팅">
+          <div id="viewerChatHeader">
+            <span>협업 채팅</span>
+            <button id="viewerChatCloseButton" type="button" aria-label="채팅 닫기">x</button>
+          </div>
+          <div id="viewerChatList">
+            <div id="viewerChatInner"></div>
+          </div>
+          <form id="viewerChatInputBar">
+            <input id="viewerMessageInput" type="text" autocomplete="off" placeholder="메시지 입력" />
+            <button id="viewerSendButton" type="submit" aria-label="전송">전송</button>
+          </form>
+        </aside>
       </div>
     </section>
   </div>
 
-  <div id="viewerOverlay" aria-hidden="true">
-    <div id="viewerTopbar">
-      <div id="viewerTopLeft">
-        <div id="viewerTopTitle">이미지 협업</div>
-        <div id="viewerTopSub">현재 상담과 연결된 협업 화면입니다</div>
-      </div>
-
-      <div id="viewerActions">
-        <button id="viewerToolToggleBtn" class="viewerBtn mobileOnlyViewerBtn" type="button" aria-label="도구 열기" aria-expanded="false">🛠</button>
-        <button id="viewerChatToggleBtn" class="viewerBtn mobileOnlyViewerBtn" type="button" aria-label="채팅 열기" aria-expanded="false">💬<span id="viewerChatBadge" class="viewerBadge">0</span></button>
-        <button id="downloadSketchBtn" class="viewerBtn" type="button" aria-label="이미지 다운로드">↓</button>
-        <button id="viewerCloseBtn" class="viewerBtn" type="button" aria-label="스케치 종료">✕</button>
-      </div>
-    </div>
-
-    <div id="viewerMain">
-      <section id="viewerLeft">
-        <div id="canvasWrap">
-          <div id="imageStage">
-            <img id="viewerImage" alt="상담 이미지" />
-            <canvas id="drawCanvas"></canvas>
-            <div id="textLayer"></div>
-            <div id="brushCursor"></div>
-          </div>
-        </div>
-
-        <div id="toolbar">
-          <div id="toolbarGuide">펜으로 표시하고 메모로 수정 내용을 남겨보세요</div>
-
-          <div id="toolbarInline">
-            <button id="penBtn" class="toolBtn active" type="button" aria-label="펜" title="펜">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-              </svg>
-            </button>
-
-            <button id="eraserBtn" class="toolBtn" type="button" aria-label="지우개" title="지우개">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20 20H7"></path>
-                <path d="M14.5 4.5l5 5-8.6 8.6a2 2 0 0 1-2.8 0l-3.2-3.2a2 2 0 0 1 0-2.8z"></path>
-              </svg>
-            </button>
-
-            <button id="noteBtn" class="toolBtn noteToolBtn" type="button" aria-label="메모장" title="메모장">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M8 3h8"></path>
-                <path d="M9 3v3"></path>
-                <path d="M15 3v3"></path>
-                <rect x="5" y="5" width="14" height="16" rx="2"></rect>
-                <path d="M8 10h8"></path>
-                <path d="M8 14h6"></path>
-              </svg>
-              <span class="toolBtnLabel">메모장</span>
-            </button>
-
-            <button id="undoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="되돌리기" title="되돌리기">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 14L4 9l5-5"></path>
-                <path d="M4 9h9a7 7 0 1 1 0 14"></path>
-              </svg>
-            </button>
-
-            <button id="redoBtn" class="toolBtn toolBtnSmall" type="button" aria-label="다시 실행" title="다시 실행">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M15 14l5-5-5-5"></path>
-                <path d="M20 9h-9a7 7 0 1 0 0 14"></path>
-              </svg>
-            </button>
-
-            <button id="clearBtn" class="toolBtn toolBtnSmall" type="button" aria-label="전체 지우기" title="전체 지우기">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M3 6h18"></path>
-                <path d="M8 6V4h8v2"></path>
-                <path d="M19 6l-1 14H6L5 6"></path>
-              </svg>
-            </button>
-
-            <div id="thicknessWrap">
-              <input id="thicknessRange" type="range" min="1" max="24" value="4" />
-            </div>
-
-            <div id="paletteWrap">
-              <button id="paletteBtn" class="toolBtn" type="button" aria-label="색상 선택" title="색상 선택">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 3a9 9 0 1 0 0 18h1a3 3 0 0 0 0-6h-1a3 3 0 0 1 0-6h2"></path>
-                  <circle cx="7.5" cy="10.5" r="1"></circle>
-                  <circle cx="12" cy="7.5" r="1"></circle>
-                  <circle cx="16.5" cy="10.5" r="1"></circle>
-                </svg>
-                <span id="palettePreview"></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <aside id="viewerRight">
-        <div id="viewerChatBox">
-          <div id="viewerChatInner"></div>
-        </div>
-
-        <div id="viewerInputBar">
-          <input
-            id="viewerMsgInput"
-            type="text"
-            placeholder="협업 내용을 메시지로 남겨보세요"
-            autocomplete="off"
-          />
-          <button id="viewerSendBtn" type="button" aria-label="메시지 전송">➤</button>
-        </div>
-      </aside>
-    </div>
-  </div>
-
-  <div id="noteEditorOverlay" aria-hidden="true">
-    <div id="noteEditorHeader">
-      <div id="noteEditorTitleWrap">
-        <div id="noteEditorTitle">메모 편집</div>
-        <div id="noteEditorMeta">
-          <span id="noteEditorSaveBadge" class="saved">저장됨</span>
-        </div>
-      </div>
-
-      <div id="noteEditorActions">
-        <button id="noteEditorDeleteBtn" class="noteEditorDangerBtn" type="button">삭제</button>
-        <button id="noteEditorDoneBtn" type="button">완료</button>
-      </div>
-    </div>
-
-    <div id="noteEditorBody">
-      <div id="noteEditorTools">
-        <div id="noteEditorColorRow"></div>
-      </div>
-
-      <div id="noteEditorMetaLine">
-        <span>메모 내용을 수정하세요</span>
-        <span id="noteEditorCounter">0 / 500</span>
-      </div>
-
-      <textarea id="noteEditorTextarea" maxlength="500" placeholder="메모를 입력하세요"></textarea>
-    </div>
-  </div>
-
-  <div id="colorPopover" aria-hidden="true">
-    <div id="colorPopoverGrid"></div>
-  </div>
-
-  <div id="uploadLoading">
-    <div id="uploadLoadingCard">
-      <div class="uploadSpinner"></div>
-      <div>이미지를 업로드 중입니다...</div>
-    </div>
-  </div>
-
-  <div id="floatingToast" aria-live="polite"></div>
-
-  <div id="rotateGuideOverlay" aria-hidden="true">
-    <div id="rotateGuideCard">
-      <div id="rotateGuideTitle">가로 화면 사용 권장</div>
-      <div id="rotateGuideDesc">
-        협업 전 핸드폰 화면 회전 기능이 켜져 있는지 확인해주세요.
-        지원 기기에서는 가로 화면으로 자동 전환을 시도합니다.
-      </div>
-      <button id="rotateGuideConfirmBtn" type="button">확인</button>
-    </div>
-  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     (function () {
+      "use strict";
+
       const params = new URLSearchParams(window.location.search);
-
-      const el = {
-        title: document.getElementById("title"),
-        connectionBadge: document.getElementById("connectionBadge"),
-        chatBox: document.getElementById("chatBox"),
-        chatInner: document.getElementById("chatInner"),
-        msgInput: document.getElementById("msgInput"),
-        sendBtn: document.getElementById("sendBtn"),
-        fileInput: document.getElementById("fileInput"),
-        fileLabel: document.getElementById("fileLabel"),
-        quickRequestButtons: document.getElementById("quickRequestButtons"),
-
-        viewerOverlay: document.getElementById("viewerOverlay"),
-        viewerImage: document.getElementById("viewerImage"),
-        imageStage: document.getElementById("imageStage"),
-        drawCanvas: document.getElementById("drawCanvas"),
-        textLayer: document.getElementById("textLayer"),
-        brushCursor: document.getElementById("brushCursor"),
-        viewerChatBox: document.getElementById("viewerChatBox"),
-        viewerChatInner: document.getElementById("viewerChatInner"),
-        viewerMsgInput: document.getElementById("viewerMsgInput"),
-        viewerSendBtn: document.getElementById("viewerSendBtn"),
-        viewerCloseBtn: document.getElementById("viewerCloseBtn"),
-        viewerToolToggleBtn: document.getElementById("viewerToolToggleBtn"),
-        viewerChatToggleBtn: document.getElementById("viewerChatToggleBtn"),
-        viewerChatBadge: document.getElementById("viewerChatBadge"),
-        downloadSketchBtn: document.getElementById("downloadSketchBtn"),
-
-        penBtn: document.getElementById("penBtn"),
-        eraserBtn: document.getElementById("eraserBtn"),
-        noteBtn: document.getElementById("noteBtn"),
-        undoBtn: document.getElementById("undoBtn"),
-        redoBtn: document.getElementById("redoBtn"),
-        clearBtn: document.getElementById("clearBtn"),
-        thicknessRange: document.getElementById("thicknessRange"),
-        paletteBtn: document.getElementById("paletteBtn"),
-        colorPopover: document.getElementById("colorPopover"),
-        colorPopoverGrid: document.getElementById("colorPopoverGrid"),
-
-        noteEditorOverlay: document.getElementById("noteEditorOverlay"),
-        noteEditorTextarea: document.getElementById("noteEditorTextarea"),
-        noteEditorCounter: document.getElementById("noteEditorCounter"),
-        noteEditorDoneBtn: document.getElementById("noteEditorDoneBtn"),
-        noteEditorDeleteBtn: document.getElementById("noteEditorDeleteBtn"),
-        noteEditorSaveBadge: document.getElementById("noteEditorSaveBadge"),
-        noteEditorColorRow: document.getElementById("noteEditorColorRow"),
-
-        floatingToast: document.getElementById("floatingToast"),
-        uploadLoading: document.getElementById("uploadLoading"),
-        rotateGuideOverlay: document.getElementById("rotateGuideOverlay"),
-        rotateGuideConfirmBtn: document.getElementById("rotateGuideConfirmBtn")
-      };
-
-      const canvasCtx = el.drawCanvas.getContext("2d");
-      let socket = null;
-      let toastTimer = null;
-      let noteSaveTimer = null;
-      let lastViewerRequestAt = 0;
-
-      const DRAW_COLORS = [
-        "#ff3b30", "#ff9500", "#ffd60a", "#34c759", "#0a84ff",
-        "#5e5ce6", "#bf5af2", "#ff2d55", "#111827", "#ffffff"
-      ];
-
-      const NOTE_COLORS = [
-        "#fff7c2", "#dff7d6", "#d8ecff",
-        "#ffe1d6", "#f2ddff", "#ffe6f1"
-      ];
+      const parentOriginParam = params.get("parentOrigin") || "";
+      const safeParentOrigin = parentOriginParam && parentOriginParam !== "null" ? parentOriginParam : "";
+      const embedded = params.get("embed") === "1";
+      const viewerOnly = params.get("viewerOnly") === "1";
+      const hostView = params.get("hostView") || (window.innerWidth <= 768 ? "mobile" : "desktop");
 
       const state = {
-        apiBase: window.location.origin,
+        roomId: params.get("roomId") || localStorage.getItem("designChat.roomId") || createId("room"),
+        userName: params.get("userName") || localStorage.getItem("designChat.userName") || "고객",
+        role: params.get("role") === "admin" ? "admin" : "user",
         socketPath: "/socket.io",
-        version: "boot",
-        connected: false,
         joined: false,
-        roomId: (params.get("roomId") || "").trim() || createUuid(),
-        userName: (params.get("userName") || "").trim() || "고객",
-        role: (params.get("role") || "").trim() === "admin" ? "admin" : "user",
-        embed: params.get("embed") === "1",
-        viewerOnly: params.get("viewerOnly") === "1" || params.get("viewer") === "1",
-        hostView: (params.get("hostView") || "").trim() || "desktop",
-        parentOrigin: (params.get("parentOrigin") || "").trim(),
-
-        currentViewerImageId: "",
-        currentViewerImageUrl: "",
-
-        strokes: [],
-        redoStrokes: [],
-        currentStroke: null,
-
-        notes: [],
-        activeNoteId: "",
-        draggingNoteId: "",
-        draggingNotePointerId: null,
-        dragOffsetX: 0,
-        dragOffsetY: 0,
-
-        mode: "draw",
+        messages: [],
+        currentImageId: params.get("imageId") || "",
+        currentImageUrl: params.get("imageUrl") || "",
+        viewerOpen: false,
+        viewerOnly,
+        hostView,
+        tool: "pen",
         color: "#ff3b30",
-        width: 4,
-        noteColor: "#fff7c2",
-
-        pendingMessages: [],
-        isFullscreenViewer: false,
-        isViewerChatOpen: false,
-        isViewerToolsOpen: false,
+        thickness: 4,
+        strokes: [],
+        redoStack: [],
+        currentStroke: null,
+        notes: [],
+        draggingNote: null,
         unreadViewerCount: 0,
-        forceMobileLandscape: false
+        isViewerChatOpen: false,
+        imageReady: false,
+        fitRaf: 0
       };
 
-      function createUuid() {
-        if (window.crypto && window.crypto.randomUUID) {
-          return window.crypto.randomUUID();
-        }
-        return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+      localStorage.setItem("designChat.roomId", state.roomId);
+      localStorage.setItem("designChat.userName", state.userName);
+
+      const el = {
+        body: document.body,
+        chatSubtitle: document.getElementById("chatSubtitle"),
+        connectionBadge: document.getElementById("connectionBadge"),
+        messageList: document.getElementById("messageList"),
+        messageInner: document.getElementById("messageInner"),
+        inputBar: document.getElementById("inputBar"),
+        messageInput: document.getElementById("messageInput"),
+        uploadInput: document.getElementById("uploadInput"),
+        quickRequestBar: document.getElementById("quickRequestBar"),
+        viewerOverlay: document.getElementById("viewerOverlay"),
+        viewerStage: document.getElementById("viewerStage"),
+        imageStage: document.getElementById("imageStage"),
+        viewerImage: document.getElementById("viewerImage"),
+        drawCanvas: document.getElementById("drawCanvas"),
+        noteLayer: document.getElementById("noteLayer"),
+        viewerCloseButton: document.getElementById("viewerCloseButton"),
+        viewerToolsButton: document.getElementById("viewerToolsButton"),
+        viewerChatButton: document.getElementById("viewerChatButton"),
+        viewerChatBadge: document.getElementById("viewerChatBadge"),
+        toolPanel: document.getElementById("toolPanel"),
+        viewerChatPanel: document.getElementById("viewerChatPanel"),
+        viewerChatList: document.getElementById("viewerChatList"),
+        viewerChatInner: document.getElementById("viewerChatInner"),
+        viewerChatInputBar: document.getElementById("viewerChatInputBar"),
+        viewerMessageInput: document.getElementById("viewerMessageInput"),
+        viewerChatCloseButton: document.getElementById("viewerChatCloseButton"),
+        colorPicker: document.getElementById("colorPicker"),
+        thicknessRange: document.getElementById("thicknessRange"),
+        thicknessLabel: document.getElementById("thicknessLabel"),
+        toast: document.getElementById("toast")
+      };
+
+      const ctx = el.drawCanvas.getContext("2d");
+      let socket = null;
+      let toastTimer = 0;
+      let noteSaveTimer = 0;
+
+      if (viewerOnly) {
+        el.body.classList.add("viewer-only");
       }
 
-      function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
+      el.chatSubtitle.textContent = "상담 코드 " + state.roomId.slice(0, 8).toUpperCase();
+
+      function createId(prefix) {
+        if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+        return prefix + "-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+      }
+
+      function isMobileHost() {
+        return state.hostView === "mobile" || window.innerWidth <= 768;
+      }
+
+      function isOwnMessage(message) {
+        if (!message || message.sender === "system") return false;
+        return message.sender === state.role && (message.senderName || "") === displayName();
+      }
+
+      function displayName() {
+        return state.role === "admin" ? "관리자" : state.userName;
+      }
+
+      function setConnection(text, connected) {
+        el.connectionBadge.textContent = text;
+        el.connectionBadge.classList.toggle("connected", Boolean(connected));
+      }
+
+      function showToast(message) {
+        window.clearTimeout(toastTimer);
+        el.toast.textContent = message;
+        el.toast.classList.add("visible");
+        toastTimer = window.setTimeout(function () {
+          el.toast.classList.remove("visible");
+        }, 1800);
+      }
+
+      function scrollToEnd(container) {
+        requestAnimationFrame(function () {
+          container.scrollTop = container.scrollHeight;
+        });
+      }
+
+      function formatTime(time) {
+        const date = new Date(time || Date.now());
+        return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function renderMessages(messages) {
+        state.messages = Array.isArray(messages) ? messages.slice() : [];
+        el.messageInner.innerHTML = "";
+        el.viewerChatInner.innerHTML = "";
+        state.messages.forEach(function (message) {
+          appendMessageNode(message, el.messageInner);
+          appendMessageNode(message, el.viewerChatInner);
+        });
+        scrollToEnd(el.messageList);
+        scrollToEnd(el.viewerChatList);
+      }
+
+      function appendMessage(message) {
+        state.messages.push(message);
+        appendMessageNode(message, el.messageInner);
+        appendMessageNode(message, el.viewerChatInner);
+        scrollToEnd(el.messageList);
+        scrollToEnd(el.viewerChatList);
+
+        if (
+          state.viewerOpen &&
+          el.body.classList.contains("mobile-landscape-mode") &&
+          !state.isViewerChatOpen &&
+          !isOwnMessage(message)
+        ) {
+          state.unreadViewerCount += 1;
+          updateViewerBadge();
+        }
+      }
+
+      function appendMessageNode(message, target) {
+        const row = document.createElement("div");
+        const own = isOwnMessage(message);
+        row.className = "messageRow " + (message.sender === "system" ? "system" : own ? "me" : "other");
+
+        if (message.sender !== "system") {
+          const meta = document.createElement("div");
+          meta.className = "messageMeta";
+          meta.textContent = (message.senderName || "고객") + " · " + formatTime(message.time);
+          row.appendChild(meta);
+        }
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+
+        if (message.type === "image" && message.imageUrl) {
+          bubble.classList.add("imageBubble");
+          const button = document.createElement("button");
+          button.className = "chatImageButton";
+          button.type = "button";
+          button.setAttribute("aria-label", "협업 뷰어 열기");
+          const img = document.createElement("img");
+          img.src = message.imageUrl;
+          img.alt = "업로드 이미지";
+          button.appendChild(img);
+          button.addEventListener("click", function () {
+            handleImageTap(message.imageId, message.imageUrl);
+          });
+          const hint = document.createElement("div");
+          hint.className = "imageHint";
+          hint.textContent = "이미지를 눌러 협업 화면 열기";
+          bubble.appendChild(button);
+          bubble.appendChild(hint);
+        } else {
+          bubble.textContent = message.text || "";
+        }
+
+        row.appendChild(bubble);
+        target.appendChild(row);
+      }
+
+      function sendText(text) {
+        const value = String(text || "").trim();
+        if (!value || !socket || !state.joined) return;
+        socket.emit("message", { text: value }, function (response) {
+          if (!response || !response.ok) showToast((response && response.error) || "메시지 전송 실패");
+        });
+      }
+
+      async function uploadImage(file) {
+        if (!file || !file.type || !file.type.startsWith("image/")) {
+          showToast("이미지 파일만 업로드할 수 있습니다.");
+          return;
+        }
+        if (!socket || !state.joined) {
+          showToast("서버 연결 후 다시 시도해 주세요.");
+          return;
+        }
+
+        const form = new FormData();
+        form.append("image", file);
+        showToast("이미지를 업로드하는 중입니다.");
+
+        try {
+          const response = await fetch("/upload", { method: "POST", body: form });
+          const data = await response.json();
+          if (!response.ok || !data.url) throw new Error(data.error || "업로드 실패");
+
+          socket.emit("image", { url: data.url }, function (result) {
+            if (!result || !result.ok) {
+              showToast((result && result.error) || "이미지 저장 실패");
+              return;
+            }
+            showToast("이미지가 업로드되었습니다.");
+          });
+        } catch (error) {
+          showToast(error.message || "이미지 업로드 실패");
+        } finally {
+          el.uploadInput.value = "";
+        }
+      }
+
+      function handleImageTap(imageId, imageUrl) {
+        if (!imageId || !imageUrl) return;
+        if (embedded && safeParentOrigin && !viewerOnly && !isMobileHost()) {
+          window.parent.postMessage({
+            type: "OPEN_VIEWER_PANEL",
+            roomId: state.roomId,
+            userName: state.userName,
+            imageId: imageId,
+            imageUrl: imageUrl
+          }, safeParentOrigin);
+          return;
+        }
+        openViewer(imageId, imageUrl, { mobileLandscape: isMobileHost() });
+      }
+
+      function openViewer(imageId, imageUrl, options) {
+        state.currentImageId = imageId;
+        state.currentImageUrl = imageUrl;
+        state.viewerOpen = true;
+        state.imageReady = false;
+        state.strokes = [];
+        state.redoStack = [];
+        state.notes = [];
+        el.body.classList.add("viewer-open");
+        el.viewerOverlay.setAttribute("aria-hidden", "false");
+        closeViewerPanels();
+
+        if (options && options.mobileLandscape) {
+          enterMobileLandscapeMode();
+        }
+
+        if (el.viewerImage.src !== imageUrl) {
+          el.viewerImage.removeAttribute("src");
+          el.viewerImage.src = imageUrl;
+        } else if (el.viewerImage.complete && el.viewerImage.naturalWidth) {
+          handleViewerImageLoaded();
+        }
+
+        loadCollaborationState();
+      }
+
+      function closeViewer() {
+        state.viewerOpen = false;
+        state.currentImageId = "";
+        state.currentImageUrl = "";
+        state.currentStroke = null;
+        el.body.classList.remove("viewer-open", "mobile-landscape-mode", "viewer-chat-open", "viewer-tools-open");
+        el.viewerOverlay.setAttribute("aria-hidden", "true");
+        unlockOrientation();
+        exitFullscreenIfNeeded();
+        if (embedded && safeParentOrigin) {
+          window.parent.postMessage({ type: "CLOSE_VIEWER_PANEL" }, safeParentOrigin);
+        }
+      }
+
+      function enterMobileLandscapeMode() {
+        el.body.classList.add("mobile-landscape-mode");
+        requestAnimationFrame(function () {
+          requestFullscreenIfPossible();
+          lockLandscapeIfPossible();
+          scheduleFit();
+        });
+      }
+
+      function requestFullscreenIfPossible() {
+        const target = document.documentElement;
+        if (document.fullscreenElement || !target.requestFullscreen) return;
+        target.requestFullscreen().catch(function () {});
+      }
+
+      function exitFullscreenIfNeeded() {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(function () {});
+        }
+      }
+
+      function lockLandscapeIfPossible() {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock("landscape").catch(function () {});
+        }
+      }
+
+      function unlockOrientation() {
+        if (screen.orientation && screen.orientation.unlock) {
+          try { screen.orientation.unlock(); } catch (error) {}
+        }
+      }
+
+      function closeViewerPanels() {
+        state.isViewerChatOpen = false;
+        el.body.classList.remove("viewer-chat-open", "viewer-tools-open");
+      }
+
+      function toggleViewerChat(forceOpen) {
+        const next = typeof forceOpen === "boolean" ? forceOpen : !el.body.classList.contains("viewer-chat-open");
+        state.isViewerChatOpen = next;
+        el.body.classList.toggle("viewer-chat-open", next);
+        if (next) {
+          el.body.classList.remove("viewer-tools-open");
+          state.unreadViewerCount = 0;
+          updateViewerBadge();
+          scrollToEnd(el.viewerChatList);
+          setTimeout(function () { el.viewerMessageInput.focus(); }, 0);
+        }
+      }
+
+      function updateViewerBadge() {
+        const count = Math.min(state.unreadViewerCount, 99);
+        el.viewerChatBadge.textContent = state.unreadViewerCount > 99 ? "99+" : String(count);
+        el.viewerChatBadge.classList.toggle("visible", state.unreadViewerCount > 0);
+      }
+
+      function toggleTools() {
+        const next = !el.body.classList.contains("viewer-tools-open");
+        el.body.classList.toggle("viewer-tools-open", next);
+        if (next) {
+          el.body.classList.remove("viewer-chat-open");
+          state.isViewerChatOpen = false;
+        }
       }
 
       function getImageDisplayRect() {
-        const stageRect = el.imageStage.getBoundingClientRect();
-        const imgRect = el.viewerImage.getBoundingClientRect();
-
-        if (!imgRect.width || !imgRect.height) {
-          return {
-            left: 0,
-            top: 0,
-            width: stageRect.width,
-            height: stageRect.height
-          };
-        }
-
+        const stage = el.imageStage.getBoundingClientRect();
+        const naturalWidth = el.viewerImage.naturalWidth || 1;
+        const naturalHeight = el.viewerImage.naturalHeight || 1;
+        const safeWidth = stage.width * 0.8;
+        const safeHeight = stage.height * 0.8;
+        const scale = Math.min(safeWidth / naturalWidth, safeHeight / naturalHeight);
+        const renderWidth = naturalWidth * scale;
+        const renderHeight = naturalHeight * scale;
         return {
-          left: imgRect.left - stageRect.left,
-          top: imgRect.top - stageRect.top,
-          width: imgRect.width,
-          height: imgRect.height
-        };
-      }
-
-      function relativePointToStagePoint(x, y) {
-        const imageRect = getImageDisplayRect();
-        return {
-          x: imageRect.left + x * imageRect.width,
-          y: imageRect.top + y * imageRect.height
+          left: (stage.width - renderWidth) / 2,
+          top: (stage.height - renderHeight) / 2,
+          width: renderWidth,
+          height: renderHeight
         };
       }
 
       function clientPointToImageRelative(clientX, clientY) {
-        const stageRect = el.imageStage.getBoundingClientRect();
-        const imageRect = getImageDisplayRect();
-
+        const stage = el.imageStage.getBoundingClientRect();
+        const rect = getImageDisplayRect();
         return {
-          x: clamp((clientX - stageRect.left - imageRect.left) / imageRect.width, 0, 1),
-          y: clamp((clientY - stageRect.top - imageRect.top) / imageRect.height, 0, 1)
+          x: clamp((clientX - stage.left - rect.left) / rect.width, 0, 1),
+          y: clamp((clientY - stage.top - rect.top) / rect.height, 0, 1)
         };
       }
 
-      function escapeHtml(value) {
-        return String(value || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+      function relativePointToStagePoint(point) {
+        const rect = getImageDisplayRect();
+        return {
+          x: rect.left + clamp(Number(point.x), 0, 1) * rect.width,
+          y: rect.top + clamp(Number(point.y), 0, 1) * rect.height
+        };
       }
 
-      function formatTime(time) {
-        try {
-          return new Date(time || Date.now()).toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit"
+      function fitCanvas() {
+        const stage = el.imageStage.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        el.drawCanvas.width = Math.max(1, Math.round(stage.width * dpr));
+        el.drawCanvas.height = Math.max(1, Math.round(stage.height * dpr));
+        el.drawCanvas.style.width = stage.width + "px";
+        el.drawCanvas.style.height = stage.height + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const rect = getImageDisplayRect();
+        Object.assign(el.viewerImage.style, {
+          left: rect.left + "px",
+          top: rect.top + "px",
+          width: rect.width + "px",
+          height: rect.height + "px"
+        });
+
+        redrawCanvas();
+        renderNotes();
+      }
+
+      function scheduleFit() {
+        cancelAnimationFrame(state.fitRaf);
+        state.fitRaf = requestAnimationFrame(fitCanvas);
+      }
+
+      function redrawCanvas() {
+        const stage = el.imageStage.getBoundingClientRect();
+        ctx.clearRect(0, 0, stage.width, stage.height);
+        state.strokes.forEach(drawStroke);
+        if (state.currentStroke) drawStroke(state.currentStroke);
+      }
+
+      function drawStroke(stroke) {
+        if (!stroke || !Array.isArray(stroke.points) || stroke.points.length < 2) return;
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.globalCompositeOperation = stroke.mode === "erase" ? "destination-out" : "source-over";
+        ctx.strokeStyle = stroke.color || state.color;
+        ctx.lineWidth = Number(stroke.width || state.thickness);
+        ctx.beginPath();
+        stroke.points.forEach(function (point, index) {
+          const stagePoint = relativePointToStagePoint(point);
+          if (index === 0) ctx.moveTo(stagePoint.x, stagePoint.y);
+          else ctx.lineTo(stagePoint.x, stagePoint.y);
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function renderNotes() {
+        el.noteLayer.innerHTML = "";
+        const rect = getImageDisplayRect();
+        state.notes.forEach(function (note) {
+          const center = relativePointToStagePoint(note);
+          const width = clamp(Number(note.width || 0.18), 0.1, 0.36) * rect.width;
+          const height = clamp(Number(note.height || 0.12), 0.08, 0.32) * rect.height;
+          const node = document.createElement("div");
+          node.className = "note";
+          node.dataset.noteId = note.id;
+          node.style.left = (center.x - width / 2) + "px";
+          node.style.top = (center.y - height / 2) + "px";
+          node.style.width = width + "px";
+          node.style.height = height + "px";
+          node.style.background = note.color || "#fff7c2";
+
+          const header = document.createElement("div");
+          header.className = "noteHeader";
+          header.textContent = note.updatedByName || "메모";
+          header.addEventListener("pointerdown", function (event) {
+            startNoteDrag(event, note);
           });
-        } catch (error) {
-          return "";
-        }
-      }
 
-      function scrollToBottom(node) {
-        if (!node) return;
-        requestAnimationFrame(function () {
-          node.scrollTop = node.scrollHeight;
+          const del = document.createElement("button");
+          del.className = "noteDelete";
+          del.type = "button";
+          del.textContent = "x";
+          del.addEventListener("click", function (event) {
+            event.stopPropagation();
+            deleteNote(note.id);
+          });
+          header.appendChild(del);
+
+          const text = document.createElement("textarea");
+          text.className = "noteText";
+          text.value = note.text || "";
+          text.placeholder = "메모 입력";
+          text.addEventListener("input", function () {
+            note.text = text.value;
+            scheduleNoteSave(note);
+          });
+          text.addEventListener("pointerdown", function (event) {
+            event.stopPropagation();
+          });
+
+          node.appendChild(header);
+          node.appendChild(text);
+          el.noteLayer.appendChild(node);
         });
       }
 
-      function showToast(text) {
-        if (!text) return;
-        el.floatingToast.textContent = text;
-        el.floatingToast.classList.add("show");
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () {
-          el.floatingToast.classList.remove("show");
-        }, 1800);
+      function startNoteDrag(event, note) {
+        event.preventDefault();
+        event.stopPropagation();
+        const pointer = clientPointToImageRelative(event.clientX, event.clientY);
+        state.draggingNote = {
+          id: note.id,
+          offsetX: pointer.x - note.x,
+          offsetY: pointer.y - note.y
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
       }
 
-      function showUploadLoading(visible) {
-        el.uploadLoading.classList.toggle("show", !!visible);
+      function moveNoteDrag(event) {
+        if (!state.draggingNote) return;
+        const note = state.notes.find(function (item) { return item.id === state.draggingNote.id; });
+        if (!note) return;
+        const pointer = clientPointToImageRelative(event.clientX, event.clientY);
+        note.x = clamp(pointer.x - state.draggingNote.offsetX, 0, 1);
+        note.y = clamp(pointer.y - state.draggingNote.offsetY, 0, 1);
+        renderNotes();
       }
 
-      function isMobileLandscapeViewerMode() {
-        return document.body.classList.contains("mobile-landscape-mode");
+      function endNoteDrag() {
+        if (!state.draggingNote) return;
+        const note = state.notes.find(function (item) { return item.id === state.draggingNote.id; });
+        state.draggingNote = null;
+        if (note) saveNotePatch(note, { x: note.x, y: note.y });
       }
 
-      function updateViewerChatBadge() {
-        if (!el.viewerChatBadge) return;
-        if (state.unreadViewerCount > 0) {
-          el.viewerChatBadge.textContent = state.unreadViewerCount > 99 ? "99+" : String(state.unreadViewerCount);
-          el.viewerChatBadge.classList.add("show");
-        } else {
-          el.viewerChatBadge.textContent = "0";
-          el.viewerChatBadge.classList.remove("show");
-        }
+      function scheduleNoteSave(note) {
+        clearTimeout(noteSaveTimer);
+        noteSaveTimer = setTimeout(function () {
+          saveNotePatch(note, { text: note.text });
+        }, 350);
       }
 
-      function syncViewerMobilePanels() {
-        document.body.classList.toggle("viewer-chat-open", !!state.isViewerChatOpen);
-        document.body.classList.toggle("viewer-tools-open", !!state.isViewerToolsOpen);
-        if (el.viewerChatToggleBtn) {
-          el.viewerChatToggleBtn.setAttribute("aria-expanded", state.isViewerChatOpen ? "true" : "false");
-        }
-        if (el.viewerToolToggleBtn) {
-          el.viewerToolToggleBtn.setAttribute("aria-expanded", state.isViewerToolsOpen ? "true" : "false");
-        }
-      }
-
-      function closeViewerMobilePanels() {
-        state.isViewerChatOpen = false;
-        state.isViewerToolsOpen = false;
-        syncViewerMobilePanels();
-      }
-
-      function setViewerChatOpen(nextOpen) {
-        state.isViewerChatOpen = !!nextOpen;
-        if (state.isViewerChatOpen) {
-          state.isViewerToolsOpen = false;
-          state.unreadViewerCount = 0;
-          updateViewerChatBadge();
-          scrollToBottom(el.viewerChatBox);
-        }
-        syncViewerMobilePanels();
-      }
-
-      function setViewerToolsOpen(nextOpen) {
-        state.isViewerToolsOpen = !!nextOpen;
-        if (state.isViewerToolsOpen) {
-          state.isViewerChatOpen = false;
-        }
-        syncViewerMobilePanels();
-      }
-
-      function scheduleViewerLayoutRefresh() {
-        requestAnimationFrame(function () {
-          fitCanvas();
-          requestAnimationFrame(function () {
-            fitCanvas();
-            setTimeout(function () {
-              if (state.currentViewerImageId) {
-                fitCanvas();
-              }
-            }, 180);
-          });
+      function saveNotePatch(note, patch) {
+        if (!socket || !state.currentImageId || !note) return;
+        socket.emit("update-note", {
+          imageId: state.currentImageId,
+          noteId: note.id,
+          patch: Object.assign({}, patch, {
+            updatedByRole: state.role,
+            updatedByName: displayName()
+          })
         });
       }
 
-      function isMobileDevice() {
-        return (
-          window.matchMedia("(max-width: 900px)").matches ||
-          (window.matchMedia("(max-width: 1180px)").matches && window.matchMedia("(pointer: coarse)").matches) ||
-          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-        );
-      }
-
-      function syncMobileLandscapeMode() {
-        const isLandscape = window.matchMedia("(orientation: landscape)").matches || window.innerWidth > window.innerHeight;
-        const shouldUseLandscapeMode = Boolean(
-          state.currentViewerImageId &&
-          isMobileDevice() &&
-          (isLandscape || state.forceMobileLandscape || document.fullscreenElement)
-        );
-
-        document.body.classList.toggle("mobile-landscape-mode", shouldUseLandscapeMode);
-
-        if (shouldUseLandscapeMode) {
-          closeRotateGuide();
-        } else {
-          closeViewerMobilePanels();
-        }
-
-        if (state.currentViewerImageId) {
-          scheduleViewerLayoutRefresh();
-        }
-      }
-
-      function openRotateGuide() {
-        el.rotateGuideOverlay.classList.add("open");
-        el.rotateGuideOverlay.setAttribute("aria-hidden", "false");
-      }
-
-      function closeRotateGuide() {
-        el.rotateGuideOverlay.classList.remove("open");
-        el.rotateGuideOverlay.setAttribute("aria-hidden", "true");
-      }
-
-      async function enterViewerFullscreen() {
-        if (!document.fullscreenElement && el.viewerOverlay.requestFullscreen) {
-          await el.viewerOverlay.requestFullscreen();
-          state.isFullscreenViewer = true;
-        }
-      }
-
-      async function lockLandscapeOrientation() {
-        if (screen.orientation && screen.orientation.lock) {
-          await screen.orientation.lock("landscape");
-          document.body.classList.add("mobile-landscape-mode");
-          syncMobileLandscapeMode();
-          return true;
-        }
-        syncMobileLandscapeMode();
-        return false;
-      }
-
-      async function unlockOrientation() {
-        try {
-          if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-          }
-        } catch (error) {
-          console.warn("orientation unlock failed", error);
-        }
-        document.body.classList.remove("mobile-landscape-mode");
-        closeViewerMobilePanels();
-      }
-
-      async function exitViewerFullscreen() {
-        try {
-          if (document.fullscreenElement && document.exitFullscreen) {
-            await document.exitFullscreen();
-          }
-        } catch (error) {
-          console.warn("exit fullscreen failed", error);
-        }
-        state.isFullscreenViewer = false;
-      }
-
-      async function prepareMobileLandscapeViewer() {
-        if (!isMobileDevice()) return;
-
-        state.forceMobileLandscape = true;
-        document.body.classList.add("mobile-landscape-mode");
-        syncMobileLandscapeMode();
-        let orientationLocked = false;
-
-        try {
-          await enterViewerFullscreen();
-        } catch (error) {
-          console.warn("fullscreen request failed", error);
-        }
-
-        try {
-          orientationLocked = await lockLandscapeOrientation();
-        } catch (error) {
-          console.warn("orientation lock failed", error);
-        }
-
-        if (!orientationLocked) {
-          openRotateGuide();
-          showToast("자동 회전에 실패했습니다. 화면 회전 기능을 켜고 가로로 돌려주세요.");
-        } else {
-          closeRotateGuide();
-        }
-
-        syncMobileLandscapeMode();
-        closeViewerMobilePanels();
-        updateViewerChatBadge();
-        scheduleViewerLayoutRefresh();
-      }
-
-      async function restoreMobilePortraitViewer() {
-        if (!isMobileDevice()) return;
-
-        state.forceMobileLandscape = false;
-        await unlockOrientation();
-
-        try {
-          if (screen.orientation && screen.orientation.lock) {
-            await screen.orientation.lock("portrait");
-          }
-        } catch (error) {
-          console.warn("portrait lock failed", error);
-        }
-
-        await exitViewerFullscreen();
-      }
-
-      function setConnectionBadge(text, ok) {
-        el.connectionBadge.textContent = text;
-        el.connectionBadge.style.background = ok ? "#ebf9ee" : "#edf4fa";
-        el.connectionBadge.style.color = ok ? "#2f7b42" : "#53687a";
-      }
-
-      function getParentTargetOrigin() {
-        return state.parentOrigin || "";
-      }
-
-      function isHostDesktopView() {
-        if (state.hostView === "desktop") return true;
-        if (state.hostView === "mobile") return false;
-        return window.innerWidth > 900;
-      }
-
-      function isMe(sender) {
-        return sender === state.role;
-      }
-
-      function updateActiveToolButtons() {
-        el.penBtn.classList.toggle("active", state.mode === "draw");
-        el.eraserBtn.classList.toggle("active", state.mode === "erase");
-        el.noteBtn.classList.toggle("active", state.mode === "note");
-        document.documentElement.style.setProperty("--selected-draw-color", state.color);
-      }
-
-      function updateBrushCursorStyle() {
-        const size = Math.max(8, Number(state.width || 4) * 2.5);
-        el.brushCursor.style.width = size + "px";
-        el.brushCursor.style.height = size + "px";
-        el.brushCursor.style.display = state.mode === "note" ? "none" : "block";
-        el.drawCanvas.classList.toggle("cursor-preview", state.mode !== "note");
-      }
-
-      function renderColorPopover() {
-        el.colorPopoverGrid.innerHTML = "";
-
-        DRAW_COLORS.forEach(function (color) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "colorChip" + (state.color === color ? " active" : "");
-          button.style.background = color;
-
-          button.addEventListener("click", function () {
-            state.color = color;
-            updateActiveToolButtons();
-            updateBrushCursorStyle();
-            renderColorPopover();
-            closeColorPopover();
-          });
-
-          el.colorPopoverGrid.appendChild(button);
+      function addNoteAt(clientX, clientY) {
+        if (!socket || !state.currentImageId) return;
+        const point = clientPointToImageRelative(clientX, clientY);
+        const note = {
+          id: createId("note"),
+          x: point.x,
+          y: point.y,
+          width: 0.18,
+          height: 0.12,
+          text: "",
+          color: "#fff7c2",
+          author: state.role,
+          updatedByRole: state.role,
+          updatedByName: displayName()
+        };
+        socket.emit("add-note", { imageId: state.currentImageId, note: note }, function (response) {
+          if (!response || !response.ok) showToast((response && response.error) || "메모 추가 실패");
         });
       }
 
-      function openColorPopover() {
-        const rect = el.paletteBtn.getBoundingClientRect();
-        el.colorPopover.style.left = Math.max(8, rect.left - 100) + "px";
-        el.colorPopover.style.top = Math.max(8, rect.top - 190) + "px";
-        el.colorPopover.classList.add("open");
-        el.colorPopover.setAttribute("aria-hidden", "false");
+      function deleteNote(noteId) {
+        if (!socket || !state.currentImageId || !noteId) return;
+        socket.emit("delete-note", { imageId: state.currentImageId, noteId: noteId });
       }
 
-      function closeColorPopover() {
-        el.colorPopover.classList.remove("open");
-        el.colorPopover.setAttribute("aria-hidden", "true");
-      }
-
-      function renderNoteColorRow() {
-        el.noteEditorColorRow.innerHTML = "";
-
-        NOTE_COLORS.forEach(function (color) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "noteColorSwatch" + (state.noteColor === color ? " active" : "");
-          button.style.background = color;
-
-          button.addEventListener("click", function () {
-            state.noteColor = color;
-
-            const note = state.notes.find(function (item) {
-              return item.id === state.activeNoteId;
-            });
-
-            if (!note) return;
-
-            note.color = color;
-            renderNotes();
-
-            socket.emit("update-note", {
-              imageId: state.currentViewerImageId,
-              noteId: note.id,
-              patch: {
-                color: color,
-                updatedByRole: state.role,
-                updatedByName: state.userName
-              }
-            });
-
-            renderNoteColorRow();
-          });
-
-          el.noteEditorColorRow.appendChild(button);
-        });
-      }
-
-      function resetViewerState() {
-        state.currentViewerImageId = "";
-        state.currentViewerImageUrl = "";
-        state.strokes = [];
-        state.redoStrokes = [];
-        state.currentStroke = null;
-        state.notes = [];
-        state.activeNoteId = "";
-      }
-
-      function renderMessages(messages) {
-        el.chatInner.innerHTML = "";
-        el.viewerChatInner.innerHTML = "";
-        messages.forEach(addMessageToUi);
-        scrollToBottom(el.chatBox);
-        scrollToBottom(el.viewerChatBox);
-      }
-
-      function addMessageToUi(message) {
-        const kind =
-          message.type === "system"
-            ? "system"
-            : isMe(message.sender)
-              ? "me"
-              : "other";
-
-        const row = document.createElement("div");
-        row.className = "messageRow " + kind;
-
-        if (kind === "system") {
-          const bubble = document.createElement("div");
-          bubble.className = "bubble";
-          bubble.innerHTML = escapeHtml(message.text || "");
-          row.appendChild(bubble);
-
-          el.chatInner.appendChild(row);
-          el.viewerChatInner.appendChild(row.cloneNode(true));
+      function startDrawing(event) {
+        if (!state.viewerOpen || !state.currentImageId) return;
+        if (state.tool === "note") {
+          addNoteAt(event.clientX, event.clientY);
           return;
         }
 
-        const body = document.createElement("div");
-        body.className = "messageBody";
+        event.preventDefault();
+        el.drawCanvas.setPointerCapture(event.pointerId);
+        state.currentStroke = {
+          id: createId("stroke"),
+          mode: state.tool === "eraser" ? "erase" : "draw",
+          color: state.color,
+          width: state.tool === "eraser" ? Math.max(8, state.thickness * 2) : state.thickness,
+          points: [clientPointToImageRelative(event.clientX, event.clientY)],
+          sender: state.role,
+          time: Date.now()
+        };
+        state.redoStack = [];
+      }
 
-        if (kind === "other") {
-          const avatar = document.createElement("div");
-          avatar.className = "senderAvatar";
-          avatar.textContent = ((message.senderName || "상").trim().charAt(0) || "상");
-          body.appendChild(avatar);
+      function moveDrawing(event) {
+        if (!state.currentStroke) return;
+        event.preventDefault();
+        state.currentStroke.points.push(clientPointToImageRelative(event.clientX, event.clientY));
+        redrawCanvas();
+      }
+
+      function endDrawing() {
+        if (!state.currentStroke) return;
+        const stroke = state.currentStroke;
+        state.currentStroke = null;
+        if (stroke.points.length < 2) {
+          redrawCanvas();
+          return;
         }
+        state.strokes.push(stroke);
+        redrawCanvas();
+        socket.emit("draw-stroke", { imageId: state.currentImageId, stroke: stroke });
+      }
 
-        const stack = document.createElement("div");
-        stack.className = "messageStack";
+      function undoStroke() {
+        if (!state.strokes.length || !socket) return;
+        state.redoStack.push(state.strokes.pop());
+        replaceDrawing();
+      }
 
-        if (kind === "other") {
-          const senderLine = document.createElement("div");
-          senderLine.className = "senderLine";
+      function redoStroke() {
+        if (!state.redoStack.length || !socket) return;
+        state.strokes.push(state.redoStack.pop());
+        replaceDrawing();
+      }
 
-          const senderName = document.createElement("span");
-          senderName.className = "senderName";
-          senderName.textContent = message.senderName || "상담";
+      function clearDrawing() {
+        if (!socket || !state.currentImageId) return;
+        state.strokes = [];
+        state.redoStack = [];
+        replaceDrawing();
+      }
 
-          const senderTime = document.createElement("span");
-          senderTime.className = "senderTime";
-          senderTime.textContent = formatTime(message.time);
+      function replaceDrawing() {
+        redrawCanvas();
+        socket.emit("replace-drawing", { imageId: state.currentImageId, strokes: state.strokes });
+      }
 
-          senderLine.appendChild(senderName);
-          senderLine.appendChild(senderTime);
-          stack.appendChild(senderLine);
-        }
+      function setTool(tool) {
+        state.tool = tool;
+        document.querySelectorAll(".toolButton[data-tool]").forEach(function (button) {
+          button.classList.toggle("active", button.dataset.tool === tool);
+        });
+      }
 
-        if (message.type === "image" && message.imageUrl) {
-          const bubble = document.createElement("div");
-          bubble.className = "imageBubble";
-          bubble.dataset.imageId = message.imageId || "";
-          bubble.dataset.imageUrl = message.imageUrl || "";
-          bubble.innerHTML = `
-            <img class="chatImg" src="${escapeHtml(message.imageUrl)}" alt="업로드 이미지" />
-            <div class="imageHint">이미지를 눌러 수정 위치를 표시하세요</div>
-          `;
-          bubble.addEventListener("click", function () {
-            openViewer(message.imageId, message.imageUrl);
-          });
-          stack.appendChild(bubble);
-        } else {
-          const bubble = document.createElement("div");
-          bubble.className = "bubble";
-          bubble.innerHTML = escapeHtml(message.text || "");
-          stack.appendChild(bubble);
-        }
+      function loadCollaborationState() {
+        if (!socket || !state.currentImageId || !state.joined) return;
+        socket.emit("get-drawing", { imageId: state.currentImageId }, function (response) {
+          state.strokes = Array.isArray(response && response.strokes) ? response.strokes : [];
+          state.redoStack = [];
+          redrawCanvas();
+        });
+        socket.emit("get-notes", { imageId: state.currentImageId }, function (response) {
+          state.notes = Array.isArray(response && response.notes) ? response.notes : [];
+          renderNotes();
+        });
+      }
 
-        if (kind === "me") {
-          const meta = document.createElement("div");
-          meta.className = "meta";
-          meta.textContent = formatTime(message.time);
-          stack.appendChild(meta);
-        }
+      function handleViewerImageLoaded() {
+        state.imageReady = true;
+        scheduleFit();
+      }
 
-        body.appendChild(stack);
-        row.appendChild(body);
-
-        el.chatInner.appendChild(row);
-
-        const clone = row.cloneNode(true);
-        const cloneBubble = clone.querySelector(".imageBubble");
-        if (cloneBubble) {
-          cloneBubble.addEventListener("click", function () {
-            openViewer(message.imageId, message.imageUrl);
-          });
-        }
-        el.viewerChatInner.appendChild(clone);
+      function clamp(value, min, max) {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return min;
+        return Math.min(max, Math.max(min, number));
       }
 
       async function loadConfig() {
         try {
-          const response = await fetch(state.apiBase + "/config", {
-            credentials: "omit"
-          });
+          const response = await fetch("/config", { cache: "no-store" });
           const data = await response.json();
-
-          if (data && data.ok) {
-            state.version = data.version || state.version;
-            state.socketPath = data.socketPath || "/socket.io";
-            el.title.textContent = "디자인 상담";
-          }
+          if (data && data.socketPath) state.socketPath = data.socketPath;
         } catch (error) {
-          console.warn("config load failed", error);
-          showToast("서버 설정을 불러오지 못했지만 기본 연결을 시도합니다.");
+          state.socketPath = "/socket.io";
         }
       }
 
-      function flushPendingMessages() {
-        if (!state.joined || !state.pendingMessages.length) return;
-        const queue = state.pendingMessages.slice();
-        state.pendingMessages = [];
-        queue.forEach(sendTextMessage);
-      }
-
-      function joinRoom() {
-        if (!socket || !socket.connected) return;
-
-        socket.emit(
-          "join",
-          {
-            roomId: state.roomId,
-            userName: state.userName,
-            role: state.role
-          },
-          function (response) {
-            if (response && response.ok) {
-              state.joined = true;
-              flushPendingMessages();
-
-              const bootImageId = (params.get("imageId") || "").trim();
-              const bootImageUrl = (params.get("imageUrl") || "").trim();
-
-              if (state.viewerOnly && bootImageId && bootImageUrl && !state.currentViewerImageId) {
-                openViewerInline(bootImageId, bootImageUrl);
-              }
-            }
-          }
-        );
-      }
-
       function connectSocket() {
-        setConnectionBadge("연결 중", false);
-
-        socket = io(state.apiBase, {
-          path: state.socketPath || "/socket.io",
+        setConnection("연결 중", false);
+        socket = io(window.location.origin, {
+          path: state.socketPath,
           transports: ["websocket", "polling"]
         });
 
         socket.on("connect", function () {
-          state.connected = true;
-          setConnectionBadge("연결됨", true);
-          joinRoom();
+          setConnection("연결됨", true);
+          socket.emit("join", {
+            roomId: state.roomId,
+            userName: state.userName,
+            role: state.role
+          }, function (response) {
+            state.joined = Boolean(response && response.ok);
+            if (state.joined && state.currentImageId && state.currentImageUrl && viewerOnly) {
+              openViewer(state.currentImageId, state.currentImageUrl, { mobileLandscape: isMobileHost() });
+            } else if (state.currentImageId && state.currentImageUrl) {
+              loadCollaborationState();
+            }
+          });
         });
 
         socket.on("disconnect", function () {
-          state.connected = false;
           state.joined = false;
-          setConnectionBadge("연결 끊김", false);
-          showToast("연결이 끊겼습니다. 자동 재연결을 시도합니다.");
+          setConnection("재연결 중", false);
         });
 
         socket.on("connect_error", function () {
-          setConnectionBadge("연결 재시도 중", false);
+          setConnection("연결 재시도 중", false);
         });
 
         socket.on("history", function (payload) {
@@ -2304,883 +1460,125 @@
         });
 
         socket.on("message", function (message) {
-          addMessageToUi(message || {});
-          scrollToBottom(el.chatBox);
-          if (!isMobileLandscapeViewerMode() || state.isViewerChatOpen) {
-            scrollToBottom(el.viewerChatBox);
-          }
-          if (
-            isMobileLandscapeViewerMode() &&
-            el.viewerOverlay.classList.contains("open") &&
-            !state.isViewerChatOpen &&
-            message &&
-            message.sender &&
-            message.sender !== state.role &&
-            message.type !== "system"
-          ) {
-            state.unreadViewerCount += 1;
-            updateViewerChatBadge();
-          }
+          appendMessage(message || {});
         });
 
         socket.on("drawing-replaced", function (payload) {
-          if (!payload || payload.imageId !== state.currentViewerImageId) return;
+          if (!payload || payload.imageId !== state.currentImageId) return;
           state.strokes = Array.isArray(payload.strokes) ? payload.strokes : [];
-          state.redoStrokes = [];
+          state.redoStack = [];
           redrawCanvas();
         });
 
         socket.on("draw-stroke", function (payload) {
-          if (!payload || payload.imageId !== state.currentViewerImageId || !payload.stroke) return;
-          state.strokes.push(payload.stroke);
+          if (!payload || payload.imageId !== state.currentImageId || !payload.stroke) return;
+          if (!state.strokes.some(function (stroke) { return stroke.id === payload.stroke.id; })) {
+            state.strokes.push(payload.stroke);
+            redrawCanvas();
+          }
+        });
+
+        socket.on("drawing-cleared", function (payload) {
+          if (!payload || payload.imageId !== state.currentImageId) return;
+          state.strokes = [];
+          state.redoStack = [];
           redrawCanvas();
         });
 
         socket.on("notes", function (payload) {
-          if (!payload || payload.imageId !== state.currentViewerImageId) return;
+          if (!payload || payload.imageId !== state.currentImageId) return;
           state.notes = Array.isArray(payload.notes) ? payload.notes : [];
           renderNotes();
         });
 
         socket.on("note-added", function (payload) {
-          if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
-          const idx = state.notes.findIndex(function (note) {
-            return note.id === payload.note.id;
-          });
-
-          if (idx >= 0) {
-            state.notes[idx] = payload.note;
-          } else {
-            state.notes.push(payload.note);
-          }
-          renderNotes();
+          if (!payload || payload.imageId !== state.currentImageId || !payload.note) return;
+          upsertNote(payload.note);
         });
 
         socket.on("note-updated", function (payload) {
-          if (!payload || payload.imageId !== state.currentViewerImageId || !payload.note) return;
-          const idx = state.notes.findIndex(function (note) {
-            return note.id === payload.note.id;
-          });
-
-          if (idx >= 0) {
-            state.notes[idx] = payload.note;
-          }
-
-          renderNotes();
-          syncActiveNoteEditor();
+          if (!payload || payload.imageId !== state.currentImageId || !payload.note) return;
+          upsertNote(payload.note);
         });
 
         socket.on("note-deleted", function (payload) {
-          if (!payload || payload.imageId !== state.currentViewerImageId) return;
-          state.notes = state.notes.filter(function (note) {
-            return note.id !== payload.noteId;
-          });
-
-          if (state.activeNoteId === payload.noteId) {
-            closeNoteEditor();
-          }
-
+          if (!payload || payload.imageId !== state.currentImageId) return;
+          state.notes = state.notes.filter(function (note) { return note.id !== payload.noteId; });
           renderNotes();
         });
       }
 
-      function sendTextMessage(text) {
-        const value = String(text || "").trim();
-        if (!value || !socket) return;
-
-        if (!state.joined) {
-          state.pendingMessages.push(value);
-          return;
-        }
-
-        socket.emit("message", { text: value }, function (response) {
-          if (!response || !response.ok) {
-            alert((response && response.error) || "메시지 전송 실패");
-          }
-        });
-      }
-
-      function handleMainSend() {
-        const text = el.msgInput.value.trim();
-        if (!text) return;
-        sendTextMessage(text);
-        el.msgInput.value = "";
-      }
-
-      function handleViewerSend() {
-        const text = el.viewerMsgInput.value.trim();
-        if (!text) return;
-        sendTextMessage(text);
-        el.viewerMsgInput.value = "";
-      }
-
-      async function uploadImage(file) {
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-          alert("이미지 파일만 업로드할 수 있습니다.");
-          return;
-        }
-
-        try {
-          showUploadLoading(true);
-
-          const formData = new FormData();
-          formData.append("image", file);
-
-          const response = await fetch(state.apiBase + "/upload", {
-            method: "POST",
-            body: formData
-          });
-
-          const data = await response.json();
-
-          if (!response.ok || !data || !data.ok || !data.url) {
-            throw new Error((data && data.error) || "업로드 실패");
-          }
-
-          socket.emit("image", { url: data.url }, function (result) {
-            if (!result || !result.ok) {
-              alert((result && result.error) || "이미지 저장 실패");
-              return;
-            }
-
-            sendTextMessage("이미지를 확인했어요. 이미지를 눌러 수정 위치를 표시하거나, 원하는 내용을 메모로 남겨주세요.");
-          });
-        } catch (error) {
-          alert(error.message || "이미지 업로드 실패");
-        } finally {
-          showUploadLoading(false);
-          el.fileInput.value = "";
-        }
-      }
-
-      function fitCanvas() {
-        const rect = el.imageStage.getBoundingClientRect();
-        const ratio = window.devicePixelRatio || 1;
-
-        el.drawCanvas.style.width = rect.width + "px";
-        el.drawCanvas.style.height = rect.height + "px";
-        el.drawCanvas.width = Math.max(1, Math.round(rect.width * ratio));
-        el.drawCanvas.height = Math.max(1, Math.round(rect.height * ratio));
-
-        canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
-        canvasCtx.scale(ratio, ratio);
-
-        redrawCanvas();
+      function upsertNote(note) {
+        const index = state.notes.findIndex(function (item) { return item.id === note.id; });
+        if (index >= 0) state.notes[index] = note;
+        else state.notes.push(note);
         renderNotes();
-        updateBrushCursorStyle();
       }
 
-      function redrawCanvas() {
-        const stageRect = el.imageStage.getBoundingClientRect();
-        const imageRect = getImageDisplayRect();
-
-        canvasCtx.clearRect(0, 0, stageRect.width, stageRect.height);
-
-        state.strokes.forEach(function (stroke) {
-          if (!Array.isArray(stroke.points) || stroke.points.length < 1) return;
-
-          canvasCtx.save();
-          canvasCtx.beginPath();
-          canvasCtx.rect(imageRect.left, imageRect.top, imageRect.width, imageRect.height);
-          canvasCtx.clip();
-
-          canvasCtx.lineCap = "round";
-          canvasCtx.lineJoin = "round";
-          canvasCtx.lineWidth = Number(stroke.width || 3);
-
-          if (stroke.mode === "erase") {
-            canvasCtx.globalCompositeOperation = "destination-out";
-            canvasCtx.strokeStyle = "rgba(0,0,0,1)";
-          } else {
-            canvasCtx.globalCompositeOperation = "source-over";
-            canvasCtx.strokeStyle = stroke.color || "#ff3b30";
-          }
-
-          const firstX = imageRect.left + stroke.points[0].x * imageRect.width;
-          const firstY = imageRect.top + stroke.points[0].y * imageRect.height;
-
-          canvasCtx.beginPath();
-          canvasCtx.moveTo(firstX, firstY);
-
-          for (let i = 1; i < stroke.points.length; i++) {
-            const point = stroke.points[i];
-            const x = imageRect.left + point.x * imageRect.width;
-            const y = imageRect.top + point.y * imageRect.height;
-            canvasCtx.lineTo(x, y);
-          }
-
-          canvasCtx.stroke();
-          canvasCtx.restore();
-        });
-      }
-
-      function pointerToRelative(event) {
-        const stageRect = el.imageStage.getBoundingClientRect();
-        const imageRect = getImageDisplayRect();
-
-        return {
-          x: clamp((event.clientX - stageRect.left - imageRect.left) / imageRect.width, 0, 1),
-          y: clamp((event.clientY - stageRect.top - imageRect.top) / imageRect.height, 0, 1)
-        };
-      }
-
-      function startStroke(event) {
-        if (!state.currentViewerImageId) return;
-        if (state.mode === "note") return;
-
-        const point = pointerToRelative(event);
-
-        state.currentStroke = {
-          id: createUuid(),
-          mode: state.mode === "erase" ? "erase" : "draw",
-          color: state.color,
-          width: Number(state.width || 3),
-          points: [point],
-          time: Date.now(),
-          sender: state.role
-        };
-
-        el.drawCanvas.setPointerCapture(event.pointerId);
-      }
-
-      function moveStroke(event) {
-        if (!state.currentStroke) return;
-
-        const point = pointerToRelative(event);
-        state.currentStroke.points.push(point);
-
-        const preview = state.strokes.concat([state.currentStroke]);
-        const original = state.strokes;
-
-        state.strokes = preview;
-        redrawCanvas();
-        state.strokes = original;
-      }
-
-      function endStroke() {
-        if (!state.currentStroke) return;
-
-        const finished = state.currentStroke;
-        state.currentStroke = null;
-        state.strokes.push(finished);
-        state.redoStrokes = [];
-        redrawCanvas();
-
-        socket.emit(
-          "draw-stroke",
-          {
-            imageId: state.currentViewerImageId,
-            stroke: finished
-          },
-          function (response) {
-            if (!response || !response.ok) {
-              alert((response && response.error) || "드로잉 저장 실패");
-            }
-          }
-        );
-      }
-
-      function undoStroke() {
-        if (!state.strokes.length || !state.currentViewerImageId) return;
-        const stroke = state.strokes.pop();
-        state.redoStrokes.push(stroke);
-        redrawCanvas();
-
-        socket.emit("replace-drawing", {
-          imageId: state.currentViewerImageId,
-          strokes: state.strokes
-        });
-      }
-
-      function redoStroke() {
-        if (!state.redoStrokes.length || !state.currentViewerImageId) return;
-        const stroke = state.redoStrokes.pop();
-        state.strokes.push(stroke);
-        redrawCanvas();
-
-        socket.emit("replace-drawing", {
-          imageId: state.currentViewerImageId,
-          strokes: state.strokes
-        });
-      }
-
-      function clearDrawing() {
-        if (!state.currentViewerImageId) return;
-        state.strokes = [];
-        state.redoStrokes = [];
-        redrawCanvas();
-
-        socket.emit("replace-drawing", {
-          imageId: state.currentViewerImageId,
-          strokes: []
-        });
-      }
-
-      function renderNotes() {
-        el.textLayer.innerHTML = "";
-        const stageRect = el.imageStage.getBoundingClientRect();
-
-        state.notes.forEach(function (note) {
-          const node = document.createElement("button");
-          node.type = "button";
-
-          const isExpanded = state.activeNoteId === note.id;
-          const previewText = ((note.text || "메모").trim().slice(0, 3)) || "메모";
-          const fullText = ((note.text || "메모").trim()) || "메모";
-
-          node.className = "noteMarker" + (isExpanded ? " expanded selected" : "");
-          node.style.left = (note.x * stageRect.width) + "px";
-          node.style.top = (note.y * stageRect.height) + "px";
-          node.dataset.noteId = note.id;
-
-          node.innerHTML = `
-            <span class="noteDot" style="background:${escapeHtml(note.color || "#fff7c2")}"></span>
-            <span class="noteMarkerText">${escapeHtml(isExpanded ? fullText : previewText)}</span>
-          `;
-
-          node.addEventListener("click", function (event) {
-            event.stopPropagation();
-
-            if (state.activeNoteId === note.id) {
-              state.activeNoteId = "";
-            } else {
-              state.activeNoteId = note.id;
-            }
-
-            renderNotes();
-          });
-
-          node.addEventListener("dblclick", function (event) {
-            event.stopPropagation();
-            state.activeNoteId = note.id;
-            openNoteEditor(note.id);
-            renderNotes();
-          });
-
-          node.addEventListener("pointerdown", function (event) {
-            event.stopPropagation();
-
-            state.draggingNoteId = note.id;
-            state.draggingNotePointerId = event.pointerId;
-
-            const targetRect = node.getBoundingClientRect();
-            state.dragOffsetX = event.clientX - (targetRect.left + targetRect.width / 2);
-            state.dragOffsetY = event.clientY - (targetRect.top + targetRect.height / 2);
-
-            node.setPointerCapture(event.pointerId);
-          });
-
-          node.addEventListener("pointermove", function (event) {
-            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) {
-              return;
-            }
-
-            const currentStageRect = el.imageStage.getBoundingClientRect();
-
-            const x = clamp(
-              (event.clientX - currentStageRect.left - state.dragOffsetX) / currentStageRect.width,
-              0.02,
-              0.98
-            );
-
-            const y = clamp(
-              (event.clientY - currentStageRect.top - state.dragOffsetY) / currentStageRect.height,
-              0.02,
-              0.98
-            );
-
-            const found = state.notes.find(function (item) {
-              return item.id === note.id;
-            });
-
-            if (found) {
-              found.x = x;
-              found.y = y;
-              renderNotes();
-            }
-          });
-
-          node.addEventListener("pointerup", function (event) {
-            if (state.draggingNoteId !== note.id || state.draggingNotePointerId !== event.pointerId) {
-              return;
-            }
-
-            state.draggingNoteId = "";
-            state.draggingNotePointerId = null;
-
-            const found = state.notes.find(function (item) {
-              return item.id === note.id;
-            });
-
-            if (!found) return;
-
-            socket.emit("update-note", {
-              imageId: state.currentViewerImageId,
-              noteId: note.id,
-              patch: {
-                x: found.x,
-                y: found.y,
-                updatedByRole: state.role,
-                updatedByName: state.userName
-              }
-            });
-          });
-
-          el.textLayer.appendChild(node);
-        });
-      }
-
-      function addNoteAtCenter() {
-        if (!state.currentViewerImageId) return;
-
-        socket.emit(
-          "add-note",
-          {
-            imageId: state.currentViewerImageId,
-            note: {
-              id: createUuid(),
-              x: 0.5,
-              y: 0.5,
-              width: 0.16,
-              height: 0.1,
-              text: "메모를 입력하세요",
-              color: state.noteColor,
-              author: state.role,
-              updatedByRole: state.role,
-              updatedByName: state.userName
-            }
-          },
-          function (response) {
-            if (response && response.ok && response.note) {
-              state.activeNoteId = response.note.id;
-              openNoteEditor(response.note.id);
-            }
-          }
-        );
-      }
-
-      function openNoteEditor(noteId) {
-        const note = state.notes.find(function (item) {
-          return item.id === noteId;
-        });
-
-        if (!note) return;
-
-        state.activeNoteId = noteId;
-        state.noteColor = note.color || state.noteColor;
-
-        el.noteEditorOverlay.classList.add("open");
-        el.noteEditorOverlay.setAttribute("aria-hidden", "false");
-
-        el.noteEditorTextarea.value = note.text || "";
-        el.noteEditorCounter.textContent = el.noteEditorTextarea.value.length + " / 500";
-        el.noteEditorSaveBadge.className = "saved";
-        el.noteEditorSaveBadge.textContent = "저장됨";
-
-        renderNoteColorRow();
-      }
-
-      function syncActiveNoteEditor() {
-        if (!state.activeNoteId || !el.noteEditorOverlay.classList.contains("open")) return;
-
-        const note = state.notes.find(function (item) {
-          return item.id === state.activeNoteId;
-        });
-
-        if (!note) return;
-
-        if (document.activeElement !== el.noteEditorTextarea) {
-          el.noteEditorTextarea.value = note.text || "";
-          el.noteEditorCounter.textContent = el.noteEditorTextarea.value.length + " / 500";
-        }
-
-        state.noteColor = note.color || state.noteColor;
-        renderNoteColorRow();
-      }
-
-      function closeNoteEditor() {
-        el.noteEditorOverlay.classList.remove("open");
-        el.noteEditorOverlay.setAttribute("aria-hidden", "true");
-        state.activeNoteId = "";
-      }
-
-      function saveActiveNoteDebounced() {
-        const note = state.notes.find(function (item) {
-          return item.id === state.activeNoteId;
-        });
-
-        if (!note || !state.currentViewerImageId) return;
-
-        note.text = el.noteEditorTextarea.value.slice(0, 500);
-        el.noteEditorCounter.textContent = note.text.length + " / 500";
-        el.noteEditorSaveBadge.className = "pending";
-        el.noteEditorSaveBadge.textContent = "저장 중";
-
-        renderNotes();
-
-        clearTimeout(noteSaveTimer);
-        noteSaveTimer = setTimeout(function () {
-          socket.emit(
-            "update-note",
-            {
-              imageId: state.currentViewerImageId,
-              noteId: note.id,
-              patch: {
-                text: note.text,
-                updatedByRole: state.role,
-                updatedByName: state.userName
-              }
-            },
-            function (response) {
-              if (response && response.ok) {
-                el.noteEditorSaveBadge.className = "saved";
-                el.noteEditorSaveBadge.textContent = "저장됨";
-              } else {
-                el.noteEditorSaveBadge.className = "offline";
-                el.noteEditorSaveBadge.textContent = "저장 실패";
-              }
-            }
-          );
-        }, 250);
-      }
-
-      function deleteActiveNote() {
-        if (!state.activeNoteId || !state.currentViewerImageId) return;
-
-        socket.emit(
-          "delete-note",
-          {
-            imageId: state.currentViewerImageId,
-            noteId: state.activeNoteId
-          },
-          function () {
-            closeNoteEditor();
-          }
-        );
-      }
-
-      async function openViewerInline(imageId, imageUrl) {
-        state.currentViewerImageId = imageId;
-        state.currentViewerImageUrl = imageUrl;
-        state.strokes = [];
-        state.redoStrokes = [];
-        state.notes = [];
-        state.activeNoteId = "";
-        state.unreadViewerCount = 0;
-        closeViewerMobilePanels();
-        updateViewerChatBadge();
-
-        el.viewerOverlay.classList.add("open");
-        el.viewerOverlay.setAttribute("aria-hidden", "false");
-        document.body.classList.add("viewer-inline-open");
-        syncMobileLandscapeMode();
-
-        updateBrushCursorStyle();
-
-        el.viewerImage.onload = function () {
-          scheduleViewerLayoutRefresh();
-
-          socket.emit("get-drawing", { imageId: imageId }, function (response) {
-            state.strokes = Array.isArray(response && response.strokes) ? response.strokes : [];
-            redrawCanvas();
-          });
-
-          socket.emit("get-notes", { imageId: imageId }, function (response) {
-            state.notes = Array.isArray(response && response.notes) ? response.notes : [];
-            renderNotes();
-          });
-        };
-
-        el.viewerImage.src = imageUrl;
-
-        if (isMobileDevice()) {
-          prepareMobileLandscapeViewer();
+      function handleParentMessage(event) {
+        if (safeParentOrigin && event.origin !== safeParentOrigin) return;
+        const data = event.data || {};
+        if (data.type === "SELECT_VIEWER_IMAGE" && data.imageId && data.imageUrl) {
+          openViewer(data.imageId, data.imageUrl, { mobileLandscape: isMobileHost() });
         }
       }
 
-      function requestParentViewerPanel(imageId, imageUrl) {
-        if (!window.parent || window.parent === window) return false;
+      el.inputBar.addEventListener("submit", function (event) {
+        event.preventDefault();
+        sendText(el.messageInput.value);
+        el.messageInput.value = "";
+      });
 
-        const now = Date.now();
-        if (now - lastViewerRequestAt < 500) return true;
-        lastViewerRequestAt = now;
+      el.viewerChatInputBar.addEventListener("submit", function (event) {
+        event.preventDefault();
+        sendText(el.viewerMessageInput.value);
+        el.viewerMessageInput.value = "";
+      });
 
-        const targetOrigin = getParentTargetOrigin();
-        if (!targetOrigin) return false;
+      el.uploadInput.addEventListener("change", function () {
+        uploadImage(el.uploadInput.files && el.uploadInput.files[0]);
+      });
 
-        window.parent.postMessage(
-          {
-            type: "OPEN_VIEWER_PANEL",
-            roomId: state.roomId,
-            userName: state.userName,
-            imageId: imageId,
-            imageUrl: imageUrl
-          },
-          targetOrigin
-        );
+      el.quickRequestBar.addEventListener("click", function (event) {
+        const chip = event.target.closest(".quickChip");
+        if (!chip) return;
+        sendText(chip.dataset.text || chip.textContent);
+      });
 
-        return true;
-      }
+      el.viewerImage.addEventListener("load", handleViewerImageLoaded);
+      el.viewerCloseButton.addEventListener("click", closeViewer);
+      el.viewerToolsButton.addEventListener("click", toggleTools);
+      el.viewerChatButton.addEventListener("click", function () { toggleViewerChat(); });
+      el.viewerChatCloseButton.addEventListener("click", function () { toggleViewerChat(false); });
+      el.drawCanvas.addEventListener("pointerdown", startDrawing);
+      el.drawCanvas.addEventListener("pointermove", moveDrawing);
+      el.drawCanvas.addEventListener("pointerup", endDrawing);
+      el.drawCanvas.addEventListener("pointercancel", endDrawing);
+      el.noteLayer.addEventListener("pointermove", moveNoteDrag);
+      el.noteLayer.addEventListener("pointerup", endNoteDrag);
+      el.noteLayer.addEventListener("pointercancel", endNoteDrag);
 
-      function openViewer(imageId, imageUrl) {
-        if (!imageId || !imageUrl) return;
+      document.querySelectorAll(".toolButton[data-tool]").forEach(function (button) {
+        button.addEventListener("click", function () { setTool(button.dataset.tool); });
+      });
+      document.getElementById("undoButton").addEventListener("click", undoStroke);
+      document.getElementById("redoButton").addEventListener("click", redoStroke);
+      document.getElementById("clearButton").addEventListener("click", clearDrawing);
+      el.colorPicker.addEventListener("input", function () { state.color = el.colorPicker.value; });
+      el.thicknessRange.addEventListener("input", function () {
+        state.thickness = Number(el.thicknessRange.value);
+        el.thicknessLabel.textContent = state.thickness + "px";
+      });
 
-        const isDesktop = isHostDesktopView();
-        const isInsideIframe = window.parent && window.parent !== window;
+      window.addEventListener("message", handleParentMessage);
+      window.addEventListener("resize", scheduleFit);
+      window.addEventListener("orientationchange", scheduleFit);
+      document.addEventListener("fullscreenchange", scheduleFit);
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && state.viewerOpen) closeViewer();
+      });
 
-        if (isDesktop && isInsideIframe && !state.viewerOnly) {
-          const requested = requestParentViewerPanel(imageId, imageUrl);
-          if (requested) return;
-        }
-
-        openViewerInline(imageId, imageUrl);
-      }
-
-      async function closeViewer() {
-        const isInsideIframe = window.parent && window.parent !== window;
-
-        if (window.innerWidth > 768 && isInsideIframe && state.viewerOnly) {
-          window.parent.postMessage({ type: "CLOSE_VIEWER_PANEL" }, getParentTargetOrigin() || "*");
-          return;
-        }
-
-        if (isMobileDevice()) {
-          await restoreMobilePortraitViewer();
-        }
-
-        closeRotateGuide();
-        el.viewerOverlay.classList.remove("open");
-        el.viewerOverlay.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("viewer-inline-open");
-        state.unreadViewerCount = 0;
-        updateViewerChatBadge();
-        closeViewerMobilePanels();
-        resetViewerState();
-      }
-
-      function downloadCurrentSketch() {
-        if (!state.currentViewerImageId || !state.currentViewerImageUrl) return;
-
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-
-        img.onload = function () {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-
-          state.strokes.forEach(function (stroke) {
-            if (!Array.isArray(stroke.points) || !stroke.points.length) return;
-
-            ctx.save();
-            ctx.lineCap = "round";
-            ctx.lineJoin = "round";
-            ctx.lineWidth = Number(stroke.width || 3);
-
-            if (stroke.mode === "erase") {
-              ctx.globalCompositeOperation = "destination-out";
-              ctx.strokeStyle = "rgba(0,0,0,1)";
-            } else {
-              ctx.globalCompositeOperation = "source-over";
-              ctx.strokeStyle = stroke.color || "#ff3b30";
-            }
-
-            ctx.beginPath();
-            ctx.moveTo(stroke.points[0].x * img.width, stroke.points[0].y * img.height);
-
-            for (let i = 1; i < stroke.points.length; i++) {
-              ctx.lineTo(stroke.points[i].x * img.width, stroke.points[i].y * img.height);
-            }
-
-            ctx.stroke();
-            ctx.restore();
-          });
-
-          const link = document.createElement("a");
-          link.href = canvas.toDataURL("image/png");
-          link.download = "design-collab-" + Date.now() + ".png";
-          link.click();
-        };
-
-        img.src = state.currentViewerImageUrl;
-      }
-
-      function handleParentMessages(event) {
-        if (!event.data) return;
-        if (state.parentOrigin && event.origin !== state.parentOrigin) return;
-
-        if (event.data.type === "SELECT_VIEWER_IMAGE") {
-          openViewerInline(event.data.imageId, event.data.imageUrl);
-        }
-      }
-
-      function bindEvents() {
-        el.sendBtn.addEventListener("click", handleMainSend);
-        el.viewerSendBtn.addEventListener("click", handleViewerSend);
-
-        el.msgInput.addEventListener("keydown", function (event) {
-          if (event.key === "Enter") handleMainSend();
-        });
-
-        el.viewerMsgInput.addEventListener("keydown", function (event) {
-          if (event.key === "Enter") handleViewerSend();
-        });
-
-        el.fileInput.addEventListener("change", function () {
-          const file = el.fileInput.files && el.fileInput.files[0];
-          uploadImage(file);
-        });
-
-        el.quickRequestButtons.addEventListener("click", function (event) {
-          const button = event.target.closest(".quickChip");
-          if (!button) return;
-
-          Array.prototype.forEach.call(
-            el.quickRequestButtons.querySelectorAll(".quickChip"),
-            function (chip) {
-              chip.classList.remove("active");
-            }
-          );
-
-          button.classList.add("active");
-          el.msgInput.value = button.getAttribute("data-draft") || "";
-          el.msgInput.focus();
-        });
-
-        el.viewerCloseBtn.addEventListener("click", closeViewer);
-        el.downloadSketchBtn.addEventListener("click", downloadCurrentSketch);
-        el.rotateGuideConfirmBtn.addEventListener("click", closeRotateGuide);
-        if (el.viewerChatToggleBtn) {
-          el.viewerChatToggleBtn.addEventListener("click", function () {
-            setViewerChatOpen(!state.isViewerChatOpen);
-          });
-        }
-        if (el.viewerToolToggleBtn) {
-          el.viewerToolToggleBtn.addEventListener("click", function () {
-            setViewerToolsOpen(!state.isViewerToolsOpen);
-          });
-        }
-
-        el.penBtn.addEventListener("click", function () {
-          state.mode = "draw";
-          updateActiveToolButtons();
-          updateBrushCursorStyle();
-        });
-
-        el.eraserBtn.addEventListener("click", function () {
-          state.mode = "erase";
-          updateActiveToolButtons();
-          updateBrushCursorStyle();
-        });
-
-        el.noteBtn.addEventListener("click", function () {
-          state.mode = "note";
-          updateActiveToolButtons();
-          updateBrushCursorStyle();
-          addNoteAtCenter();
-        });
-
-        el.undoBtn.addEventListener("click", undoStroke);
-        el.redoBtn.addEventListener("click", redoStroke);
-        el.clearBtn.addEventListener("click", clearDrawing);
-
-        el.thicknessRange.addEventListener("input", function () {
-          state.width = Number(el.thicknessRange.value || 4);
-          updateBrushCursorStyle();
-        });
-
-        el.paletteBtn.addEventListener("click", function (event) {
-          event.stopPropagation();
-
-          if (el.colorPopover.classList.contains("open")) {
-            closeColorPopover();
-          } else {
-            openColorPopover();
-          }
-        });
-
-        document.addEventListener("click", function (event) {
-          if (!el.colorPopover.contains(event.target) && !el.paletteBtn.contains(event.target)) {
-            closeColorPopover();
-          }
-        });
-
-        el.drawCanvas.addEventListener("pointerdown", function (event) {
-          if (state.mode === "note") return;
-          startStroke(event);
-        });
-
-        el.drawCanvas.addEventListener("pointermove", function (event) {
-          const stageRect = el.imageStage.getBoundingClientRect();
-          el.brushCursor.style.left = event.clientX - stageRect.left + "px";
-          el.brushCursor.style.top = event.clientY - stageRect.top + "px";
-          moveStroke(event);
-        });
-
-        el.drawCanvas.addEventListener("pointerup", endStroke);
-        el.drawCanvas.addEventListener("pointercancel", endStroke);
-
-        el.noteEditorTextarea.addEventListener("input", saveActiveNoteDebounced);
-        el.noteEditorDoneBtn.addEventListener("click", closeNoteEditor);
-        el.noteEditorDeleteBtn.addEventListener("click", deleteActiveNote);
-
-        el.viewerImage.addEventListener("load", function () {
-          if (!state.currentViewerImageId) return;
-          scheduleViewerLayoutRefresh();
-        });
-
-        window.addEventListener("resize", function () {
-          if (!state.currentViewerImageId) return;
-          scheduleViewerLayoutRefresh();
-        });
-
-        window.addEventListener("message", handleParentMessages);
-
-        document.addEventListener("fullscreenchange", function () {
-          if (!document.fullscreenElement) {
-            state.isFullscreenViewer = false;
-            document.body.classList.remove("mobile-landscape-mode");
-          } else if (state.currentViewerImageId) {
-            scheduleViewerLayoutRefresh();
-          }
-        });
-
-        window.addEventListener("keydown", function (event) {
-          if (event.key === "Escape") {
-            if (el.noteEditorOverlay.classList.contains("open")) {
-              closeNoteEditor();
-              return;
-            }
-
-            if (el.viewerOverlay.classList.contains("open")) {
-              closeViewer();
-            }
-          }
-        });
-      }
-
-      async function init() {
-        renderColorPopover();
-        renderNoteColorRow();
-        updateActiveToolButtons();
-        updateBrushCursorStyle();
-        updateViewerChatBadge();
-        syncViewerMobilePanels();
-
-        if (state.viewerOnly) {
-          document.body.classList.add("viewer-only-mode");
-        }
-
-        await loadConfig();
-        connectSocket();
-        bindEvents();
-      }
-
-      init();
+      loadConfig().then(connectSocket);
     })();
   </script>
 </body>
