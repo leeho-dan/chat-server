@@ -1,3 +1,16 @@
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const cors = require("cors");
+const multer = require("multer");
+const mongoose = require("mongoose");
+const { Server } = require("socket.io");
+const { v2: cloudinary } = require("cloudinary");
+const { v4: uuidv4 } = require("uuid");
+
+const app = express();
+const server = http.createServer(app);
+
 const PORT = Number(process.env.PORT || 3000);
 const HOST = "0.0.0.0";
 const PUBLIC_DIR = path.join(__dirname, "public");
